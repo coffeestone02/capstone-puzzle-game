@@ -41,3 +41,9 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
+  - name: Game Grid
+    uniqueID: 853987779
+    locked: 0
+  - name: Board
+    uniqueID: 1102732351
+    locked: 0
