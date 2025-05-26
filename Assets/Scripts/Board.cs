@@ -51,6 +51,23 @@ public class Board : MonoBehaviour
         int randomIdx = Random.Range(0, triominos.Length);
         TriominoData data = triominos[randomIdx];
         activePiece.Initialize(this, spawnPositions[currentSpawnIdx], data);
+
+        switch (currentSpawnIdx)
+        {
+            case 1:
+                activePiece.Rotate(1);
+                break;
+            case 2:
+                activePiece.Rotate(1);
+                activePiece.Rotate(1);
+                break;
+            case 3:
+                activePiece.Rotate(1);
+                activePiece.Rotate(1);
+                activePiece.Rotate(1);
+                break;
+        }
+
         Set(activePiece);
     }
 
@@ -101,7 +118,7 @@ public class Board : MonoBehaviour
     }
 
     // 스폰 위치를 계산
-    private void ComputeSpawnIdx()
+    public void NextSpawnIdx()
     {
         currentSpawnIdx++;
         currentSpawnIdx = currentSpawnIdx % 4;

@@ -606,7 +606,7 @@ MonoBehaviour:
   - {x: -1, y: -10, z: 0}
   - {x: -9, y: -2, z: 0}
   boardSize: {x: 19, y: 19}
-  currentSpawnIdx: 3
+  currentSpawnIdx: 0
 --- !u!114 &1935108064
 MonoBehaviour:
   m_ObjectHideFlags: 0
