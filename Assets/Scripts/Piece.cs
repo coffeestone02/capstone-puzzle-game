@@ -1,7 +1,7 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Tilemaps;
 
 // 피스의 이동, 회전을 담당, 플레이어 조작도 여기서 받음
 public class Piece : MonoBehaviour
@@ -10,6 +10,7 @@ public class Piece : MonoBehaviour
     public TriominoData data { get; private set; } // 현재 트리오미노의 데이터
     public Vector3Int[] cells { get; private set; } // 셀들의 위치 정보
     public Vector3Int position { get; private set; } // 피스의 위치 정보
+    public Tile[] tiles { get; private set; } // 셀들의 색상 정보
     public int rotationIdx { get; private set; }
 
     public float stepDelay = 3f;
@@ -20,6 +21,29 @@ public class Piece : MonoBehaviour
     private float moveTime;
     private float lockTime;
 
+    // piece가 처음 생성됐을 때 색을 결정함
+    private void ColorSet(Piece piece, out Tile firstTile, out Tile secondTile, out Tile thirdTile)
+    {
+        int randomIdx = Random.Range(0, 3);
+        switch (randomIdx)
+        {
+            case 0:
+                firstTile = piece.data.tiles[0];
+                secondTile = piece.data.tiles[1];
+                thirdTile = piece.data.tiles[1];
+                break;
+            case 1:
+                firstTile = piece.data.tiles[1];
+                secondTile = piece.data.tiles[0];
+                thirdTile = piece.data.tiles[1];
+                break;
+            default:
+                firstTile = piece.data.tiles[1];
+                secondTile = piece.data.tiles[1];
+                thirdTile = piece.data.tiles[0];
+                break;
+        }
+    }
 
     // 초기화 함수
     public void Initialize(Board board, Vector3Int position, TriominoData data)
@@ -34,16 +58,27 @@ public class Piece : MonoBehaviour
         moveTime = Time.time + moveDelay;
         lockTime = 0f;
 
+        Tile firstTile;
+        Tile secondTile;
+        Tile thirdTile;
+        ColorSet(this, out firstTile, out secondTile, out thirdTile);
+
         // cells 배열이 null이면 배열을 만들어서 셀 데이터를 초기화 해준다
         if (cells == null)
         {
             cells = new Vector3Int[data.cells.Length];
+            tiles = new Tile[data.cells.Length];
         }
 
         for (int i = 0; i < cells.Length; i++)
         {
             cells[i] = (Vector3Int)data.cells[i];
         }
+
+        // 색상 정보 추가
+        tiles[0] = firstTile;
+        tiles[1] = secondTile;
+        tiles[2] = thirdTile;
     }
 
     private void Update()

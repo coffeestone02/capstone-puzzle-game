@@ -40,11 +40,6 @@ public class Board : MonoBehaviour
         SpawnPiece();
     }
 
-    void Update()
-    {
-        
-    }
-
     // 지정된 위치에 트리오미노를 랜덤으로 골라 스폰
     public void SpawnPiece()
     {
@@ -71,13 +66,12 @@ public class Board : MonoBehaviour
         Set(activePiece);
     }
 
-    // Piece를 만들어서 타일에 그림
+    // Piece를 타일에 그림
     public void Set(Piece piece)
     {
-        for(int i = 0; i < piece.cells.Length; i++)
+        for (int i = 0; i < piece.cells.Length; i++)
         {
-            Vector3Int tilePosition = piece.cells[i] + piece.position;
-            tilemap.SetTile(tilePosition, piece.data.tile);
+            tilemap.SetTile(piece.cells[i] + piece.position, piece.tiles[i]);
         }
     }
 

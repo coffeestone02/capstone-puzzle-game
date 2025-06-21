@@ -597,9 +597,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   triominos:
   - triomino: 0
-    tile: {fileID: 11400000, guid: 2f5cedeea8684e9498cd5813b1360375, type: 2}
+    tiles:
+    - {fileID: 11400000, guid: d8baa55bdf62a5c439977369371a77d5, type: 2}
+    - {fileID: 11400000, guid: c979af25611192e45ae7e63562c4f6da, type: 2}
   - triomino: 1
-    tile: {fileID: 11400000, guid: 89d0f73c0a028d54dbae8d42624cc49d, type: 2}
+    tiles:
+    - {fileID: 11400000, guid: 89d0f73c0a028d54dbae8d42624cc49d, type: 2}
+    - {fileID: 11400000, guid: c979af25611192e45ae7e63562c4f6da, type: 2}
   spawnPositions:
   - {x: -1, y: 7, z: 0}
   - {x: 7, y: -2, z: 0}
@@ -619,6 +623,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2381c650a8c51a349ae1265e2d85eab7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  stepDelay: 3
+  moveDelay: 0.1
+  lockDelay: 0.5
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
