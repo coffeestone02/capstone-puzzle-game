@@ -9,8 +9,12 @@ public class Board : MonoBehaviour
     public Tilemap tilemap { get; private set; } // 그려질 타일맵
     public Piece activePiece { get; private set; } // 현재 조작중인 피스
     public TriominoData[] triominos; // 게임에서 쓸 수 있는 트리오미노(인스펙터에서 설정)
-    public Vector3Int[] spawnPositions; // 피스가 스폰될 위치
-    public Vector2Int boardSize = new Vector2Int(19, 19); // 게임보드 사이즈
+    public Vector3Int[] spawnPositions; // 피스가 스폰될 위치(인스펙터에서 설정)
+    private Vector2Int boardSize; // 게임보드 사이즈
+
+    public bool isMatching { get; private set; } 
+    [SerializeField] private int width;
+    [SerializeField] private int height;
 
     public RectInt Bounds // 보드 범위를 확인하는데 사용함.
     {
@@ -23,10 +27,11 @@ public class Board : MonoBehaviour
 
     public int currentSpawnIdx = 0; // 스폰 위치 인덱스. 0 : 위쪽, 1 : 오른쪽, 2 : 아래쪽, 3: 왼쪽
 
-    private void Awake() 
+    private void Awake()
     {
-        tilemap = GetComponentInChildren<Tilemap>();   
+        tilemap = GetComponentInChildren<Tilemap>();
         activePiece = GetComponentInChildren<Piece>();
+        boardSize = new Vector2Int(height, width);
 
         // 인스펙터에서 만들어진 테트로미노의 수만큼 진행
         for (int i = 0; i < triominos.Length; i++)
@@ -117,4 +122,131 @@ public class Board : MonoBehaviour
         currentSpawnIdx++;
         currentSpawnIdx = currentSpawnIdx % 4;
     }
+
+    public void TryMatch(Piece piece)
+    {
+        isMatching = true;
+
+        Debug.Log("매칭 확인 중");
+
+        HashSet<Vector3Int> allMatched = new HashSet<Vector3Int>();
+        for (int i = 0; i < piece.cells.Length; i++)
+        {
+            Vector3Int[] connections = GetConnections(piece, i);
+            Debug.Log(connections.Length);
+            if (CanPop(connections))
+            {
+                foreach (Vector3Int pos in connections)
+                {
+                    allMatched.Add(pos);
+                }
+            }
+        }
+
+        Debug.Log("확인 완료");
+
+        foreach (Vector3Int pos in allMatched)
+        {
+            tilemap.SetTile(pos, null);
+        }
+
+        isMatching = false;
+    }
+
+    // 연결이 4개 이상이면서 일자 모양이 아닌 경우 삭제 가능
+    private bool CanPop(Vector3Int[] connections)
+    {
+        if (connections.Length < 4)
+        {
+            return false;
+        }
+
+        // x좌표가 모두 같으면 일자 모양
+        int x = connections[0].x;
+        bool xStraightCheck = true;
+        for (int i = 1; i < connections.Length; i++)
+        {
+            if (connections[i].x != x)
+            {
+                xStraightCheck = false;
+                break;
+            }
+        }
+
+        if (xStraightCheck)
+        {
+            return false;
+        }
+
+        // y좌표가 모두 같으면 일자 모양
+        int y = connections[0].y;
+        bool yStraightCheck = true;
+        for (int i = 1; i < connections.Length; i++)
+        {
+            if (connections[i].y != y)
+            {
+                yStraightCheck = false;
+                break;
+            }
+        }
+
+        if (yStraightCheck)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    // 연결을 확인함
+    private Vector3Int[] GetConnections(Piece piece, int cellIdx)
+    {
+        Vector3Int start = piece.cells[cellIdx] + piece.position;
+        Tile matchTile = piece.tiles[cellIdx];
+
+        List<Vector3Int> connections = new List<Vector3Int>();
+        Queue<Vector3Int> queue = new Queue<Vector3Int>();
+        HashSet<Vector3Int> visited = new HashSet<Vector3Int>();
+        RectInt bounds = this.Bounds;
+
+        Vector3Int[] directions = new Vector3Int[]
+        {
+            new Vector3Int(1, 0, 0),
+            new Vector3Int(-1, 0, 0),
+            new Vector3Int(0, 1, 0),
+            new Vector3Int(0, -1, 0),
+        };
+
+        queue.Enqueue(start);
+        visited.Add(start);
+
+        while (queue.Count > 0)
+        {
+            Vector3Int current = queue.Dequeue();
+            connections.Add(current);
+
+            foreach (var dir in directions)
+            {
+                Vector3Int next = current + dir;
+
+                if (bounds.Contains((Vector2Int)next) == false || visited.Contains(next))
+                {
+                    continue;
+                }
+
+                Tile nextTile = tilemap.GetTile<Tile>(next);
+                if (nextTile == null || nextTile != matchTile)
+                {
+                    continue;
+                }
+
+                queue.Enqueue(next);
+                visited.Add(next);
+            }
+        }
+
+        return connections.ToArray();
+    }
+    
+
 }

@@ -24,7 +24,7 @@ public class Piece : MonoBehaviour
     // piece가 처음 생성됐을 때 색을 결정함
     private void ColorSet(Piece piece, out Tile firstTile, out Tile secondTile, out Tile thirdTile)
     {
-        int randomIdx = Random.Range(0, 3);
+        int randomIdx = Random.Range(0, 3); // switch의 조건 개수
         switch (randomIdx)
         {
             case 0:
@@ -86,12 +86,10 @@ public class Piece : MonoBehaviour
         // 지우고 위치를 옮겨서 다시 그린다.
         this.board.Clear(this);
 
-        lockTime += Time.deltaTime;
+        lockTime += Time.deltaTime; 
 
         // 회전 입력
         RotationInput();
-
-
 
         if (Time.time > moveTime)
         {
@@ -127,9 +125,11 @@ public class Piece : MonoBehaviour
     {
         board.Set(this); // 고정하고
         board.NextSpawnIdx(); // 스폰 위치를 변경
+        board.TryMatch(this);
         board.SpawnPiece(); // 다른 피스 스폰
-    }
+    } 
 
+    // 
     private void Step()
     {
         stepTime = Time.time + stepDelay;
@@ -166,7 +166,7 @@ public class Piece : MonoBehaviour
         newPosition.x += translation.x;
         newPosition.y += translation.y;
 
-        bool valid = this.board.IsValidPosition(this, newPosition); // 유효한 위치인지 확인
+        bool valid = board.IsValidPosition(this, newPosition); // 유효한 위치인지 확인
 
         // 유효하다면 위치를 이동
         if (valid)
@@ -271,7 +271,6 @@ public class Piece : MonoBehaviour
     }
 
     // 인풋들
-
     // 회전 입력
     private void RotationInput()
     {
