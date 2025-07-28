@@ -28,6 +28,8 @@ public class Board : MonoBehaviour
     }
 
     private int score = 0;
+    private int combo = 0;
+    private int level = 1;
     public int currentSpawnIdx = 0; // 스폰 위치 인덱스. 0 : 위쪽, 1 : 오른쪽, 2 : 아래쪽, 3: 왼쪽
 
     private void Awake()
@@ -126,17 +128,52 @@ public class Board : MonoBehaviour
         currentSpawnIdx = currentSpawnIdx % 4;
     }
 
-    // 매칭 시도
+    // 매칭 시도 및 점수 획득
     public void TryMatch(Piece piece)
     {
         isMatching = true;
+        int mainPoint = 0;
+        int bonusPoint = 0;
 
+        HashSet<Vector3Int> matched = FindMainMatch(piece); // 메인 피스 매칭
+        mainPoint += matched.Count * 100; // 메인 피스 점수 계산
+        foreach (Vector3Int pos in matched) // 메인 피스 제거
+        {
+            tilemap.SetTile(pos, null);
+        }
+
+        if (matched.Count == 0)
+        {
+            combo = 0;
+        }
+
+        HashSet<Vector3Int> bonusMatched = FindBonusMatch(matched); // 추가 제거 매칭
+        bonusPoint = bonusMatched.Count * 60; // 추가 제거 점수 계산
+        foreach (Vector3Int pos in bonusMatched) // 추가 제거
+        {
+            if ((Vector2Int)pos == new Vector2Int(-1, -1))
+            {
+                continue;
+            }
+            tilemap.SetTile(pos, null);
+        }
+
+        score += (mainPoint + bonusPoint) * (1 + combo) * (int)(1 + 0.1 * level); // 최종 점수 계산
+        Debug.Log(score);
+
+        isMatching = false;
+    }
+
+    // 메인 피스 매칭
+    private HashSet<Vector3Int> FindMainMatch(Piece piece)
+    {
         HashSet<Vector3Int> matched = new HashSet<Vector3Int>();
         for (int i = 0; i < piece.cells.Length; i++)
         {
             Vector3Int[] connections = FindConnections(piece, i);
             if (CanPop(connections))
             {
+                combo++;
                 foreach (Vector3Int pos in connections)
                 {
                     matched.Add(pos);
@@ -144,20 +181,7 @@ public class Board : MonoBehaviour
             }
         }
 
-        foreach (Vector3Int pos in matched)
-        {
-            tilemap.SetTile(pos, null);
-        }
-
-        // 추가 피스 제거
-        HashSet<Vector3Int> bonusMatched = FindBonusMatch(matched);
-        foreach (Vector3Int pos in bonusMatched)
-        {
-            if ((Vector2Int)pos == new Vector2Int(-1, -1)) continue;
-            tilemap.SetTile(pos, null);
-        }
-
-        isMatching = false;
+        return matched;
     }
 
     // 추가로 제거할 수 있는 피스 찾기
