@@ -1,5 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Numerics;
+using Unity.VisualScripting;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
@@ -15,7 +18,6 @@ public class Board : MonoBehaviour
     public bool isMatching { get; private set; } 
     [SerializeField] private int width;
     [SerializeField] private int height;
-
     public RectInt Bounds // 보드 범위를 확인하는데 사용함.
     {
         get
@@ -25,6 +27,7 @@ public class Board : MonoBehaviour
         }
     }
 
+    private int score = 0;
     public int currentSpawnIdx = 0; // 스폰 위치 인덱스. 0 : 위쪽, 1 : 오른쪽, 2 : 아래쪽, 3: 왼쪽
 
     private void Awake()
@@ -123,34 +126,83 @@ public class Board : MonoBehaviour
         currentSpawnIdx = currentSpawnIdx % 4;
     }
 
+    // 매칭 시도
     public void TryMatch(Piece piece)
     {
         isMatching = true;
 
-        Debug.Log("매칭 확인 중");
-
-        HashSet<Vector3Int> allMatched = new HashSet<Vector3Int>();
+        HashSet<Vector3Int> matched = new HashSet<Vector3Int>();
         for (int i = 0; i < piece.cells.Length; i++)
         {
-            Vector3Int[] connections = GetConnections(piece, i);
-            Debug.Log(connections.Length);
+            Vector3Int[] connections = FindConnections(piece, i);
             if (CanPop(connections))
             {
                 foreach (Vector3Int pos in connections)
                 {
-                    allMatched.Add(pos);
+                    matched.Add(pos);
                 }
             }
         }
 
-        Debug.Log("확인 완료");
-
-        foreach (Vector3Int pos in allMatched)
+        foreach (Vector3Int pos in matched)
         {
             tilemap.SetTile(pos, null);
         }
 
+        // 추가 피스 제거
+        HashSet<Vector3Int> bonusMatched = FindBonusMatch(matched);
+        foreach (Vector3Int pos in bonusMatched)
+        {
+            if ((Vector2Int)pos == new Vector2Int(-1, -1)) continue;
+            tilemap.SetTile(pos, null);
+        }
+
         isMatching = false;
+    }
+
+    // 추가로 제거할 수 있는 피스 찾기
+    private HashSet<Vector3Int> FindBonusMatch(HashSet<Vector3Int> matched)
+    {
+        HashSet<Vector3Int> bonusMatched = new HashSet<Vector3Int>();
+        if (matched == null || matched.Count == 0)
+        {
+            return bonusMatched;
+        }
+
+        RectInt bounds = this.Bounds;
+
+        // 이미 찾아진 x/y 좌표 모으기
+        HashSet<int> xs = new HashSet<int>();
+        HashSet<int> ys = new HashSet<int>();
+
+        foreach (Vector3Int pos in matched)
+        {
+            xs.Add(pos.x);
+            ys.Add(pos.y);
+        }
+
+        // 가로/세로 교차점(새로운 제거 후보 위치) 전부 찾기
+        foreach (int x in xs)
+        {
+            foreach (int y in ys)
+            {
+                Vector3Int cross = new Vector3Int(x, y, 0);
+
+                // 이미 기존 matched에 들어있거나(중복방지) 범위 밖이면 패스
+                if (matched.Contains(cross) || bounds.Contains((Vector2Int)cross) == false)
+                {
+                    continue;
+                }
+
+                // 실제로 타일이 있어야만 추가
+                if (tilemap.HasTile(cross))
+                {
+                    bonusMatched.Add(cross);
+                }
+            }
+        }
+
+        return bonusMatched;
     }
 
     // 연결이 4개 이상이면서 일자 모양이 아닌 경우 삭제 가능
@@ -199,7 +251,7 @@ public class Board : MonoBehaviour
     }
 
     // 연결을 확인함
-    private Vector3Int[] GetConnections(Piece piece, int cellIdx)
+    private Vector3Int[] FindConnections(Piece piece, int cellIdx)
     {
         Vector3Int start = piece.cells[cellIdx] + piece.position;
         Tile matchTile = piece.tiles[cellIdx];
