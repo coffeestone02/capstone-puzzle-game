@@ -173,12 +173,16 @@ public class Board : MonoBehaviour
             Vector3Int[] connections = FindConnections(piece, i);
             if (CanPop(connections))
             {
-                combo++;
                 foreach (Vector3Int pos in connections)
                 {
                     matched.Add(pos);
                 }
             }
+        }
+
+        if (matched.Count > 0)
+        {
+            combo++;
         }
 
         return matched;
