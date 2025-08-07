@@ -2,7 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Numerics;
 using Unity.VisualScripting;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
@@ -14,6 +13,8 @@ public class Board : MonoBehaviour
     public TriominoData[] triominos; // 게임에서 쓸 수 있는 트리오미노(인스펙터에서 설정)
     public Vector3Int[] spawnPositions; // 피스가 스폰될 위치(인스펙터에서 설정)
     private Vector2Int boardSize; // 게임보드 사이즈
+    public GameManager gameManager;//UI 연결용
+    public Tile grayTile; // 가장자리에 닿으면 변하는 타일
 
     public bool isMatching { get; private set; } 
     [SerializeField] private int width;
@@ -51,11 +52,19 @@ public class Board : MonoBehaviour
     }
 
     // 지정된 위치에 트리오미노를 랜덤으로 골라 스폰
+
     public void SpawnPiece()
     {
         int randomIdx = Random.Range(0, triominos.Length);
         TriominoData data = triominos[randomIdx];
+
         activePiece.Initialize(this, spawnPositions[currentSpawnIdx], data);
+
+        if (!IsValidPosition(activePiece, activePiece.position)) //블록 생성 후 겹칠 시 게임 오버
+        {
+            gameManager.GameOver();
+            return;
+        }
 
         switch (currentSpawnIdx)
         {
@@ -82,6 +91,59 @@ public class Board : MonoBehaviour
         for (int i = 0; i < piece.cells.Length; i++)
         {
             tilemap.SetTile(piece.cells[i] + piece.position, piece.tiles[i]);
+        }
+    }
+
+    /// 가장자리 낙하시 회색 블록으로 변화
+    public void ChangeGray(Piece piece)
+    {
+        RectInt bounds = this.Bounds;
+        int EdgeOrGray = 0;
+
+        // 회색 블록 탐색을 위한 방향 벡터 (상하좌우)
+        Vector3Int[] directions = new Vector3Int[]
+        {
+        new Vector3Int(1, 0, 0),
+        new Vector3Int(-1, 0, 0),
+        new Vector3Int(0, 1, 0),
+        new Vector3Int(0, -1, 0)
+        };
+
+        for (int i = 0; i < piece.cells.Length; i++)
+        {
+            Vector3Int cellPos = piece.cells[i] + piece.position;
+
+            // 보드 가장자리인지 확인
+            if (cellPos.x == bounds.xMin || cellPos.x == bounds.xMax - 1 || cellPos.y == bounds.yMin || cellPos.y == bounds.yMax - 1)
+            {
+                EdgeOrGray = 1;
+                break;
+            }
+
+            // 주변에 회색 타일이 있는지 확인
+            foreach (var dir in directions)
+            {
+                Vector3Int neighborPos = cellPos + dir;
+                Tile neighborTile = tilemap.GetTile<Tile>(neighborPos);
+
+                if (neighborTile != null && neighborTile.name == grayTile.name)
+                {
+                    EdgeOrGray = 1;
+                    break;
+                }
+            }
+
+            if (EdgeOrGray == 1) break;
+        }
+
+        // 조건 만족 시 전체 블록 회색으로 변경
+        if (EdgeOrGray == 1)
+        {
+            for (int i = 0; i < piece.cells.Length; i++)
+            {
+                Vector3Int tilePosition = piece.cells[i] + piece.position;
+                tilemap.SetTile(tilePosition, grayTile);
+            }
         }
     }
 
@@ -193,9 +255,8 @@ public class Board : MonoBehaviour
     {
         HashSet<Vector3Int> bonusMatched = new HashSet<Vector3Int>();
         if (matched == null || matched.Count == 0)
-        {
             return bonusMatched;
-        }
+        
 
         RectInt bounds = this.Bounds;
 
