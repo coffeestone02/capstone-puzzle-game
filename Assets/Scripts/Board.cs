@@ -103,10 +103,10 @@ public class Board : MonoBehaviour
         // 회색 블록 탐색을 위한 방향 벡터 (상하좌우)
         Vector3Int[] directions = new Vector3Int[]
         {
-        new Vector3Int(1, 0, 0),
-        new Vector3Int(-1, 0, 0),
-        new Vector3Int(0, 1, 0),
-        new Vector3Int(0, -1, 0)
+            new Vector3Int(1, 0, 0),
+            new Vector3Int(-1, 0, 0),
+            new Vector3Int(0, 1, 0),
+            new Vector3Int(0, -1, 0)
         };
 
         for (int i = 0; i < piece.cells.Length; i++)
@@ -145,6 +145,34 @@ public class Board : MonoBehaviour
                 tilemap.SetTile(tilePosition, grayTile);
             }
         }
+    }
+
+    public bool EdgeTest(Piece piece)
+    {
+        RectInt bounds = this.Bounds;
+
+        // 회색 블록 탐색을 위한 방향 벡터 (상하좌우)
+        Vector3Int[] directions = new Vector3Int[]
+        {
+            new Vector3Int(1, 0, 0),
+            new Vector3Int(-1, 0, 0),
+            new Vector3Int(0, 1, 0),
+            new Vector3Int(0, -1, 0)
+        };
+
+        for (int i = 0; i < piece.cells.Length; i++)
+        {
+            Vector3Int cellPos = piece.cells[i] + piece.position;
+
+            // 보드 가장자리인지 확인
+            if (cellPos.x <= bounds.xMin + 1 || cellPos.x >= bounds.xMax - 2 ||
+                cellPos.y <= bounds.yMin + 1|| cellPos.y >= bounds.yMax - 2)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     // Piece를 지움
@@ -221,7 +249,6 @@ public class Board : MonoBehaviour
         }
 
         score += (mainPoint + bonusPoint) * (1 + combo) * (int)(1 + 0.1 * level); // 최종 점수 계산
-        Debug.Log(score);
 
         isMatching = false;
     }

@@ -123,6 +123,11 @@ public class Piece : MonoBehaviour
     // 고정
     private void Lock()
     {
+        if (board.EdgeTest(this))
+        {
+            board.gameManager.GameOver();
+            Debug.Log(board.currentSpawnIdx);
+        }
         board.Set(this); // 고정하고
         board.NextSpawnIdx(); // 스폰 위치를 변경
         board.TryMatch(this); // 피스 제거 시도
