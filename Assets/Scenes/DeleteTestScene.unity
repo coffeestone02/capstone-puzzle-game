@@ -1241,6 +1241,7 @@ MonoBehaviour:
   - {x: -1, y: -10, z: 0}
   - {x: -9, y: -2, z: 0}
   gameManager: {fileID: 194543849}
+  grayTile: {fileID: 11400000, guid: 919756fd93eddcc459426406d7cb0c1e, type: 2}
   width: 19
   height: 19
   currentSpawnIdx: 0
