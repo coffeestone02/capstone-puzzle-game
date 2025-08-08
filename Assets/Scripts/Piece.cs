@@ -126,6 +126,7 @@ public class Piece : MonoBehaviour
         if (board.EdgeTest(this))
         {
             board.gameManager.GameOver();
+            board.SendGameData();
             Debug.Log(board.currentSpawnIdx);
         }
         board.Set(this); // 고정하고

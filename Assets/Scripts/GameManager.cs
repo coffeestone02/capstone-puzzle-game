@@ -9,7 +9,7 @@ public class GameManager : MonoBehaviour
     public void GameOver() //게임 오버
     {
         Time.timeScale = 0f;
-
+            
         if (gameOverUI != null)
             gameOverUI.SetActive(true); // UI 활성화
     }

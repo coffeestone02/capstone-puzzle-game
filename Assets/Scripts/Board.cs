@@ -1,22 +1,31 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Numerics;
-using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.Networking;
 using UnityEngine.Tilemaps;
+using System;
+
+[System.Serializable]
+public class PlayerData
+{
+    public string name;
+    public int finalScore;
+    public string updatedAt;
+}
 
 // 블록을 관리하는 보드겸 게임 매니저
 public class Board : MonoBehaviour
 {
+    public string serverURL = "http://localhost:3000/score";
     public Tilemap tilemap { get; private set; } // 그려질 타일맵
     public Piece activePiece { get; private set; } // 현재 조작중인 피스
     public TriominoData[] triominos; // 게임에서 쓸 수 있는 트리오미노(인스펙터에서 설정)
     public Vector3Int[] spawnPositions; // 피스가 스폰될 위치(인스펙터에서 설정)
     private Vector2Int boardSize; // 게임보드 사이즈
-    public GameManager gameManager;//UI 연결용
+    public GameManager gameManager; //UI 연결용
     public Tile grayTile; // 가장자리에 닿으면 변하는 타일
 
-    public bool isMatching { get; private set; } 
+    public bool isMatching { get; private set; }
     [SerializeField] private int width;
     [SerializeField] private int height;
     public RectInt Bounds // 보드 범위를 확인하는데 사용함.
@@ -55,7 +64,7 @@ public class Board : MonoBehaviour
 
     public void SpawnPiece()
     {
-        int randomIdx = Random.Range(0, triominos.Length);
+        int randomIdx = UnityEngine.Random.Range(0, triominos.Length);
         TriominoData data = triominos[randomIdx];
 
         activePiece.Initialize(this, spawnPositions[currentSpawnIdx], data);
@@ -166,7 +175,7 @@ public class Board : MonoBehaviour
 
             // 보드 가장자리인지 확인
             if (cellPos.x <= bounds.xMin + 1 || cellPos.x >= bounds.xMax - 2 ||
-                cellPos.y <= bounds.yMin + 1|| cellPos.y >= bounds.yMax - 2)
+                cellPos.y <= bounds.yMin + 1 || cellPos.y >= bounds.yMax - 2)
             {
                 return true;
             }
@@ -283,7 +292,7 @@ public class Board : MonoBehaviour
         HashSet<Vector3Int> bonusMatched = new HashSet<Vector3Int>();
         if (matched == null || matched.Count == 0)
             return bonusMatched;
-        
+
 
         RectInt bounds = this.Bounds;
 
@@ -415,6 +424,40 @@ public class Board : MonoBehaviour
 
         return connections.ToArray();
     }
-    
 
+    public void SendGameData()
+    {
+        StartCoroutine(SendGameDataCoroutine());
+    }
+
+    private IEnumerator SendGameDataCoroutine()
+    {
+        PlayerData gameData = new PlayerData()
+        {
+            name = "test name",
+            finalScore = score,
+            updatedAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+        };
+
+        string jsonData = JsonUtility.ToJson(gameData);
+
+        using (UnityWebRequest request = new UnityWebRequest(serverURL, "POST"))
+        {
+            byte[] jsonToSend = System.Text.Encoding.UTF8.GetBytes(jsonData);
+            request.uploadHandler = new UploadHandlerRaw(jsonToSend);
+            request.downloadHandler = new DownloadHandlerBuffer();
+            request.SetRequestHeader("Content-Type", "application/json");
+
+            yield return request.SendWebRequest();
+
+            if (request.result == UnityWebRequest.Result.Success)
+            {
+                Debug.Log("데이터 전송 성공: " + request.downloadHandler.text);
+            }
+            else
+            {
+                Debug.LogError("데이터 전송 실패: " + request.error);
+            }
+        }
+    }
 }
