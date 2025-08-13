@@ -8,9 +8,10 @@ using System;
 [System.Serializable]
 public class PlayerData
 {
+    public string gameMode;
     public string name;
     public int finalScore;
-    public string updatedAt;
+    public string updateDate;
 }
 
 // 블록을 관리하는 보드겸 게임 매니저
@@ -24,6 +25,7 @@ public class Board : MonoBehaviour
     private Vector2Int boardSize; // 게임보드 사이즈
     public GameManager gameManager; //UI 연결용
     public Tile grayTile; // 가장자리에 닿으면 변하는 타일
+    public float fadeSpeed = 1.5f;
 
     public bool isMatching { get; private set; }
     [SerializeField] private int width;
@@ -37,6 +39,15 @@ public class Board : MonoBehaviour
         }
     }
 
+    // 회색 블록 탐색을 위한 방향 벡터
+    Vector3Int[] directions = new Vector3Int[]
+    {
+        new Vector3Int(1, 0, 0),
+        new Vector3Int(-1, 0, 0),
+        new Vector3Int(0, 1, 0),
+        new Vector3Int(0, -1, 0)
+    };
+
     private int score = 0;
     private int combo = 0;
     private int level = 1;
@@ -48,7 +59,7 @@ public class Board : MonoBehaviour
         activePiece = GetComponentInChildren<Piece>();
         boardSize = new Vector2Int(height, width);
 
-        // 인스펙터에서 만들어진 테트로미노의 수만큼 진행
+        // 인스펙터에서 만들어진 트리오미노의 수만큼 진행
         for (int i = 0; i < triominos.Length; i++)
         {
             triominos[i].Initialize();
@@ -57,11 +68,22 @@ public class Board : MonoBehaviour
 
     void Start()
     {
+        Initialize();
         SpawnPiece();
     }
 
-    // 지정된 위치에 트리오미노를 랜덤으로 골라 스폰
+    private void Initialize()
+    {
+        for (int i = -20; i <= 20; i++)
+        {
+            for (int j = -20; j <= 20; j++)
+            {
+                tilemap.RemoveTileFlags(new Vector3Int(i, j), TileFlags.LockColor);
+            }
+        }
+    }
 
+    // 지정된 위치에 트리오미노를 랜덤으로 골라 스폰
     public void SpawnPiece()
     {
         int randomIdx = UnityEngine.Random.Range(0, triominos.Length);
@@ -93,7 +115,7 @@ public class Board : MonoBehaviour
 
         Set(activePiece);
     }
-
+    
     // Piece를 타일에 그림
     public void Set(Piece piece)
     {
@@ -109,21 +131,13 @@ public class Board : MonoBehaviour
         RectInt bounds = this.Bounds;
         int EdgeOrGray = 0;
 
-        // 회색 블록 탐색을 위한 방향 벡터 (상하좌우)
-        Vector3Int[] directions = new Vector3Int[]
-        {
-            new Vector3Int(1, 0, 0),
-            new Vector3Int(-1, 0, 0),
-            new Vector3Int(0, 1, 0),
-            new Vector3Int(0, -1, 0)
-        };
-
         for (int i = 0; i < piece.cells.Length; i++)
         {
             Vector3Int cellPos = piece.cells[i] + piece.position;
 
             // 보드 가장자리인지 확인
-            if (cellPos.x == bounds.xMin || cellPos.x == bounds.xMax - 1 || cellPos.y == bounds.yMin || cellPos.y == bounds.yMax - 1)
+            if (cellPos.x == bounds.xMin || cellPos.x == bounds.xMax - 1
+                || cellPos.y == bounds.yMin || cellPos.y == bounds.yMax - 1)
             {
                 EdgeOrGray = 1;
                 break;
@@ -142,7 +156,10 @@ public class Board : MonoBehaviour
                 }
             }
 
-            if (EdgeOrGray == 1) break;
+            if (EdgeOrGray == 1)
+            {
+                break;
+            }
         }
 
         // 조건 만족 시 전체 블록 회색으로 변경
@@ -156,18 +173,10 @@ public class Board : MonoBehaviour
         }
     }
 
-    public bool EdgeTest(Piece piece)
+    // 게임 오버인지 확인
+    public bool IsGameover(Piece piece)
     {
         RectInt bounds = this.Bounds;
-
-        // 회색 블록 탐색을 위한 방향 벡터 (상하좌우)
-        Vector3Int[] directions = new Vector3Int[]
-        {
-            new Vector3Int(1, 0, 0),
-            new Vector3Int(-1, 0, 0),
-            new Vector3Int(0, 1, 0),
-            new Vector3Int(0, -1, 0)
-        };
 
         for (int i = 0; i < piece.cells.Length; i++)
         {
@@ -236,10 +245,7 @@ public class Board : MonoBehaviour
 
         HashSet<Vector3Int> matched = FindMainMatch(piece); // 메인 피스 매칭
         mainPoint += matched.Count * 100; // 메인 피스 점수 계산
-        foreach (Vector3Int pos in matched) // 메인 피스 제거
-        {
-            tilemap.SetTile(pos, null);
-        }
+        DeleteMatchedPiece(matched); // 메인 피스 제거
 
         if (matched.Count == 0)
         {
@@ -248,7 +254,17 @@ public class Board : MonoBehaviour
 
         HashSet<Vector3Int> bonusMatched = FindBonusMatch(matched); // 추가 제거 매칭
         bonusPoint = bonusMatched.Count * 60; // 추가 제거 점수 계산
-        foreach (Vector3Int pos in bonusMatched) // 추가 제거
+        DeleteMatchedPiece(bonusMatched); // 추가 피스 제거
+
+        score += (mainPoint + bonusPoint) * (1 + combo) * (int)(1 + 0.1 * level); // 최종 점수 계산
+
+        isMatching = false;
+    }
+
+    // 매치된 피스를 제거
+    private void DeleteMatchedPiece(HashSet<Vector3Int> matched)
+    {
+        foreach (Vector3Int pos in matched)
         {
             if ((Vector2Int)pos == new Vector2Int(-1, -1))
             {
@@ -256,10 +272,6 @@ public class Board : MonoBehaviour
             }
             tilemap.SetTile(pos, null);
         }
-
-        score += (mainPoint + bonusPoint) * (1 + combo) * (int)(1 + 0.1 * level); // 최종 점수 계산
-
-        isMatching = false;
     }
 
     // 메인 피스 매칭
@@ -269,7 +281,7 @@ public class Board : MonoBehaviour
         for (int i = 0; i < piece.cells.Length; i++)
         {
             Vector3Int[] connections = FindConnections(piece, i);
-            if (CanPop(connections))
+            if (CanDelete(connections))
             {
                 foreach (Vector3Int pos in connections)
                 {
@@ -291,25 +303,26 @@ public class Board : MonoBehaviour
     {
         HashSet<Vector3Int> bonusMatched = new HashSet<Vector3Int>();
         if (matched == null || matched.Count == 0)
+        {
             return bonusMatched;
-
+        }
 
         RectInt bounds = this.Bounds;
 
         // 이미 찾아진 x/y 좌표 모으기
-        HashSet<int> xs = new HashSet<int>();
-        HashSet<int> ys = new HashSet<int>();
+        HashSet<int> xCross = new HashSet<int>();
+        HashSet<int> yCross = new HashSet<int>();
 
         foreach (Vector3Int pos in matched)
         {
-            xs.Add(pos.x);
-            ys.Add(pos.y);
+            xCross.Add(pos.x);
+            yCross.Add(pos.y);
         }
 
         // 가로/세로 교차점(새로운 제거 후보 위치) 전부 찾기
-        foreach (int x in xs)
+        foreach (int x in xCross)
         {
-            foreach (int y in ys)
+            foreach (int y in yCross)
             {
                 Vector3Int cross = new Vector3Int(x, y, 0);
 
@@ -331,43 +344,32 @@ public class Board : MonoBehaviour
     }
 
     // 연결이 4개 이상이면서 일자 모양이 아닌 경우 삭제 가능
-    private bool CanPop(Vector3Int[] connections)
+    private bool CanDelete(Vector3Int[] connections)
     {
         if (connections.Length < 4)
         {
             return false;
         }
 
-        // x좌표가 모두 같으면 일자 모양
+        // x좌표가 모두 같거나 y좌표가 모두 동일하면 일자모양
         int x = connections[0].x;
-        bool xStraightCheck = true;
+        int y = connections[0].y;
+        bool xCrosstraightCheck = true;
+        bool yStraightCheck = true;
         for (int i = 1; i < connections.Length; i++)
         {
             if (connections[i].x != x)
             {
-                xStraightCheck = false;
-                break;
+                xCrosstraightCheck = false;
             }
-        }
 
-        if (xStraightCheck)
-        {
-            return false;
-        }
-
-        // y좌표가 모두 같으면 일자 모양
-        int y = connections[0].y;
-        bool yStraightCheck = true;
-        for (int i = 1; i < connections.Length; i++)
-        {
             if (connections[i].y != y)
             {
                 yStraightCheck = false;
-                break;
             }
         }
 
-        if (yStraightCheck)
+        if (xCrosstraightCheck || yStraightCheck)
         {
             return false;
         }
@@ -385,14 +387,6 @@ public class Board : MonoBehaviour
         Queue<Vector3Int> queue = new Queue<Vector3Int>();
         HashSet<Vector3Int> visited = new HashSet<Vector3Int>();
         RectInt bounds = this.Bounds;
-
-        Vector3Int[] directions = new Vector3Int[]
-        {
-            new Vector3Int(1, 0, 0),
-            new Vector3Int(-1, 0, 0),
-            new Vector3Int(0, 1, 0),
-            new Vector3Int(0, -1, 0),
-        };
 
         queue.Enqueue(start);
         visited.Add(start);
@@ -434,9 +428,10 @@ public class Board : MonoBehaviour
     {
         PlayerData gameData = new PlayerData()
         {
-            name = "test name",
+            gameMode = "Classic",
+            name = "ygt2120",
             finalScore = score,
-            updatedAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+            updateDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
         };
 
         string jsonData = JsonUtility.ToJson(gameData);

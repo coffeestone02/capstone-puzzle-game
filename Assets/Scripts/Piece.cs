@@ -123,7 +123,7 @@ public class Piece : MonoBehaviour
     // 고정
     private void Lock()
     {
-        if (board.EdgeTest(this))
+        if (board.IsGameover(this))
         {
             board.gameManager.GameOver();
             board.SendGameData();
