@@ -126,9 +126,10 @@ public class Piece : MonoBehaviour
         if (board.IsGameover(this))
         {
             board.gameManager.GameOver();
-            board.SendGameData();
+            board.gameManager.SendGameData(board.score);
             Debug.Log(board.currentSpawnIdx);
         }
+
         board.Set(this); // 고정하고
         board.NextSpawnIdx(); // 스폰 위치를 변경
         board.TryMatch(this); // 피스 제거 시도

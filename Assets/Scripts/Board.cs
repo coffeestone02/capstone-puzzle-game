@@ -5,27 +5,16 @@ using UnityEngine.Networking;
 using UnityEngine.Tilemaps;
 using System;
 
-[System.Serializable]
-public class PlayerData
-{
-    public string gameMode;
-    public string name;
-    public int finalScore;
-    public string updateDate;
-}
-
-// 블록을 관리하는 보드겸 게임 매니저
+// 블록을 관리하는 보드
 public class Board : MonoBehaviour
 {
-    public string serverURL = "http://localhost:3000/score";
     public Tilemap tilemap { get; private set; } // 그려질 타일맵
     public Piece activePiece { get; private set; } // 현재 조작중인 피스
     public TriominoData[] triominos; // 게임에서 쓸 수 있는 트리오미노(인스펙터에서 설정)
     public Vector3Int[] spawnPositions; // 피스가 스폰될 위치(인스펙터에서 설정)
     private Vector2Int boardSize; // 게임보드 사이즈
-    public GameManager gameManager; //UI 연결용
+    public GameManager gameManager; // UI 연결용
     public Tile grayTile; // 가장자리에 닿으면 변하는 타일
-    public float fadeSpeed = 1.5f;
 
     public bool isMatching { get; private set; }
     [SerializeField] private int width;
@@ -48,7 +37,7 @@ public class Board : MonoBehaviour
         new Vector3Int(0, -1, 0)
     };
 
-    private int score = 0;
+    public int score { get; private set; }
     private int combo = 0;
     private int level = 1;
     public int currentSpawnIdx = 0; // 스폰 위치 인덱스. 0 : 위쪽, 1 : 오른쪽, 2 : 아래쪽, 3: 왼쪽
@@ -68,19 +57,7 @@ public class Board : MonoBehaviour
 
     void Start()
     {
-        Initialize();
         SpawnPiece();
-    }
-
-    private void Initialize()
-    {
-        for (int i = -20; i <= 20; i++)
-        {
-            for (int j = -20; j <= 20; j++)
-            {
-                tilemap.RemoveTileFlags(new Vector3Int(i, j), TileFlags.LockColor);
-            }
-        }
     }
 
     // 지정된 위치에 트리오미노를 랜덤으로 골라 스폰
@@ -125,45 +102,37 @@ public class Board : MonoBehaviour
         }
     }
 
-    /// 가장자리 낙하시 회색 블록으로 변화
-    public void ChangeGray(Piece piece)
+    private bool InEdge(int xPos, int yPos)
     {
         RectInt bounds = this.Bounds;
-        int EdgeOrGray = 0;
+        if (xPos <= bounds.xMin + 1 || xPos >= bounds.xMax - 2 ||
+            yPos <= bounds.yMin + 1 || yPos >= bounds.yMax - 2)
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    // 가장자리 낙하시 회색 블록으로 변화
+    public void ChangeGray(Piece piece)
+    {
+        bool EdgeOrGray = false;
 
         for (int i = 0; i < piece.cells.Length; i++)
         {
             Vector3Int cellPos = piece.cells[i] + piece.position;
 
             // 보드 가장자리인지 확인
-            if (cellPos.x == bounds.xMin || cellPos.x == bounds.xMax - 1
-                || cellPos.y == bounds.yMin || cellPos.y == bounds.yMax - 1)
+            if (InEdge(cellPos.x, cellPos.y))
             {
-                EdgeOrGray = 1;
-                break;
-            }
-
-            // 주변에 회색 타일이 있는지 확인
-            foreach (var dir in directions)
-            {
-                Vector3Int neighborPos = cellPos + dir;
-                Tile neighborTile = tilemap.GetTile<Tile>(neighborPos);
-
-                if (neighborTile != null && neighborTile.name == grayTile.name)
-                {
-                    EdgeOrGray = 1;
-                    break;
-                }
-            }
-
-            if (EdgeOrGray == 1)
-            {
+                EdgeOrGray = true;
                 break;
             }
         }
 
         // 조건 만족 시 전체 블록 회색으로 변경
-        if (EdgeOrGray == 1)
+        if (EdgeOrGray)
         {
             for (int i = 0; i < piece.cells.Length; i++)
             {
@@ -176,15 +145,12 @@ public class Board : MonoBehaviour
     // 게임 오버인지 확인
     public bool IsGameover(Piece piece)
     {
-        RectInt bounds = this.Bounds;
-
         for (int i = 0; i < piece.cells.Length; i++)
         {
             Vector3Int cellPos = piece.cells[i] + piece.position;
 
             // 보드 가장자리인지 확인
-            if (cellPos.x <= bounds.xMin + 1 || cellPos.x >= bounds.xMax - 2 ||
-                cellPos.y <= bounds.yMin + 1 || cellPos.y >= bounds.yMax - 2)
+            if (InEdge(cellPos.x, cellPos.y))
             {
                 return true;
             }
@@ -266,7 +232,7 @@ public class Board : MonoBehaviour
     {
         foreach (Vector3Int pos in matched)
         {
-            if ((Vector2Int)pos == new Vector2Int(-1, -1))
+            if ((Vector2Int)pos == new Vector2Int(-1, -1)) // 중앙 블록
             {
                 continue;
             }
@@ -384,8 +350,8 @@ public class Board : MonoBehaviour
         Tile matchTile = piece.tiles[cellIdx];
 
         List<Vector3Int> connections = new List<Vector3Int>();
-        Queue<Vector3Int> queue = new Queue<Vector3Int>();
-        HashSet<Vector3Int> visited = new HashSet<Vector3Int>();
+        Queue<Vector3Int> queue = new Queue<Vector3Int>(); 
+        HashSet<Vector3Int> visited = new HashSet<Vector3Int>(); 
         RectInt bounds = this.Bounds;
 
         queue.Enqueue(start);
@@ -396,7 +362,7 @@ public class Board : MonoBehaviour
             Vector3Int current = queue.Dequeue();
             connections.Add(current);
 
-            foreach (var dir in directions)
+            foreach (Vector3Int dir in directions)
             {
                 Vector3Int next = current + dir;
 
@@ -417,42 +383,5 @@ public class Board : MonoBehaviour
         }
 
         return connections.ToArray();
-    }
-
-    public void SendGameData()
-    {
-        StartCoroutine(SendGameDataCoroutine());
-    }
-
-    private IEnumerator SendGameDataCoroutine()
-    {
-        PlayerData gameData = new PlayerData()
-        {
-            gameMode = "Classic",
-            name = "ygt2120",
-            finalScore = score,
-            updateDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
-        };
-
-        string jsonData = JsonUtility.ToJson(gameData);
-
-        using (UnityWebRequest request = new UnityWebRequest(serverURL, "POST"))
-        {
-            byte[] jsonToSend = System.Text.Encoding.UTF8.GetBytes(jsonData);
-            request.uploadHandler = new UploadHandlerRaw(jsonToSend);
-            request.downloadHandler = new DownloadHandlerBuffer();
-            request.SetRequestHeader("Content-Type", "application/json");
-
-            yield return request.SendWebRequest();
-
-            if (request.result == UnityWebRequest.Result.Success)
-            {
-                Debug.Log("데이터 전송 성공: " + request.downloadHandler.text);
-            }
-            else
-            {
-                Debug.LogError("데이터 전송 실패: " + request.error);
-            }
-        }
     }
 }

@@ -353,6 +353,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4a0d6f2ab53b6714b888facf3e8665cb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  serverURL: http://localhost:3000/score
   gameOverUI: {fileID: 1403129344}
 --- !u!1 &313375906
 GameObject:
@@ -1226,7 +1227,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bc75281d50b0a914f932e63b96587d44, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  serverURL: http://localhost:3000/score
   triominos:
   - triomino: 0
     tiles:
@@ -1243,7 +1243,6 @@ MonoBehaviour:
   - {x: -9, y: -2, z: 0}
   gameManager: {fileID: 194543849}
   grayTile: {fileID: 11400000, guid: 919756fd93eddcc459426406d7cb0c1e, type: 2}
-  fadeSpeed: 1.5
   width: 19
   height: 19
   currentSpawnIdx: 0
