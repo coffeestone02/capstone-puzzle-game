@@ -126,8 +126,7 @@ public class Piece : MonoBehaviour
         if (board.IsGameover(this))
         {
             board.gameManager.GameOver();
-            board.gameManager.SendGameData(board.score);
-            Debug.Log(board.currentSpawnIdx);
+            board.webDataManager.SendGameData(board.score, board.playTime);
         }
 
         board.Set(this); // 고정하고

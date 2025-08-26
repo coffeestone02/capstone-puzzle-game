@@ -5,7 +5,10 @@ using UnityEngine.SceneManagement;
 using System;
 using TMPro;
 using UnityEngine.UI;
+using System.Collections.Generic;
 
+// 쿠키 주소: https://unity-and-data.du.r.appspot.com/cookie
+// 전송 주소: https://unity-and-data.du.r.appspot.com/score
 public class DataSendTest : MonoBehaviour
 {
     public TMP_InputField serverURL;
@@ -13,8 +16,10 @@ public class DataSendTest : MonoBehaviour
     public TMP_InputField playerName;
     public TMP_InputField finalScore;
 
-    public string defaultServerURL = "http://localhost:3000/score";
+    public string urlForCookie = "https://unity-and-data.du.r.appspot.com/cookie";
+    public string urlToSend = "http://localhost:3000/score";
     private float playTime = 0f;
+    private string cookie;
 
     private void Update()
     {
@@ -39,20 +44,14 @@ public class DataSendTest : MonoBehaviour
         return min + ":" + sec;
     }
 
-    private string RandomNameGenerate()
-    {
-        return "TestPlayer" + UnityEngine.Random.Range(1, 10000).ToString();
-    }
-
     public void SendGameData()
     {
-        StartCoroutine(SendGameDataCoroutine());
+        StartCoroutine(CookieRequestCoroutine());
     }
 
     private PlayerData SetPlayerValues()
     {
         string gameModeValue;
-        string playerNameValue;
         int finalScoreValue;
 
         // URL 
@@ -62,7 +61,7 @@ public class DataSendTest : MonoBehaviour
         }
         else
         {
-            defaultServerURL = serverURL.text;
+            urlToSend = serverURL.text;
             Debug.Log($"URL 입력 완료. {serverURL}로 연결");
         }
 
@@ -78,18 +77,6 @@ public class DataSendTest : MonoBehaviour
             Debug.Log($"gameMode 입력 완료. {gameMode.text}로 설정");
         }
 
-        // 이름
-        if (playerName.text == "")
-        {
-            playerNameValue = RandomNameGenerate();
-            Debug.Log("playerName 비어있음. 랜덤 이름 설정");
-        }
-        else
-        {
-            playerNameValue = playerName.text;
-            Debug.Log($"playerName 입력 완료. {playerName.text}로 연결");
-        }
-
         // 점수
         if (finalScore.text == "")
         {
@@ -101,23 +88,63 @@ public class DataSendTest : MonoBehaviour
             finalScoreValue = int.Parse(finalScore.text);
             Debug.Log($"finalScore 입력 완료. {int.Parse(finalScore.text)}로 설정");
         }
-        
+
         return new PlayerData()
+        {
+            gameMode = gameModeValue,
+            name = NameParser(),
+            finalScore = finalScoreValue,
+            totalPlaytime = TimeFormat(),
+            updateDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+        };
+    }
+
+    // 쿠키에서 이름만 추출함
+    private string NameParser()
+    {
+        string[] parts = cookie.Split(';');
+        foreach (string part in parts)
+        {
+            string trimmed = part.Trim();
+            if (trimmed.StartsWith("username="))
             {
-                gameMode = gameModeValue,
-                name = playerNameValue,
-                finalScore = finalScoreValue,
-                totalPlaytime = TimeFormat(),
-                updateDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
-            };
+                Debug.Log(trimmed.Substring("username=".Length));
+                return trimmed.Substring("username=".Length);
+            }
+        }
+
+        return null;
+    }
+
+    private IEnumerator CookieRequestCoroutine()
+    {
+        UnityWebRequest www = UnityWebRequest.Get(urlForCookie);
+        yield return www.SendWebRequest();
+
+        if (www.result == UnityWebRequest.Result.Success)
+        {
+            // 쿠키 추출
+            Dictionary<string, string> headers = www.GetResponseHeaders();
+            if (headers.TryGetValue("Set-Cookie", out string setCookie))
+            {
+                cookie = setCookie;
+                Debug.Log("쿠키 받음: " + cookie);
+
+                yield return StartCoroutine(SendGameDataCoroutine());
+            }
+        }
+        else
+        {
+            Debug.Log("데이터 요청 실패: " + www.error);
+        }
     }
 
     private IEnumerator SendGameDataCoroutine()
     {
-        PlayerData gameData = SetPlayerValues();
-        string jsonData = JsonUtility.ToJson(gameData);
+        PlayerData gameData = SetPlayerValues(); // 데이터 생성
+        string jsonData = JsonUtility.ToJson(gameData); // json으로 변환
 
-        using (UnityWebRequest request = new UnityWebRequest(defaultServerURL, "POST"))
+        using (UnityWebRequest request = new UnityWebRequest(urlToSend, "POST"))
         {
             byte[] jsonToSend = System.Text.Encoding.UTF8.GetBytes(jsonData);
             request.uploadHandler = new UploadHandlerRaw(jsonToSend);

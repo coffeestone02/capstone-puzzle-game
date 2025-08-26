@@ -14,7 +14,9 @@ public class Board : MonoBehaviour
     public Vector3Int[] spawnPositions; // 피스가 스폰될 위치(인스펙터에서 설정)
     private Vector2Int boardSize; // 게임보드 사이즈
     public GameManager gameManager; // UI 연결용
+    public WebDataManager webDataManager; // 웹과 통신을 위한 매니저
     public Tile grayTile; // 가장자리에 닿으면 변하는 타일
+    public float playTime { get; private set; }
 
     public bool isMatching { get; private set; }
     [SerializeField] private int width;
@@ -58,6 +60,11 @@ public class Board : MonoBehaviour
     void Start()
     {
         SpawnPiece();
+    }
+
+    private void Update()
+    {
+        playTime += Time.deltaTime;
     }
 
     // 지정된 위치에 트리오미노를 랜덤으로 골라 스폰

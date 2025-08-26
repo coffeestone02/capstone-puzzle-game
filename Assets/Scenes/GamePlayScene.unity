@@ -353,7 +353,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4a0d6f2ab53b6714b888facf3e8665cb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  serverURL: http://localhost:3000/score
   gameOverUI: {fileID: 1403129344}
 --- !u!1 &313375906
 GameObject:
@@ -643,6 +642,50 @@ Tilemap:
     e31: 0
     e32: 0
     e33: 1
+--- !u!1 &391546436
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 391546438}
+  - component: {fileID: 391546437}
+  m_Layer: 0
+  m_Name: WebDataManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &391546437
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 391546436}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a861b28e1ca95f34fa3390a1d94f29d4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!4 &391546438
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 391546436}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -1242,6 +1285,7 @@ MonoBehaviour:
   - {x: -1, y: -10, z: 0}
   - {x: -9, y: -2, z: 0}
   gameManager: {fileID: 194543849}
+  webDataManager: {fileID: 391546437}
   grayTile: {fileID: 11400000, guid: 919756fd93eddcc459426406d7cb0c1e, type: 2}
   width: 19
   height: 19
@@ -1404,3 +1448,4 @@ SceneRoots:
   - {fileID: 1832764026}
   - {fileID: 1935108062}
   - {fileID: 1299386087}
+  - {fileID: 391546438}
