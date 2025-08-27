@@ -13,6 +13,8 @@ public class Piece : MonoBehaviour
     public Tile[] tiles { get; private set; } // 셀들의 색상 정보
     public int rotationIdx { get; private set; }
 
+    private float[] stepDelayByDifficulty = { 1.25f, 0.8f, 0.3f };
+
     public float stepDelay = 3f;
     public float moveDelay = 0.1f;
     public float lockDelay = 0.5f;
@@ -83,6 +85,8 @@ public class Piece : MonoBehaviour
 
     private void Update()
     {
+        SetDifficulty();
+
         // 지우고 위치를 옮겨서 다시 그린다.
         this.board.Clear(this);
 
@@ -118,6 +122,32 @@ public class Piece : MonoBehaviour
         }
 
         this.board.Set(this);
+    }
+
+    // 레벨은 3레벨까지 존재 -> 5레벨 이상으로 늘어나면 반복문으로 변경 가능
+    private void SetDifficulty()
+    {
+        if (board.score < board.difficultyLines[0])
+        {
+            stepDelay = stepDelayByDifficulty[0];
+        }
+        else if (board.score < board.difficultyLines[1])
+        {
+            stepDelay = stepDelayByDifficulty[1];
+        }
+        else if (board.score < board.difficultyLines[2])
+        {
+            stepDelay = stepDelayByDifficulty[2];
+        }
+
+        // for (int idx = 0;idx < board.difficultyLines.Length;idx++)
+        // {
+        //     if (board.score < board.difficultyLines[idx])
+        //     {
+        //         stepDelay = stepDelayByDifficulty[idx];
+        //         break;
+        //     }
+        // }
     }
 
     // 고정

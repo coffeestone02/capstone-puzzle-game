@@ -31,13 +31,16 @@ public class Board : MonoBehaviour
     }
 
     // 회색 블록 탐색을 위한 방향 벡터
-    Vector3Int[] directions = new Vector3Int[]
+    private Vector3Int[] directions = new Vector3Int[]
     {
         new Vector3Int(1, 0, 0),
         new Vector3Int(-1, 0, 0),
         new Vector3Int(0, 1, 0),
         new Vector3Int(0, -1, 0)
     };
+
+    // 임시 난이도. 나중에 기준치 높일 것
+    public int[] difficultyLines = { 3000, 4000, 5000 };
 
     public int score { get; private set; }
     private int combo = 0;
