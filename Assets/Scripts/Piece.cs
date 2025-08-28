@@ -15,13 +15,13 @@ public class Piece : MonoBehaviour
 
     private float[] stepDelayByDifficulty = { 1.25f, 0.8f, 0.3f };
 
-    public float stepDelay = 3f;
-    public float moveDelay = 0.1f;
-    public float lockDelay = 0.5f;
+    public float stepDelay = 1.25f; // 중심으로 이동하는 속도. 자동으로 stepDelay의 시간만큼 중심으로 이동함
+    public float moveDelay = 0.1f; // 플레이어의 입력 이동 속도를 정함. 값이 클수록 입력을 많이 못함
+    public float lockDelay = 0.5f; // 이 시간만큼 못 움직이면 피스를 Lock함
 
-    private float stepTime;
-    private float moveTime;
-    private float lockTime;
+    private float stepTime; // 중심으로 이동하는 시기
+    private float moveTime; // 다음 입력을 받을 수 있는 시기
+    private float lockTime; // 고정되는 시기(lockTime이 lockDelay를 넘기는 순간 고정됨)
 
     // piece가 처음 생성됐을 때 색을 결정함
     private void ColorSet(Piece piece, out Tile firstTile, out Tile secondTile, out Tile thirdTile)
@@ -56,8 +56,8 @@ public class Piece : MonoBehaviour
 
         rotationIdx = 0;
 
-        stepTime = Time.time + stepDelay;
-        moveTime = Time.time + moveDelay;
+        stepTime = Time.time + stepDelay; // 중심으로 이동하는 시기 계산
+        moveTime = Time.time + moveDelay; // 다음 입력을 받을 수 있는 시기 계산
         lockTime = 0f;
 
         Tile firstTile;
@@ -115,7 +115,7 @@ public class Piece : MonoBehaviour
                     break;
             }
         }
-
+        
         if (Time.time > stepTime)
         {
             Step();
@@ -135,7 +135,7 @@ public class Piece : MonoBehaviour
         {
             stepDelay = stepDelayByDifficulty[1];
         }
-        else if (board.score < board.difficultyLines[2])
+        else
         {
             stepDelay = stepDelayByDifficulty[2];
         }
@@ -166,10 +166,10 @@ public class Piece : MonoBehaviour
         board.SpawnPiece(); // 다른 피스 스폰
     } 
 
-    // 
+    // 정해진 시간마다 중심으로 한 칸씩 내려감
     private void Step()
     {
-        stepTime = Time.time + stepDelay;
+        stepTime = Time.time + stepDelay; // 다음에 이동해야할 시기 계산
 
         switch (board.currentSpawnIdx)
         {
@@ -209,8 +209,8 @@ public class Piece : MonoBehaviour
         if (valid)
         {
             this.position = newPosition;
-            moveTime = Time.time + moveDelay;
-            lockTime = 0f;
+            moveTime = Time.time + moveDelay; // 다음 입력을 받을 수 있는 시기 계산
+            lockTime = 0f; // lockTime 초기화
         }
 
         return valid;
@@ -326,7 +326,10 @@ public class Piece : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.DownArrow))
         {
-            Move(Vector2Int.down);
+            if (Move(Vector2Int.down))
+            {
+                stepTime = Time.time + stepDelay;
+            }
         }
         else if (Input.GetKeyDown(KeyCode.LeftArrow))
         {
