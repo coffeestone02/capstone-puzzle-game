@@ -115,6 +115,12 @@ public class Piece : MonoBehaviour
                     break;
             }
         }
+
+        // HardDrop
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            HardDrop();
+        }
         
         if (Time.time > stepTime)
         {
@@ -122,6 +128,43 @@ public class Piece : MonoBehaviour
         }
 
         this.board.Set(this);
+    }
+
+    private void HardDrop()
+    {
+        switch (board.currentSpawnIdx)
+        {
+            case 0:
+                while (Move(Vector2Int.down))
+                {
+                    continue;
+                }
+                Lock();
+                break;
+            case 1:
+                while (Move(Vector2Int.left))
+                {
+                    continue;
+                }
+                Lock();
+                break;
+            case 2:
+                while (Move(Vector2Int.up))
+                {
+                    continue;
+                }
+                Lock();
+                break;
+            case 3:
+                while (Move(Vector2Int.right))
+                {
+                    continue;
+                }
+                Lock();
+                break;
+            default:
+                break;
+        }
     }
 
     // 레벨은 3레벨까지 존재 -> 5레벨 이상으로 늘어나면 반복문으로 변경 가능
