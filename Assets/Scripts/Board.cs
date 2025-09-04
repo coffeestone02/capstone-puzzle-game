@@ -16,6 +16,7 @@ public class Board : MonoBehaviour
     public GameManager gameManager; // UI 연결용
     public WebDataManager webDataManager; // 웹과 통신을 위한 매니저
     public Tile grayTile; // 가장자리에 닿으면 변하는 타일
+    public GameObject destroyParticle; // 피스 삭제 파티클
     public float playTime { get; private set; }
 
     public bool isMatching { get; private set; }
@@ -247,7 +248,20 @@ public class Board : MonoBehaviour
                 continue;
             }
             tilemap.SetTile(pos, null);
+            EffectPlay(pos);
         }
+    }
+
+    public void EffectPlay(Vector3Int pos)
+    {
+        if (destroyParticle == null)
+        {
+            Debug.Log("파티클 시스템 빠졌음");
+            return;
+        }
+
+        // 블록의 위치에 파티클 프리팹을 생성
+        Instantiate(destroyParticle, pos, Quaternion.identity);
     }
 
     // 메인 피스 매칭
