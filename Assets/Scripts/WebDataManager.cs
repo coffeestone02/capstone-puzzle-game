@@ -67,23 +67,25 @@ public class WebDataManager : MonoBehaviour
     // 쿠키 요청
     private IEnumerator CookieRequestCoroutine(int score, float playTime)
     {
-        UnityWebRequest www = UnityWebRequest.Get(urlForCookie);
-        yield return www.SendWebRequest();
+        using (UnityWebRequest www = UnityWebRequest.Get(urlForCookie))
+        {
+            yield return www.SendWebRequest();
 
-        if (www.result == UnityWebRequest.Result.Success)
-        {
-            // 쿠키 추출
-            Dictionary<string, string> headers = www.GetResponseHeaders();
-            if (headers.TryGetValue("Set-Cookie", out string setCookie))
+            if (www.result == UnityWebRequest.Result.Success)
             {
-                cookie = setCookie;
-                Debug.Log("Received Cookie: " + cookie);
-                yield return StartCoroutine(SendGameDataCoroutine(score, playTime));
+                // 쿠키 추출
+                Dictionary<string, string> headers = www.GetResponseHeaders();
+                if (headers.TryGetValue("Set-Cookie", out string setCookie))
+                {
+                    cookie = setCookie;
+                    Debug.Log("Received Cookie: " + cookie);
+                    yield return StartCoroutine(SendGameDataCoroutine(score, playTime));
+                }
             }
-        }
-        else
-        {
-            Debug.Log("데이터 요청 실패: " + www.error);
+            else
+            {
+                Debug.Log("데이터 요청 실패: " + www.error);
+            }
         }
     }
 
@@ -102,10 +104,10 @@ public class WebDataManager : MonoBehaviour
 
         using (UnityWebRequest request = new UnityWebRequest(urlToSend, "POST"))
         {
-            byte[] jsonToSend = System.Text.Encoding.UTF8.GetBytes(jsonData);
+            byte[] jsonToSend = System.Text.Encoding.UTF8.GetBytes(jsonData); // 네트워크에선 바이트 형태로 전송되기 때문에 바이트로 변환
             request.uploadHandler = new UploadHandlerRaw(jsonToSend);
-            request.downloadHandler = new DownloadHandlerBuffer();
-            request.SetRequestHeader("Content-Type", "application/json");
+            request.downloadHandler = new DownloadHandlerBuffer(); // 서버로부터 받은 응답을 버퍼에 저장
+            request.SetRequestHeader("Content-Type", "application/json"); // http 요청 헤더에 보내는 데이터가 json 형식임을 서버에 명시함
 
             yield return request.SendWebRequest();
 
