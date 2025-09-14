@@ -16,6 +16,7 @@ public class Board : MonoBehaviour
     public GameManager gameManager; // UI 연결용
     public WebDataManager webDataManager; // 웹과 통신을 위한 매니저
     public Tile grayTile; // 가장자리에 닿으면 변하는 타일
+    public GameObject destroyParticles;
     public float playTime { get; private set; }
 
     public bool isMatching { get; private set; }
@@ -102,7 +103,7 @@ public class Board : MonoBehaviour
 
         Set(activePiece);
     }
-    
+
     // Piece를 타일에 그림
     public void Set(Piece piece)
     {
@@ -246,6 +247,9 @@ public class Board : MonoBehaviour
             {
                 continue;
             }
+            
+            // 파티클 효과 함수 호출
+            PlayDestroyParticles(pos);
             tilemap.SetTile(pos, null);
         }
     }
@@ -360,8 +364,8 @@ public class Board : MonoBehaviour
         Tile matchTile = piece.tiles[cellIdx];
 
         List<Vector3Int> connections = new List<Vector3Int>();
-        Queue<Vector3Int> queue = new Queue<Vector3Int>(); 
-        HashSet<Vector3Int> visited = new HashSet<Vector3Int>(); 
+        Queue<Vector3Int> queue = new Queue<Vector3Int>();
+        HashSet<Vector3Int> visited = new HashSet<Vector3Int>();
         RectInt bounds = this.Bounds;
 
         queue.Enqueue(start);
@@ -393,5 +397,19 @@ public class Board : MonoBehaviour
         }
 
         return connections.ToArray();
+    }
+    
+        // 파티클 효과를 생성하고 재생하는 함수
+    private void PlayDestroyParticles(Vector3 position)
+    {
+        if (destroyParticles == null)
+        {
+            return;
+        }
+
+        GameObject particles = Instantiate(destroyParticles, tilemap.GetCellCenterWorld(Vector3Int.FloorToInt(position)), Quaternion.identity);
+        float scaleMultiplier = 0.2f; // 파티클 크기를 줄임
+        particles.transform.localScale = new Vector3(scaleMultiplier, scaleMultiplier, scaleMultiplier);
+        Destroy(particles, 1f); // 1초 뒤에 파괴
     }
 }
