@@ -1,25 +1,50 @@
 using UnityEngine;
-using System.Collections;
-using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 using System;
 
-// °ÔÀÓ°ü¸® ±â´É
+// ê²Œì„ê´€ë¦¬ ê¸°ëŠ¥
 public class GameManager : MonoBehaviour
 {
+    public bool isPaused = false;
+    public bool isOver = false;
+
     public GameObject gameOverUI;
 
-    public void GameOver() //°ÔÀÓ ¿À¹ö
+    private void Update()
     {
-        Time.timeScale = 0f;
-
-        if (gameOverUI != null)
-            gameOverUI.SetActive(true); // UI È°¼ºÈ­
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            isPaused = !isPaused;
+        }
     }
 
-    public void RestartGame() // Àç½ÃÀÛ
+    public void GameOver()
     {
-        Time.timeScale = 1f;
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        Invoke("loadGameOver", 2f);
+    }
+
+    private void loadGameOver()
+    {
+        SceneManager.LoadScene("GameOver");
+    }
+
+    public void MainMenu()
+    {
+        SceneManager.LoadScene("Title");
+    }
+
+    public void GamePlay()
+    {
+        SceneManager.LoadScene("GamePlayScene");
+    }
+
+    public void Exit()
+    {
+        #if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false; // ì—ë””í„° ìƒì—ì„œ ì¢…ë£Œ
+        #else
+        Application.Quit(); // ì•± ì¢…ë£Œ
+        #endif
     }
 }

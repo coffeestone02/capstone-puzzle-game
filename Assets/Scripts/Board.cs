@@ -14,7 +14,6 @@ public class Board : MonoBehaviour
     public Vector3Int[] spawnPositions; // 피스가 스폰될 위치(인스펙터에서 설정)
     private Vector2Int boardSize; // 게임보드 사이즈
     public GameManager gameManager; // UI 연결용
-    public WebDataManager webDataManager; // 웹과 통신을 위한 매니저
     public Tile grayTile; // 가장자리에 닿으면 변하는 타일
     public GameObject destroyParticles;
     public float playTime { get; private set; }
@@ -163,6 +162,7 @@ public class Board : MonoBehaviour
             // 보드 가장자리인지 확인
             if (InEdge(cellPos.x, cellPos.y))
             {
+                gameManager.isOver = true;
                 return true;
             }
         }

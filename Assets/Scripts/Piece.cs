@@ -85,6 +85,11 @@ public class Piece : MonoBehaviour
 
     private void Update()
     {
+        if (board.gameManager.isOver)
+        {
+            return;
+        }
+        
         SetDifficulty();
 
         // 지우고 위치를 옮겨서 다시 그린다.
@@ -199,7 +204,6 @@ public class Piece : MonoBehaviour
         if (board.IsGameover(this))
         {
             board.gameManager.GameOver();
-            board.webDataManager.SendGameData(board.score, board.playTime);
         }
 
         board.Set(this); // 고정하고
