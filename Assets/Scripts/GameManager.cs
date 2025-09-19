@@ -1,50 +1,104 @@
 using UnityEngine;
+using System.Collections;
+using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
 using System;
 
-// ê²Œìž„ê´€ë¦¬ ê¸°ëŠ¥
+[System.Serializable]
+public class PlayerData
+{
+    public string gameMode;
+    public string name;
+    public int finalScore;
+    public string totalPlaytime;
+    public string updateDate;
+}
+
+// °ÔÀÓ°ü¸® ±â´É
 public class GameManager : MonoBehaviour
 {
-    public bool isPaused = false;
-    public bool isOver = false;
-
+    public string serverURL = "http://localhost:3000/score";
     public GameObject gameOverUI;
+    private float playTime = 0f;
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Escape))
+        playTime += Time.deltaTime;
+    }
+
+    public void GameOver() //°ÔÀÓ ¿À¹ö
+    {
+        Time.timeScale = 0f;
+
+        if (gameOverUI != null)
+            gameOverUI.SetActive(true); // UI È°¼ºÈ­
+    }
+
+    public void RestartGame() // Àç½ÃÀÛ
+    {
+        Time.timeScale = 1f;
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+    }
+
+    private string TimeFormat()
+    {
+        string min = ((int)(playTime / 60)).ToString();
+        
+        if (int.Parse(min) < 10)
         {
-            isPaused = !isPaused;
+            min = "0" + min;
         }
+
+        string sec = ((int)(playTime % 60)).ToString();
+        if (int.Parse(sec) < 10)
+        {
+            sec = "0" + sec;
+        }
+
+        return min + ":" + sec;
     }
 
-    public void GameOver()
+    // Å×½ºÆ®¿ë ´Ð³×ÀÓ »ý¼º
+    private string RandomNameGenerate()
     {
-        Invoke("loadGameOver", 2f);
+        return "TestPlayer" + UnityEngine.Random.Range(1, 10000).ToString();
     }
 
-    private void loadGameOver()
+    public void SendGameData(int score)
     {
-        SceneManager.LoadScene("GameOver");
+        StartCoroutine(SendGameDataCoroutine(score));
     }
 
-    public void MainMenu()
+    private IEnumerator SendGameDataCoroutine(int score)
     {
-        SceneManager.LoadScene("Title");
-    }
+        PlayerData gameData = new PlayerData()
+        {
+            gameMode = "Classic",
+            name = RandomNameGenerate(),
+            finalScore = score,
+            totalPlaytime = TimeFormat(),
+            updateDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+        };
 
-    public void GamePlay()
-    {
-        SceneManager.LoadScene("GamePlayScene");
-    }
+        string jsonData = JsonUtility.ToJson(gameData);
 
-    public void Exit()
-    {
-        #if UNITY_EDITOR
-        UnityEditor.EditorApplication.isPlaying = false; // ì—ë””í„° ìƒì—ì„œ ì¢…ë£Œ
-        #else
-        Application.Quit(); // ì•± ì¢…ë£Œ
-        #endif
+        using (UnityWebRequest request = new UnityWebRequest(serverURL, "POST"))
+        {
+            byte[] jsonToSend = System.Text.Encoding.UTF8.GetBytes(jsonData);
+            request.uploadHandler = new UploadHandlerRaw(jsonToSend);
+            request.downloadHandler = new DownloadHandlerBuffer();
+            request.SetRequestHeader("Content-Type", "application/json");
+
+            yield return request.SendWebRequest();
+
+            if (request.result == UnityWebRequest.Result.Success)
+            {
+                Debug.Log("µ¥ÀÌÅÍ Àü¼Û ¼º°ø: " + request.downloadHandler.text);
+            }
+            else
+            {
+                Debug.LogError("µ¥ÀÌÅÍ Àü¼Û ½ÇÆÐ: " + request.error);
+            }
+        }
     }
 }

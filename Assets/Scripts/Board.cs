@@ -15,8 +15,6 @@ public class Board : MonoBehaviour
     private Vector2Int boardSize; // 게임보드 사이즈
     public GameManager gameManager; // UI 연결용
     public Tile grayTile; // 가장자리에 닿으면 변하는 타일
-    public GameObject destroyParticles;
-    public float playTime { get; private set; }
 
     public bool isMatching { get; private set; }
     [SerializeField] private int width;
@@ -31,16 +29,13 @@ public class Board : MonoBehaviour
     }
 
     // 회색 블록 탐색을 위한 방향 벡터
-    private Vector3Int[] directions = new Vector3Int[]
+    Vector3Int[] directions = new Vector3Int[]
     {
         new Vector3Int(1, 0, 0),
         new Vector3Int(-1, 0, 0),
         new Vector3Int(0, 1, 0),
         new Vector3Int(0, -1, 0)
     };
-
-    // 임시 난이도. 나중에 기준치 높일 것
-    public int[] difficultyLines = { 3000, 4000, 5000 };
 
     public int score { get; private set; }
     private int combo = 0;
@@ -63,11 +58,6 @@ public class Board : MonoBehaviour
     void Start()
     {
         SpawnPiece();
-    }
-
-    private void Update()
-    {
-        playTime += Time.deltaTime;
     }
 
     // 지정된 위치에 트리오미노를 랜덤으로 골라 스폰
@@ -102,7 +92,7 @@ public class Board : MonoBehaviour
 
         Set(activePiece);
     }
-
+    
     // Piece를 타일에 그림
     public void Set(Piece piece)
     {
@@ -162,7 +152,6 @@ public class Board : MonoBehaviour
             // 보드 가장자리인지 확인
             if (InEdge(cellPos.x, cellPos.y))
             {
-                gameManager.isOver = true;
                 return true;
             }
         }
@@ -233,6 +222,13 @@ public class Board : MonoBehaviour
         bonusPoint = bonusMatched.Count * 60; // 추가 제거 점수 계산
         DeleteMatchedPiece(bonusMatched); // 추가 피스 제거
 
+        int cleared = matched.Count + bonusMatched.Count;  // 제거 총합
+        if (cleared > 0)
+        {
+            piece.OnCleared();
+            combo++;
+        }
+
         score += (mainPoint + bonusPoint) * (1 + combo) * (int)(1 + 0.1 * level); // 최종 점수 계산
 
         isMatching = false;
@@ -247,9 +243,6 @@ public class Board : MonoBehaviour
             {
                 continue;
             }
-            
-            // 파티클 효과 함수 호출
-            PlayDestroyParticles(pos);
             tilemap.SetTile(pos, null);
         }
     }
@@ -364,8 +357,8 @@ public class Board : MonoBehaviour
         Tile matchTile = piece.tiles[cellIdx];
 
         List<Vector3Int> connections = new List<Vector3Int>();
-        Queue<Vector3Int> queue = new Queue<Vector3Int>();
-        HashSet<Vector3Int> visited = new HashSet<Vector3Int>();
+        Queue<Vector3Int> queue = new Queue<Vector3Int>(); 
+        HashSet<Vector3Int> visited = new HashSet<Vector3Int>(); 
         RectInt bounds = this.Bounds;
 
         queue.Enqueue(start);
@@ -397,19 +390,5 @@ public class Board : MonoBehaviour
         }
 
         return connections.ToArray();
-    }
-    
-        // 파티클 효과를 생성하고 재생하는 함수
-    private void PlayDestroyParticles(Vector3 position)
-    {
-        if (destroyParticles == null)
-        {
-            return;
-        }
-
-        GameObject particles = Instantiate(destroyParticles, tilemap.GetCellCenterWorld(Vector3Int.FloorToInt(position)), Quaternion.identity);
-        float scaleMultiplier = 0.2f; // 파티클 크기를 줄임
-        particles.transform.localScale = new Vector3(scaleMultiplier, scaleMultiplier, scaleMultiplier);
-        Destroy(particles, 1f); // 1초 뒤에 파괴
     }
 }
