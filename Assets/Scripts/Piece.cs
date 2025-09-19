@@ -23,6 +23,40 @@ public class Piece : MonoBehaviour
     private float moveTime; // 다음 입력을 받을 수 있는 시기
     private float lockTime; // 고정되는 시기(lockTime이 lockDelay를 넘기는 순간 고정됨)
 
+    //DAS(딜레이), ARR(이동속도)
+    public float das = 0.15f;    // 좌/우(측면) 연사 시작 지연
+    public float arr = 0.03f;    // 좌/우(측면) 연사 간격
+    private int holdDir = 0;         // -1=측면 음(-), +1=측면 양(+), 0=없음
+    private float repeatTimer = 0f;
+
+    private Vector2Int lateralNeg;   // holdDir=-1일 때 이동 벡터
+    private Vector2Int lateralPos;   // holdDir=+1일 때 이동 벡터
+    private KeyCode negKey;
+    private KeyCode posKey;
+
+    //빠른 낙하
+    public float softDropArr = 0.03f; // 낙하 키 홀드 시 연사 간격(작을수록 빠름)
+    private float softDropTimer = 0f;
+    private KeyCode gravityKey;       // 스폰 방향에 따라 달라지는 '중력 키'
+    private Vector2Int gravityVec;    // 스폰 방향에 따른 '중력 벡터'
+
+    // Sound
+    public AudioSource sound;              // Piece(또는 자식)에 붙인 AudioSource
+    public AudioClip soundMove;            // 좌/우(측면) 이동
+    public AudioClip soundSoftDropTick;    // 빠른 낙하 한 칸 '틱'
+    public AudioClip soundRotate;          // 회전 성공
+    public AudioClip soundLock;            // 고정
+    public AudioClip soundClear;           // 블록 파괴(클리어)
+    public float soundVolume = 0.8f;       // 기본 볼륨
+    public Vector2 pitchJitter = new Vector2(0.95f, 1.05f); // 미세 피치 랜덤
+
+    // 이동 Sound 과도한 스팸 방지용 쿨다운
+    private float moveSoundCd = 0f;
+    public float moveSoundInterval = 0.04f; // 이동음 최소 간격(초)
+
+    private float soundMuteUntil = 0f; // 스폰 직후 음소거
+
+
     // piece가 처음 생성됐을 때 색을 결정함
     private void ColorSet(Piece piece, out Tile firstTile, out Tile secondTile, out Tile thirdTile)
     {
@@ -59,6 +93,12 @@ public class Piece : MonoBehaviour
         stepTime = Time.time + stepDelay; // 중심으로 이동하는 시기 계산
         moveTime = Time.time + moveDelay; // 다음 입력을 받을 수 있는 시기 계산
         lockTime = 0f;
+
+        // 타이머 상태 초기화
+        holdDir = 0;         
+        repeatTimer = 0f;    
+        softDropTimer = 0f; 
+        soundMuteUntil = Time.time + 0.05f;
 
         Tile firstTile;
         Tile secondTile;
@@ -100,26 +140,10 @@ public class Piece : MonoBehaviour
         // 회전 입력
         RotationInput();
 
-        if (Time.time > moveTime)
-        {
-            switch (board.currentSpawnIdx)
-            {
-                case 0:
-                    TopPosInput();
-                    break;
-                case 1:
-                    RightPosInput();
-                    break;
-                case 2:
-                    BottomPosInput();
-                    break;
-                case 3:
-                    LeftPosInput();
-                    break;
-                default:
-                    break;
-            }
-        }
+        SetupDirections();   // 측면 + 중력 키/벡터 셋업
+        GravityTap();        // 중력 키 '탭' → 한 칸
+        HandleSoftDrop();    // 중력 키 '홀드' → 빠른 낙하
+        HandleAutoShift();   // 측면 DAS/ARR
 
         // HardDrop
         if (Input.GetKeyDown(KeyCode.Space))
@@ -206,6 +230,8 @@ public class Piece : MonoBehaviour
             board.gameManager.GameOver();
         }
 
+        PlaySound(soundLock, 1.0f);
+
         board.Set(this); // 고정하고
         board.NextSpawnIdx(); // 스폰 위치를 변경
         board.TryMatch(this); // 피스 제거 시도
@@ -258,6 +284,24 @@ public class Piece : MonoBehaviour
             this.position = newPosition;
             moveTime = Time.time + moveDelay; // 다음 입력을 받을 수 있는 시기 계산
             lockTime = 0f; // lockTime 초기화
+
+            // 이동 Sound: 중력 이동과 측면 이동을 구분
+            bool isGravityMove = (translation == gravityVec);
+
+            if (isGravityMove)
+            {
+                // 빠른 낙하의 사운드
+                PlaySound(soundSoftDropTick, 0.6f);
+            }
+            else
+            {
+                // 측면 이동 사운드 - 스팸 방지 쿨타임
+                if (Time.time >= moveSoundCd)
+                {
+                    PlaySound(soundMove);
+                    moveSoundCd = Time.time + moveSoundInterval;
+                }
+            }
         }
 
         return valid;
@@ -277,6 +321,11 @@ public class Piece : MonoBehaviour
         {
             rotationIdx = originalRotation;
             ApplyRotationMatrix(-direction);
+        }
+        else
+        {
+            // 회전 성공 Sound
+            PlaySound(soundRotate);
         }
     }
 
@@ -368,75 +417,138 @@ public class Piece : MonoBehaviour
         }
     }
 
-    // 위로 입력 불가
-    private void TopPosInput()
+    // 스폰 방향에 맞춰 '측면'과 '중력' 키/벡터 정의
+    private void SetupDirections()
     {
-        if (Input.GetKeyDown(KeyCode.DownArrow))
+        switch (board.currentSpawnIdx)
         {
-            if (Move(Vector2Int.down))
+            // 중력 상/하 : 측면 = 좌/우
+            case 0:
+                gravityKey = KeyCode.DownArrow; gravityVec = Vector2Int.down;
+                lateralNeg = Vector2Int.left; lateralPos = Vector2Int.right;
+                negKey = KeyCode.LeftArrow; posKey = KeyCode.RightArrow;
+                break;
+            case 2:
+                gravityKey = KeyCode.UpArrow; gravityVec = Vector2Int.up;
+                lateralNeg = Vector2Int.left; lateralPos = Vector2Int.right;
+                negKey = KeyCode.LeftArrow; posKey = KeyCode.RightArrow;
+                break;
+
+            // 중력 좌/우 : 측면 = 상/하
+            case 1:
+                gravityKey = KeyCode.LeftArrow; gravityVec = Vector2Int.left;
+                lateralNeg = Vector2Int.down; lateralPos = Vector2Int.up;
+                negKey = KeyCode.DownArrow; posKey = KeyCode.UpArrow;
+                break;
+            case 3:
+                gravityKey = KeyCode.RightArrow; gravityVec = Vector2Int.right;
+                lateralNeg = Vector2Int.down; lateralPos = Vector2Int.up;
+                negKey = KeyCode.DownArrow; posKey = KeyCode.UpArrow;
+                break;
+        }
+    }
+
+    // 중력 방향으로 '한 칸' 탭
+    private void GravityTap()
+    {
+        if (Input.GetKeyDown(gravityKey))
+        {
+            Move(gravityVec);
+            softDropTimer = softDropArr;           // 같은 프레임 중복 방지
+            stepTime = Time.time + stepDelay;      // 자연 낙하와 겹치지 않게 밀어둠
+        }
+    }
+
+    // 낙하 키 홀드 → 빠른 낙하
+    private void HandleSoftDrop()
+    {
+        if (Input.GetKey(gravityKey))
+        {
+            softDropTimer -= Time.unscaledDeltaTime;
+            while (softDropTimer <= 0f)
             {
-                stepTime = Time.time + stepDelay;
+                softDropTimer += (softDropArr <= 0f) ? 0.0001f : softDropArr;
+                Move(gravityVec);
+                stepTime = Time.time + stepDelay;  // 자연 낙하와 중복 방지
             }
         }
-        else if (Input.GetKeyDown(KeyCode.LeftArrow))
+        else
         {
-            Move(Vector2Int.left);
-        }
-        else if (Input.GetKeyDown(KeyCode.RightArrow))
-        {
-            Move(Vector2Int.right);
+            softDropTimer = 0f;
         }
     }
 
-    // 오른쪽으로 입력 불가
-    private void RightPosInput()
+    // 좌/우(or 상/하) DAS/ARR
+    private void HandleAutoShift()
     {
-        if (Input.GetKeyDown(KeyCode.LeftArrow))
+        bool negDown = Input.GetKeyDown(negKey);
+        bool posDown = Input.GetKeyDown(posKey);
+        bool negHeld = Input.GetKey(negKey);
+        bool posHeld = Input.GetKey(posKey);
+        bool negUp = Input.GetKeyUp(negKey);
+        bool posUp = Input.GetKeyUp(posKey);
+
+        if (negDown && !posHeld) StartHold(-1);
+        else if (posDown && !negHeld) StartHold(+1);
+        else if (negDown && posHeld) StartHold(-1);
+        else if (posDown && negHeld) StartHold(+1);
+
+        if (negDown && holdDir == +1) StartHold(-1);
+        if (posDown && holdDir == -1) StartHold(+1);
+
+        if ((negUp && holdDir == -1) || (posUp && holdDir == +1)) StopHold();
+
+        if (holdDir != 0)
         {
-            Move(Vector2Int.left);
-        }
-        else if (Input.GetKeyDown(KeyCode.UpArrow))
-        {
-            Move(Vector2Int.up);
-        }
-        else if (Input.GetKeyDown(KeyCode.DownArrow))
-        {
-            Move(Vector2Int.down);
+            bool stillHolding = (holdDir == -1) ? negHeld : posHeld;
+            if (!stillHolding)
+            {
+                StopHold();
+            }
+            else
+            {
+                repeatTimer -= Time.unscaledDeltaTime;
+                while (repeatTimer <= 0f)
+                {
+                    repeatTimer += (arr <= 0f) ? 0.0001f : arr;
+                    Move(holdDir == -1 ? lateralNeg : lateralPos);
+                }
+            }
         }
     }
 
-    // 아래쪽으로 입력 불가
-    private void BottomPosInput()
+    private void StartHold(int dir)
     {
-        if (Input.GetKeyDown(KeyCode.UpArrow))
-        {
-            Move(Vector2Int.up);
-        }
-        else if (Input.GetKeyDown(KeyCode.LeftArrow))
-        {
-            Move(Vector2Int.left);
-        }
-        else if (Input.GetKeyDown(KeyCode.RightArrow))
-        {
-            Move(Vector2Int.right);
-        }
+        holdDir = dir;
+        Move(holdDir == -1 ? lateralNeg : lateralPos);
+        repeatTimer = das;
     }
 
-    // 왼쪽으로 입력 불가
-    private void LeftPosInput()
+    private void StopHold()
     {
-        if (Input.GetKeyDown(KeyCode.RightArrow))
-        {
-            Move(Vector2Int.right);
-        }
-        else if (Input.GetKeyDown(KeyCode.UpArrow))
-        {
-            Move(Vector2Int.up);
-        }
-        else if (Input.GetKeyDown(KeyCode.DownArrow))
-        {
-            Move(Vector2Int.down);
-        }
+        holdDir = 0;
+        repeatTimer = 0f;
     }
 
+    // Sound 헬퍼
+    private void PlaySound(AudioClip clip, float vol = -1f, bool jitter = true)
+    {
+        if (sound == null || clip == null) return;
+
+        float v = (vol < 0f) ? soundVolume : vol;
+
+        // 피치 랜덤
+        float oldPitch = sound.pitch;
+        if (jitter) sound.pitch = UnityEngine.Random.Range(pitchJitter.x, pitchJitter.y);
+
+        sound.PlayOneShot(clip, v);
+
+        sound.pitch = oldPitch;
+    }
+
+    // 보드에서 라인/매치로 '파괴'가 일어났을 때 호출
+    public void OnCleared()
+    {
+        PlaySound(soundClear, 1.0f, false);
+    }
 }
