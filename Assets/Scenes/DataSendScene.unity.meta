@@ -1,5 +1,9 @@
 fileFormatVersion: 2
+<<<<<<<< HEAD:Assets/Scenes/DataSendScene.unity.meta
 guid: ad46029b57d91544d9ec78e3f2399d73
+========
+guid: 948499e2be0079d4db2a1b1a2c3ebd52
+>>>>>>>> main:Assets/Scenes/TestScene.unity.meta
 DefaultImporter:
   externalObjects: {}
   userData: 

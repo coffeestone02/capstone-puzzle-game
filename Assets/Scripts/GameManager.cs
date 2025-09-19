@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
+<<<<<<< HEAD
 using System;
 
 [System.Serializable]
@@ -18,6 +19,17 @@ public class PlayerData
 public class GameManager : MonoBehaviour
 {
     public string serverURL = "http://localhost:3000/score";
+=======
+using UnityEngine.UI;
+using System;
+
+// Í≤åÏûÑÍ¥ÄÎ¶¨ Í∏∞Îä•
+public class GameManager : MonoBehaviour
+{
+    public bool isPaused = false;
+    public bool isOver = false;
+
+>>>>>>> main
     public GameObject gameOverUI;
     private float playTime = 0f;
 
@@ -26,18 +38,41 @@ public class GameManager : MonoBehaviour
         playTime += Time.deltaTime;
     }
 
-    public void GameOver() //∞‘¿” ø¿πˆ
+    private void Update()
     {
-        Time.timeScale = 0f;
-
-        if (gameOverUI != null)
-            gameOverUI.SetActive(true); // UI »∞º∫»≠
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            isPaused = !isPaused;
+        }
     }
 
-    public void RestartGame() // ¿ÁΩ√¿€
+    public void GameOver()
     {
-        Time.timeScale = 1f;
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        Invoke("loadGameOver", 2f);
+    }
+
+    private void loadGameOver()
+    {
+        SceneManager.LoadScene("GameOver");
+    }
+
+    public void MainMenu()
+    {
+        SceneManager.LoadScene("Title");
+    }
+
+    public void GamePlay()
+    {
+        SceneManager.LoadScene("GamePlayScene");
+    }
+
+    public void Exit()
+    {
+        #if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false; // ÏóêÎîîÌÑ∞ ÏÉÅÏóêÏÑú Ï¢ÖÎ£å
+        #else
+        Application.Quit(); // Ïï± Ï¢ÖÎ£å
+        #endif
     }
 
     private string TimeFormat()

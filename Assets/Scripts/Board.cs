@@ -15,6 +15,8 @@ public class Board : MonoBehaviour
     private Vector2Int boardSize; // 게임보드 사이즈
     public GameManager gameManager; // UI 연결용
     public Tile grayTile; // 가장자리에 닿으면 변하는 타일
+    public GameObject destroyParticles;
+    public float playTime { get; private set; }
 
     public bool isMatching { get; private set; }
     [SerializeField] private int width;
@@ -29,7 +31,11 @@ public class Board : MonoBehaviour
     }
 
     // 회색 블록 탐색을 위한 방향 벡터
+<<<<<<< HEAD
     Vector3Int[] directions = new Vector3Int[]
+=======
+    private Vector3Int[] directions = new Vector3Int[]
+>>>>>>> main
     {
         new Vector3Int(1, 0, 0),
         new Vector3Int(-1, 0, 0),
@@ -37,6 +43,12 @@ public class Board : MonoBehaviour
         new Vector3Int(0, -1, 0)
     };
 
+<<<<<<< HEAD
+=======
+    // 임시 난이도. 나중에 기준치 높일 것
+    public int[] difficultyLines = { 3000, 4000, 5000 };
+
+>>>>>>> main
     public int score { get; private set; }
     private int combo = 0;
     private int level = 1;
@@ -60,6 +72,14 @@ public class Board : MonoBehaviour
         SpawnPiece();
     }
 
+<<<<<<< HEAD
+=======
+    private void Update()
+    {
+        playTime += Time.deltaTime;
+    }
+
+>>>>>>> main
     // 지정된 위치에 트리오미노를 랜덤으로 골라 스폰
     public void SpawnPiece()
     {
@@ -152,6 +172,7 @@ public class Board : MonoBehaviour
             // 보드 가장자리인지 확인
             if (InEdge(cellPos.x, cellPos.y))
             {
+                gameManager.isOver = true;
                 return true;
             }
         }
@@ -221,6 +242,7 @@ public class Board : MonoBehaviour
         HashSet<Vector3Int> bonusMatched = FindBonusMatch(matched); // 추가 제거 매칭
         bonusPoint = bonusMatched.Count * 60; // 추가 제거 점수 계산
         DeleteMatchedPiece(bonusMatched); // 추가 피스 제거
+<<<<<<< HEAD
 
         int cleared = matched.Count + bonusMatched.Count;  // 제거 총합
         if (cleared > 0)
@@ -228,6 +250,8 @@ public class Board : MonoBehaviour
             piece.OnCleared();
             combo++;
         }
+=======
+>>>>>>> main
 
         score += (mainPoint + bonusPoint) * (1 + combo) * (int)(1 + 0.1 * level); // 최종 점수 계산
 
@@ -243,6 +267,12 @@ public class Board : MonoBehaviour
             {
                 continue;
             }
+<<<<<<< HEAD
+=======
+            
+            // 파티클 효과 함수 호출
+            PlayDestroyParticles(pos);
+>>>>>>> main
             tilemap.SetTile(pos, null);
         }
     }
@@ -391,4 +421,21 @@ public class Board : MonoBehaviour
 
         return connections.ToArray();
     }
+<<<<<<< HEAD
+=======
+    
+        // 파티클 효과를 생성하고 재생하는 함수
+    private void PlayDestroyParticles(Vector3 position)
+    {
+        if (destroyParticles == null)
+        {
+            return;
+        }
+
+        GameObject particles = Instantiate(destroyParticles, tilemap.GetCellCenterWorld(Vector3Int.FloorToInt(position)), Quaternion.identity);
+        float scaleMultiplier = 0.2f; // 파티클 크기를 줄임
+        particles.transform.localScale = new Vector3(scaleMultiplier, scaleMultiplier, scaleMultiplier);
+        Destroy(particles, 1f); // 1초 뒤에 파괴
+    }
+>>>>>>> main
 }
