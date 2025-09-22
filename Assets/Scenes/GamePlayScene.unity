@@ -854,9 +854,13 @@ MonoBehaviour:
   - {x: -9, y: -2, z: 0}
   gameManager: {fileID: 225440997}
   grayTile: {fileID: 11400000, guid: 919756fd93eddcc459426406d7cb0c1e, type: 2}
-  destroyParticles: {fileID: 1449242181322416601, guid: 052d5f6cf7d3ebc44bba49fbe653f9a8, type: 3}
+  destroyParticles: {fileID: 8919484260529707532, guid: 2c27f6103c8348844a3cc636de15052a, type: 3}
+  protectedFloorTile: {fileID: 11400000, guid: 230e7c420b91c42489febd73d97a991f, type: 2}
+  BombParticleScale: 1
   width: 19
   height: 19
+  bombTile: {fileID: 11400000, guid: ef3566dbedb038f42af8771dbb192c11, type: 2}
+  bombParticles: {fileID: 8176850701479282271, guid: b219c04f384e7f345bb8ae1fef443965, type: 3}
   difficultyLines: b80b0000a00f000088130000
   currentSpawnIdx: 0
 --- !u!114 &1935108064

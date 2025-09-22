@@ -95,9 +95,9 @@ public class Piece : MonoBehaviour
         lockTime = 0f;
 
         // 타이머 상태 초기화
-        holdDir = 0;         
-        repeatTimer = 0f;    
-        softDropTimer = 0f; 
+        holdDir = 0;
+        repeatTimer = 0f;
+        softDropTimer = 0f;
         soundMuteUntil = Time.time + 0.05f;
 
         Tile firstTile;
@@ -129,13 +129,13 @@ public class Piece : MonoBehaviour
         {
             return;
         }
-        
+
         SetDifficulty();
 
         // 지우고 위치를 옮겨서 다시 그린다.
         this.board.Clear(this);
 
-        lockTime += Time.deltaTime; 
+        lockTime += Time.deltaTime;
 
         // 회전 입력
         RotationInput();
@@ -150,7 +150,7 @@ public class Piece : MonoBehaviour
         {
             HardDrop();
         }
-        
+
         if (Time.time > stepTime)
         {
             Step();
@@ -237,7 +237,7 @@ public class Piece : MonoBehaviour
         board.TryMatch(this); // 피스 제거 시도
         board.ChangeGray(this); // 가장자리 혹은 회색블록에 낙하시 회색 블록으로 변화
         board.SpawnPiece(); // 다른 피스 스폰
-    } 
+    }
 
     // 정해진 시간마다 중심으로 한 칸씩 내려감
     private void Step()
