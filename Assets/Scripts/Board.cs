@@ -231,6 +231,10 @@ public class Board : MonoBehaviour
         {
             combo = 0;
         }
+        else
+        {
+            piece.PlaySound(piece.soundClear);
+        }
 
         HashSet<Vector3Int> bonusMatched = FindBonusMatch(matched); // 추가 제거 매칭
         bonusPoint = bonusMatched.Count * 60; // 추가 제거 점수 계산

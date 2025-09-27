@@ -505,7 +505,7 @@ public class Piece : MonoBehaviour
     }
 
     // Sound 헬퍼
-    private void PlaySound(AudioClip clip, float vol = -1f)
+    public void PlaySound(AudioClip clip, float vol = -1f)
     {
         if (sound == null || clip == null) return;
 
