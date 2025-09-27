@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.Tilemaps;
 using System;
+using TMPro;
 
 // 블록을 관리하는 보드
 public class Board : MonoBehaviour
@@ -42,6 +43,8 @@ public class Board : MonoBehaviour
     // 임시 난이도. 나중에 기준치 높일 것
     public int[] difficultyLines = { 3000, 4000, 5000 };
 
+
+    public TMP_Text scoreText;
     public int score { get; private set; }
     private int combo = 0;
     private int level = 1;
@@ -87,16 +90,16 @@ public class Board : MonoBehaviour
         switch (currentSpawnIdx)
         {
             case 1:
-                activePiece.Rotate(1);
+                activePiece.Rotate(1, true);
                 break;
             case 2:
-                activePiece.Rotate(1);
-                activePiece.Rotate(1);
+                activePiece.Rotate(1, true);
+                activePiece.Rotate(1, true);
                 break;
             case 3:
-                activePiece.Rotate(1);
-                activePiece.Rotate(1);
-                activePiece.Rotate(1);
+                activePiece.Rotate(1, true);
+                activePiece.Rotate(1, true);
+                activePiece.Rotate(1, true);
                 break;
         }
 
@@ -234,6 +237,7 @@ public class Board : MonoBehaviour
         DeleteMatchedPiece(bonusMatched); // 추가 피스 제거
 
         score += (mainPoint + bonusPoint) * (1 + combo) * (int)(1 + 0.1 * level); // 최종 점수 계산
+        scoreText.text = score.ToString();
 
         isMatching = false;
     }

@@ -42,19 +42,10 @@ public class Piece : MonoBehaviour
 
     // Sound
     public AudioSource sound;              // Piece(또는 자식)에 붙인 AudioSource
-    public AudioClip soundMove;            // 좌/우(측면) 이동
-    public AudioClip soundSoftDropTick;    // 빠른 낙하 한 칸 '틱'
     public AudioClip soundRotate;          // 회전 성공
-    public AudioClip soundLock;            // 고정
     public AudioClip soundClear;           // 블록 파괴(클리어)
     public float soundVolume = 0.8f;       // 기본 볼륨
     public Vector2 pitchJitter = new Vector2(0.95f, 1.05f); // 미세 피치 랜덤
-
-    // 이동 Sound 과도한 스팸 방지용 쿨다운
-    private float moveSoundCd = 0f;
-    public float moveSoundInterval = 0.04f; // 이동음 최소 간격(초)
-
-    private float soundMuteUntil = 0f; // 스폰 직후 음소거
 
 
     // piece가 처음 생성됐을 때 색을 결정함
@@ -98,7 +89,6 @@ public class Piece : MonoBehaviour
         holdDir = 0;         
         repeatTimer = 0f;    
         softDropTimer = 0f; 
-        soundMuteUntil = Time.time + 0.05f;
 
         Tile firstTile;
         Tile secondTile;
@@ -230,8 +220,6 @@ public class Piece : MonoBehaviour
             board.gameManager.GameOver();
         }
 
-        PlaySound(soundLock, 1.0f);
-
         board.Set(this); // 고정하고
         board.NextSpawnIdx(); // 스폰 위치를 변경
         board.TryMatch(this); // 피스 제거 시도
@@ -287,28 +275,13 @@ public class Piece : MonoBehaviour
 
             // 이동 Sound: 중력 이동과 측면 이동을 구분
             bool isGravityMove = (translation == gravityVec);
-
-            if (isGravityMove)
-            {
-                // 빠른 낙하의 사운드
-                PlaySound(soundSoftDropTick, 0.6f);
-            }
-            else
-            {
-                // 측면 이동 사운드 - 스팸 방지 쿨타임
-                if (Time.time >= moveSoundCd)
-                {
-                    PlaySound(soundMove);
-                    moveSoundCd = Time.time + moveSoundInterval;
-                }
-            }
         }
 
         return valid;
     }
 
     // 회전
-    public void Rotate(int direction)
+    public void Rotate(int direction, bool isSpawn = false)
     {
         int originalRotation = rotationIdx; // 기존 방향
 
@@ -322,9 +295,10 @@ public class Piece : MonoBehaviour
             rotationIdx = originalRotation;
             ApplyRotationMatrix(-direction);
         }
-        else
+        else if(isSpawn == false)
         {
             // 회전 성공 Sound
+            Debug.Log("회전");
             PlaySound(soundRotate);
         }
     }
@@ -531,24 +505,18 @@ public class Piece : MonoBehaviour
     }
 
     // Sound 헬퍼
-    private void PlaySound(AudioClip clip, float vol = -1f, bool jitter = true)
+    private void PlaySound(AudioClip clip, float vol = -1f)
     {
         if (sound == null || clip == null) return;
 
         float v = (vol < 0f) ? soundVolume : vol;
 
-        // 피치 랜덤
-        float oldPitch = sound.pitch;
-        if (jitter) sound.pitch = UnityEngine.Random.Range(pitchJitter.x, pitchJitter.y);
-
         sound.PlayOneShot(clip, v);
-
-        sound.pitch = oldPitch;
     }
 
     // 보드에서 라인/매치로 '파괴'가 일어났을 때 호출
     public void OnCleared()
     {
-        PlaySound(soundClear, 1.0f, false);
+        PlaySound(soundClear, 1.0f);
     }
 }
