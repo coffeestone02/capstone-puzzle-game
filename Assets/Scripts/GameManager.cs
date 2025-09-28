@@ -6,27 +6,27 @@ using System;
 // 게임관리 기능
 public class GameManager : MonoBehaviour
 {
-    public bool isPaused = false;
+    public GameObject gameOverPanel;
+    public GameObject gamePausePanel;
+    public bool isPause = false;
     public bool isOver = false;
-
-    public GameObject gameOverUI;
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Escape))
+        if (isOver)
         {
-            isPaused = !isPaused;
+            gameOverPanel.SetActive(true);            
+        }
+        else if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            isPause = !isPause;
+            gamePausePanel.SetActive(isPause);
         }
     }
 
     public void GameOver()
     {
-        Invoke("loadGameOver", 2f);
-    }
-
-    private void loadGameOver()
-    {
-        SceneManager.LoadScene("GameOver");
+        Debug.Log("Game Over");
     }
 
     public void MainMenu()

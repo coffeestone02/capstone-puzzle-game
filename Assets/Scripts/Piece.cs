@@ -40,13 +40,6 @@ public class Piece : MonoBehaviour
     private KeyCode gravityKey;       // 스폰 방향에 따라 달라지는 '중력 키'
     private Vector2Int gravityVec;    // 스폰 방향에 따른 '중력 벡터'
 
-    // Sound
-    public AudioSource sound;              // Piece(또는 자식)에 붙인 AudioSource
-    public AudioClip soundRotate;          // 회전 성공
-    public AudioClip soundClear;           // 블록 파괴(클리어)
-    public float soundVolume = 0.8f;       // 기본 볼륨
-    public Vector2 pitchJitter = new Vector2(0.95f, 1.05f); // 미세 피치 랜덤
-
 
     // piece가 처음 생성됐을 때 색을 결정함
     private void ColorSet(Piece piece, out Tile firstTile, out Tile secondTile, out Tile thirdTile)
@@ -115,7 +108,7 @@ public class Piece : MonoBehaviour
 
     private void Update()
     {
-        if (board.gameManager.isOver)
+        if (board.gameManager.isOver || board.gameManager.isPause)
         {
             return;
         }
@@ -189,27 +182,16 @@ public class Piece : MonoBehaviour
     // 레벨은 3레벨까지 존재 -> 5레벨 이상으로 늘어나면 반복문으로 변경 가능
     private void SetDifficulty()
     {
-        if (board.score < board.difficultyLines[0])
+        for (int idx = 0;idx < board.difficultyLines.Length;idx++)
         {
-            stepDelay = stepDelayByDifficulty[0];
+            if (board.score < board.difficultyLines[idx])
+            {
+                board.level = idx + 1;
+                board.levelText.text = board.level.ToString();
+                stepDelay = stepDelayByDifficulty[idx];
+                break;
+            }
         }
-        else if (board.score < board.difficultyLines[1])
-        {
-            stepDelay = stepDelayByDifficulty[1];
-        }
-        else
-        {
-            stepDelay = stepDelayByDifficulty[2];
-        }
-
-        // for (int idx = 0;idx < board.difficultyLines.Length;idx++)
-        // {
-        //     if (board.score < board.difficultyLines[idx])
-        //     {
-        //         stepDelay = stepDelayByDifficulty[idx];
-        //         break;
-        //     }
-        // }
     }
 
     // 고정
@@ -221,6 +203,8 @@ public class Piece : MonoBehaviour
         }
 
         board.Set(this); // 고정하고
+        AudioManager.instance.PlayLockSound();
+        
         board.NextSpawnIdx(); // 스폰 위치를 변경
         board.TryMatch(this); // 피스 제거 시도
         board.ChangeGray(this); // 가장자리 혹은 회색블록에 낙하시 회색 블록으로 변화
@@ -298,8 +282,7 @@ public class Piece : MonoBehaviour
         else if(isSpawn == false)
         {
             // 회전 성공 Sound
-            Debug.Log("회전");
-            PlaySound(soundRotate);
+            AudioManager.instance.PlayRotateSound();
         }
     }
 
@@ -502,21 +485,5 @@ public class Piece : MonoBehaviour
     {
         holdDir = 0;
         repeatTimer = 0f;
-    }
-
-    // Sound 헬퍼
-    public void PlaySound(AudioClip clip, float vol = -1f)
-    {
-        if (sound == null || clip == null) return;
-
-        float v = (vol < 0f) ? soundVolume : vol;
-
-        sound.PlayOneShot(clip, v);
-    }
-
-    // 보드에서 라인/매치로 '파괴'가 일어났을 때 호출
-    public void OnCleared()
-    {
-        PlaySound(soundClear, 1.0f);
     }
 }

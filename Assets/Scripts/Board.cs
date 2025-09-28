@@ -45,9 +45,11 @@ public class Board : MonoBehaviour
 
 
     public TMP_Text scoreText;
+    public TMP_Text levelText;
+    public TMP_Text playtimeText;
     public int score { get; private set; }
     private int combo = 0;
-    private int level = 1;
+    public int level = 1;
     public int currentSpawnIdx = 0; // 스폰 위치 인덱스. 0 : 위쪽, 1 : 오른쪽, 2 : 아래쪽, 3: 왼쪽
 
     private void Awake()
@@ -70,7 +72,13 @@ public class Board : MonoBehaviour
 
     private void Update()
     {
+        if (gameManager.isOver || gameManager.isPause)
+        {
+            return;
+        }
+
         playTime += Time.deltaTime;
+        playtimeText.text = playTime.ToString();
     }
 
     // 지정된 위치에 트리오미노를 랜덤으로 골라 스폰
@@ -233,7 +241,7 @@ public class Board : MonoBehaviour
         }
         else
         {
-            piece.PlaySound(piece.soundClear);
+            AudioManager.instance.PlayClearSound();
         }
 
         HashSet<Vector3Int> bonusMatched = FindBonusMatch(matched); // 추가 제거 매칭
