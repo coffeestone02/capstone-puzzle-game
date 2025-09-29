@@ -41,6 +41,10 @@ public class Board : MonoBehaviour
     private bool spawnNextPieceAsBomb = false; // 다음에 스폰될 Piece에 폭탄을 심을지 여부
     private int bombCellIndexInActivePiece = -1; // ActivePiece 내에서 폭탄 타일이 있는 cells 인덱스
 
+    // ⭐ 게이지 관련 델리게이트 및 변수 추가
+    public Action<float> OnBombGaugeUpdate; // 게이지 업데이트 이벤트를 외부에 알림
+    private const float GaugeMaxValue = 0.55f; // 게이지의 최대 값 (폭탄 생성 임계값에 도달하지 않았을 때의 값)
+
     public RectInt Bounds // 보드 범위를 확인하는데 사용함.
     {
         get
@@ -83,6 +87,7 @@ public class Board : MonoBehaviour
     void Start()
     {
         SpawnPiece();
+        UpdateBombGauge(); // ⭐ 초기 게이지 값 설정
     }
 
     private void Update()
@@ -116,6 +121,7 @@ public class Board : MonoBehaviour
 
             // 폭탄 블록이 ActivePiece에 심겼음을 표시. Lock되기 전까지는 lockedBombPosition은 null 유지
             spawnNextPieceAsBomb = false; // 플래그 리셋
+            UpdateBombGauge(); // ⭐ 폭탄이 스폰되면서 플래그 리셋 -> 게이지 초기값(0.55)으로 복귀
         }
 
 
@@ -270,12 +276,13 @@ public class Board : MonoBehaviour
             bombCellIndexInActivePiece = -1;
 
             ExplodeBomb(bombPos);
+            UpdateBombGauge(); // ⭐ 폭발 후 게이지 업데이트 (lockedBombPosition이 설정됨)
 
             // 폭탄이 터졌으므로, 이 턴의 나머지 매칭 로직은 스킵합니다.
             isMatching = false;
             return;
         }
-        
+
         // 2. 일반 매칭 및 보너스 매칭 진행 (폭탄이 없을 때만)
 
         int mainPoint = 0;
@@ -308,6 +315,8 @@ public class Board : MonoBehaviour
             spawnNextPieceAsBomb = true;
             clearedBlockCount = 0; // 폭탄 생성 플래그를 켰으므로 카운트 초기화
         }
+
+        UpdateBombGauge(); // ⭐ 블록 파괴 후 게이지 업데이트
 
         isMatching = false;
     }
@@ -551,6 +560,35 @@ public class Board : MonoBehaviour
         // 폭발 후 lockedBombPosition 초기화: 폭탄이 제거되었다고 처리하여 다음 폭탄 생성을 허용
         lockedBombPosition = null;
         isBombExploding = false;
+    }
+
+    // ⭐ 폭탄 게이지 업데이트 함수 추가
+    private void UpdateBombGauge()
+    {
+        float currentGaugeValue;
+
+        if (spawnNextPieceAsBomb)
+        {
+            // 폭탄이 예약된 상태 -> 게이지 0.0 (곧 스폰되므로)
+            currentGaugeValue = 0.0f;
+        }
+        else if (lockedBombPosition.HasValue)
+        {
+            // 폭탄이 보드에 락된 상태 -> 게이지 0.0 (다음 폭탄 생성 로직이 잠금)
+            currentGaugeValue = 0.0f;
+        }
+        else
+        {
+            // 부숴진 블록 수에 따른 게이지 값 계산 (0.55에서 0.0까지 감소)
+            // clearedBlockCount가 0일 때 0.55, BombSpawnThreshold일 때 0.0이 되도록 계산.
+            float ratio = (float)clearedBlockCount / BombSpawnThreshold;
+            currentGaugeValue = GaugeMaxValue * (1.0f - ratio);
+
+            // 게이지가 음수가 되는 것을 방지
+            currentGaugeValue = Mathf.Max(0.0f, currentGaugeValue);
+        }
+
+        OnBombGaugeUpdate?.Invoke(currentGaugeValue);
     }
 
 
