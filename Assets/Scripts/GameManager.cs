@@ -8,16 +8,17 @@ public class GameManager : MonoBehaviour
 {
     public GameObject gameOverPanel;
     public GameObject gamePausePanel;
+    public GameObject optionPanel;
     public bool isPause = false;
     public bool isOver = false;
 
     private void Update()
     {
-        if (isOver)
+        if (gameOverPanel != null && isOver)
         {
             gameOverPanel.SetActive(true);            
         }
-        else if (Input.GetKeyDown(KeyCode.Escape))
+        else if (optionPanel.activeSelf == false && gamePausePanel != null && Input.GetKeyDown(KeyCode.Escape))
         {
             isPause = !isPause;
             gamePausePanel.SetActive(isPause);
@@ -39,12 +40,18 @@ public class GameManager : MonoBehaviour
         SceneManager.LoadScene("GamePlayScene");
     }
 
+    public void Resume()
+    {
+        isPause = false;
+        gamePausePanel.SetActive(isPause);
+    }
+
     public void Exit()
     {
-        #if UNITY_EDITOR
+#if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false; // 에디터 상에서 종료
-        #else
+#else
         Application.Quit(); // 앱 종료
-        #endif
+#endif
     }
 }

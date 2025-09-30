@@ -41,7 +41,7 @@ public class Board : MonoBehaviour
     };
 
     // 임시 난이도. 나중에 기준치 높일 것
-    public int[] difficultyLines = { 3000, 4000, 5000 };
+    public int[] difficultyLines = { 10000, 30000, 50000 };
 
 
     public TMP_Text scoreText;
@@ -77,8 +77,40 @@ public class Board : MonoBehaviour
             return;
         }
 
+        TimeTextUpdate();
+    }
+
+    private void TimeTextUpdate()
+    {
         playTime += Time.deltaTime;
-        playtimeText.text = playTime.ToString();
+        string min;
+        string sec;
+
+        // 분
+        if (playTime < 60f)
+        {
+            min = "00";
+        }
+        else if (playTime < 600f)
+        {
+            min = "0" + Math.Truncate(playTime / 60f).ToString();
+        }
+        else
+        {
+            min = Math.Truncate(playTime / 60f).ToString();
+        }
+
+        // 초
+        if (Math.Truncate(playTime % 60f) < 10f)
+        {
+            sec = "0" + Math.Truncate(playTime % 60f).ToString();
+        }
+        else
+        {
+            sec = Math.Truncate(playTime % 60f).ToString();
+        }
+
+        playtimeText.text = min + ":" + sec;
     }
 
     // 지정된 위치에 트리오미노를 랜덤으로 골라 스폰
