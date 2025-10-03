@@ -15,10 +15,23 @@ public class Board : MonoBehaviour
     private Vector2Int boardSize; // 게임보드 사이즈
     public GameManager gameManager; // UI 연결용
     public Tile grayTile; // 가장자리에 닿으면 변하는 타일
-
+    public GameObject destroyParticles;
+    public float playTime { get; private set; }
     public bool isMatching { get; private set; }
+    private int spawnObstacleCounter = 0;  // 장애물 스폰 카운트
+    [SerializeField] private int obstacleEverySpawns = 7; // n번째마다 장애물 스폰
+
     [SerializeField] private int width;
     [SerializeField] private int height;
+    [SerializeField] private int rocketThreshold = 9;   // 로켓 조건, 한 번에 n개 제거하면 다음 피스에 로켓 포함
+
+    // 색상별 십자 로켓 타일(가로+세로 동시 폭발)
+    public Tile rocketCross_Purple;
+    public Tile rocketCross_Blue;
+    public Tile rocketCross_Red;
+
+    private bool nextSpawnHasRocket = false; // 다음 스폰에 로켓 넣을지
+
     public RectInt Bounds // 보드 범위를 확인하는데 사용함.
     {
         get
@@ -29,7 +42,7 @@ public class Board : MonoBehaviour
     }
 
     // 회색 블록 탐색을 위한 방향 벡터
-    Vector3Int[] directions = new Vector3Int[]
+    private Vector3Int[] directions = new Vector3Int[]
     {
         new Vector3Int(1, 0, 0),
         new Vector3Int(-1, 0, 0),
@@ -37,10 +50,98 @@ public class Board : MonoBehaviour
         new Vector3Int(0, -1, 0)
     };
 
+    // 직교(상하좌우) 접촉 판정용 방향 벡터
+    private static readonly Vector3Int[] orthoDirections = new Vector3Int[]
+    {
+        new Vector3Int( 1, 0, 0),
+        new Vector3Int(-1, 0, 0),
+        new Vector3Int( 0, 1, 0),
+        new Vector3Int( 0,-1, 0)
+    };
+
+    // 임시 난이도. 나중에 기준치 높일 것
+    public int[] difficultyLines = { 3000, 4000, 5000 };
+
     public int score { get; private set; }
     private int combo = 0;
     private int level = 1;
     public int currentSpawnIdx = 0; // 스폰 위치 인덱스. 0 : 위쪽, 1 : 오른쪽, 2 : 아래쪽, 3: 왼쪽
+
+    // 색 아이디/유틸 
+    private enum ColorId { Unknown, Purple, Blue, Red }
+
+    private ColorId GetColorId(TileBase t)
+    {
+        if (t == null) return ColorId.Unknown;
+
+        // 십자 로켓 변형 → 색 매핑
+        if (t == rocketCross_Purple) return ColorId.Purple;
+        if (t == rocketCross_Blue) return ColorId.Blue;
+        if (t == rocketCross_Red) return ColorId.Red;
+
+        // 일반 타일 이름 기반(프로젝트 네이밍에 맞게 보강 가능)
+        string n = t.name.ToLowerInvariant();
+        if (n.Contains("purple") || n.Contains("보")) return ColorId.Purple;
+        if (n.Contains("blue") || n.Contains("파")) return ColorId.Blue;
+        if (n.Contains("red") || n.Contains("빨")) return ColorId.Red;
+
+        return ColorId.Unknown;
+    }
+
+    private bool IsSameColor(TileBase a, TileBase b)
+    {
+        var ca = GetColorId(a);
+        var cb = GetColorId(b);
+        return ca != ColorId.Unknown && ca == cb;
+    }
+
+    private bool IsCrossRocket(TileBase t)
+    {
+        return t == rocketCross_Purple || t == rocketCross_Blue || t == rocketCross_Red;
+    }
+
+    private Tile ChooseCrossRocketForColor(ColorId c)
+    {
+        switch (c)
+        {
+            case ColorId.Purple: return rocketCross_Purple;
+            case ColorId.Blue: return rocketCross_Blue;
+            case ColorId.Red: return rocketCross_Red;
+            default: return null;
+        }
+    }
+
+    // 장애물 설정
+
+    public Tile obstacleTile; // 장애물 타일(1x1)
+
+    // 2-Bag 방향 관리
+    private enum DropDir { Up, Right, Down, Left }
+    private List<DropDir> dirBag = new List<DropDir>();
+    private int dirBagIdx = 0;
+
+    // 각 피스의 출발 방향 저장(해당 피스의 '반대쪽 모서리'를 소멸 조건으로 사용)
+    private Dictionary<Piece, DropDir> pieceSpawnFrom = new Dictionary<Piece, DropDir>();
+
+    private void RefillBag()
+    {
+        dirBag.Clear();
+        dirBag.AddRange(new[] { DropDir.Up, DropDir.Right, DropDir.Down, DropDir.Left }); // 셔플
+
+        for (int i = 0; i < dirBag.Count; i++)
+        {
+            int j = UnityEngine.Random.Range(i, dirBag.Count);
+            (dirBag[i], dirBag[j]) = (dirBag[j], dirBag[i]);
+        }
+        dirBagIdx = 0;
+    }
+
+    private DropDir NextBagDir()
+    {
+        if (dirBag.Count == 0 || dirBagIdx >= dirBag.Count)
+            RefillBag();
+        return dirBag[dirBagIdx++];
+    }
 
     private void Awake()
     {
@@ -53,6 +154,9 @@ public class Board : MonoBehaviour
         {
             triominos[i].Initialize();
         }
+
+        // Bag 초기화
+        RefillBag();
     }
 
     void Start()
@@ -60,39 +164,64 @@ public class Board : MonoBehaviour
         SpawnPiece();
     }
 
+    private void Update()
+    {
+        playTime += Time.deltaTime;
+    }
+
     // 지정된 위치에 트리오미노를 랜덤으로 골라 스폰
     public void SpawnPiece()
     {
+        if (obstacleTile != null && obstacleEverySpawns > 0) //새 피스 뽑기 '직전'에 장애물 1줄 드랍
+        {
+            spawnObstacleCounter++;
+            if (spawnObstacleCounter % obstacleEverySpawns == 0)
+            {
+                DropDir dir = NextBagDir();   // 1-bag에서 다음 방향
+                DropObstacleLine(dir);
+            }
+        }
+
         int randomIdx = UnityEngine.Random.Range(0, triominos.Length);
         TriominoData data = triominos[randomIdx];
 
         activePiece.Initialize(this, spawnPositions[currentSpawnIdx], data);
 
-        if (!IsValidPosition(activePiece, activePiece.position)) //블록 생성 후 겹칠 시 게임 오버
+        // 스폰 시 겹치면 게임오버
+        if (!IsValidPosition(activePiece, activePiece.position))
         {
             gameManager.GameOver();
             return;
         }
 
+        // 스폰 방향에 맞춰 회전
         switch (currentSpawnIdx)
         {
-            case 1:
-                activePiece.Rotate(1);
-                break;
-            case 2:
-                activePiece.Rotate(1);
-                activePiece.Rotate(1);
-                break;
-            case 3:
-                activePiece.Rotate(1);
-                activePiece.Rotate(1);
-                activePiece.Rotate(1);
-                break;
+            case 1: activePiece.Rotate(1); break;
+            case 2: activePiece.Rotate(1); activePiece.Rotate(1); break;
+            case 3: activePiece.Rotate(1); activePiece.Rotate(1); activePiece.Rotate(1); break;
+        }
+
+        // 이 피스의 출발 방향 기록(해당 피스의 소멸 모서리 계산용)
+        pieceSpawnFrom[activePiece] = (DropDir)currentSpawnIdx;
+
+        // 로켓 추가 (십자형)
+        if (nextSpawnHasRocket)
+        {
+            int cell = UnityEngine.Random.Range(0, activePiece.cells.Length); // 3칸 중 1칸만
+            TileBase baseTile = activePiece.tiles[cell];                      // 그 칸의 색을 읽음
+            ColorId c = GetColorId(baseTile);
+            Tile rocketVariant = ChooseCrossRocketForColor(c);
+
+            if (rocketVariant != null) // 색을 알 수 없으면 넣지 않음
+                activePiece.tiles[cell] = rocketVariant;
+
+            nextSpawnHasRocket = false;
         }
 
         Set(activePiece);
     }
-    
+
     // Piece를 타일에 그림
     public void Set(Piece piece)
     {
@@ -110,11 +239,10 @@ public class Board : MonoBehaviour
         {
             return true;
         }
-
         return false;
     }
 
-    // 가장자리 낙하시 회색 블록으로 변화
+    // 가장자리 낙하시 회색 블록으로 변화(원하면 호출해서 써도 됨)
     public void ChangeGray(Piece piece)
     {
         bool EdgeOrGray = false;
@@ -122,8 +250,6 @@ public class Board : MonoBehaviour
         for (int i = 0; i < piece.cells.Length; i++)
         {
             Vector3Int cellPos = piece.cells[i] + piece.position;
-
-            // 보드 가장자리인지 확인
             if (InEdge(cellPos.x, cellPos.y))
             {
                 EdgeOrGray = true;
@@ -131,7 +257,6 @@ public class Board : MonoBehaviour
             }
         }
 
-        // 조건 만족 시 전체 블록 회색으로 변경
         if (EdgeOrGray)
         {
             for (int i = 0; i < piece.cells.Length; i++)
@@ -140,23 +265,6 @@ public class Board : MonoBehaviour
                 tilemap.SetTile(tilePosition, grayTile);
             }
         }
-    }
-
-    // 게임 오버인지 확인
-    public bool IsGameover(Piece piece)
-    {
-        for (int i = 0; i < piece.cells.Length; i++)
-        {
-            Vector3Int cellPos = piece.cells[i] + piece.position;
-
-            // 보드 가장자리인지 확인
-            if (InEdge(cellPos.x, cellPos.y))
-            {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     // Piece를 지움
@@ -174,24 +282,101 @@ public class Board : MonoBehaviour
     {
         RectInt bounds = this.Bounds;
 
-        // 각 셀마다 검사해야함
         for (int i = 0; i < piece.cells.Length; i++)
         {
             Vector3Int tilePosition = piece.cells[i] + position;
 
-            // 보드 범위 안에 있는지 검사
             if (bounds.Contains((Vector2Int)tilePosition) == false)
-            {
                 return false;
-            }
 
-            // 이미 타일이 있는지 검사
             if (this.tilemap.HasTile(tilePosition))
-            {
                 return false;
-            }
+        }
+        return true;
+    }
+
+    // 모서리 닿았는지
+    private bool IsTouchingEdge(Piece piece)
+    {
+        for (int i = 0; i < piece.cells.Length; i++)
+        {
+            Vector3Int cellPos = piece.cells[i] + piece.position;
+            if (InEdge(cellPos.x, cellPos.y))
+                return true;
+        }
+        return false;
+    }
+
+    // 피스가 낙하 반대편 모서리에 닿았는지 검사
+    private bool IsTouchingVanishEdge(Piece piece)
+    {
+        if (!pieceSpawnFrom.TryGetValue(piece, out DropDir from))
+        {
+            return IsTouchingEdge(piece);
         }
 
+        RectInt b = this.Bounds;
+        int vanishXLeft = b.xMin + 1;
+        int vanishXRight = b.xMax - 2;
+        int vanishYBottom = b.yMin + 1;
+        int vanishYTop = b.yMax - 2;
+
+        // 출발 방향의 '반대편 모서리'에 닿았는지 검사
+        for (int i = 0; i < piece.cells.Length; i++)
+        {
+            Vector3Int p = piece.cells[i] + piece.position;
+
+            switch (from)
+            {
+                case DropDir.Up:    // 위에서 내려옴 → 아래 모서리에 닿으면 소멸
+                    if (p.y <= vanishYBottom) return true;
+                    break;
+                case DropDir.Right: // 오른쪽에서 옴 → 왼쪽 모서리에 닿으면 소멸
+                    if (p.x <= vanishXLeft) return true;
+                    break;
+                case DropDir.Down:  // 아래에서 올라옴 → 위 모서리에 닿으면 소멸
+                    if (p.y >= vanishYTop) return true;
+                    break;
+                case DropDir.Left:  // 왼쪽에서 옴 → 오른쪽 모서리에 닿으면 소멸
+                    if (p.x >= vanishXRight) return true;
+                    break;
+            }
+        }
+        return false;
+    }
+
+    // 다른 블록과 직교 접촉?
+    private bool HasOrthoTouch(Piece piece)
+    {
+        RectInt bounds = this.Bounds;
+
+        for (int i = 0; i < piece.cells.Length; i++)
+        {
+            Vector3Int cellPos = piece.cells[i] + piece.position;
+
+            foreach (var d in orthoDirections)
+            {
+                Vector3Int adj = cellPos + d;
+                if (!bounds.Contains((Vector2Int)adj))
+                    continue;
+
+                if (tilemap.HasTile(adj))
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    // 낙하 반대편 모서리에 닿으면 제거 후 다음 스폰 (장애물 드랍 카운트 포함)
+    public bool DestroyIfEdgeSolo(Piece piece)
+    {
+        if (!IsTouchingVanishEdge(piece)) return false;
+
+        // 어떤 경우든 고정하지 않고 제거
+        Clear(piece);
+        pieceSpawnFrom.Remove(piece);         // 기록 정리
+        NextSpawnIdx();
+        SpawnPiece();
         return true;
     }
 
@@ -210,7 +395,14 @@ public class Board : MonoBehaviour
         int bonusPoint = 0;
 
         HashSet<Vector3Int> matched = FindMainMatch(piece); // 메인 피스 매칭
+        HashSet<Vector3Int> bonusMatched = FindBonusMatch(matched); // 추가 제거 매칭
+
+        // 매치/보너스만 카운트(로켓 폭발분은 카운트 제외)
+        int clearedByMatchOnly = matched.Count + bonusMatched.Count;
+
         mainPoint += matched.Count * 100; // 메인 피스 점수 계산
+        bonusPoint = bonusMatched.Count * 60; // 추가 제거 점수 계산
+
         DeleteMatchedPiece(matched); // 메인 피스 제거
 
         if (matched.Count == 0)
@@ -218,36 +410,58 @@ public class Board : MonoBehaviour
             combo = 0;
         }
 
-        HashSet<Vector3Int> bonusMatched = FindBonusMatch(matched); // 추가 제거 매칭
-        bonusPoint = bonusMatched.Count * 60; // 추가 제거 점수 계산
         DeleteMatchedPiece(bonusMatched); // 추가 피스 제거
 
-        int cleared = matched.Count + bonusMatched.Count;  // 제거 총합
-        if (cleared > 0)
+        // 로켓 스폰 조건(한 번만 세팅) — 로켓 폭발로 지운 칸은 포함하지 않음
+        if (clearedByMatchOnly >= rocketThreshold && !nextSpawnHasRocket)
+            nextSpawnHasRocket = true;
+
+        if (clearedByMatchOnly > 0)
         {
             piece.OnCleared();
             combo++;
         }
 
-        score += (mainPoint + bonusPoint) * (1 + combo) * (int)(1 + 0.1 * level); // 최종 점수 계산
+        // 최종 점수 계산 (로켓 폭발 점수는 FireCrossRocketAt에서 즉시 가산됨)
+        score += (mainPoint + bonusPoint) * (1 + combo) * (int)(1 + 0.1 * level);
 
         isMatching = false;
     }
 
-    // 매치된 피스를 제거
+    // 매치된 피스를 제거 (로켓은 먼저 수집 → 십자 폭발은 나중에)
     private void DeleteMatchedPiece(HashSet<Vector3Int> matched)
     {
+        if (matched == null || matched.Count == 0)
+            return;
+
+        // 로켓 먼저 수집
+        List<Vector3Int> crossRockets = new List<Vector3Int>();
         foreach (Vector3Int pos in matched)
         {
-            if ((Vector2Int)pos == new Vector2Int(-1, -1)) // 중앙 블록
-            {
+            TileBase tb = tilemap.GetTile<TileBase>(pos);
+            if (tb == null) continue;
+            if (IsCrossRocket(tb)) crossRockets.Add(pos);
+        }
+
+        // 일반 제거(중앙 보호)
+        foreach (Vector3Int pos in matched)
+        {
+            if ((Vector2Int)pos == new Vector2Int(-1, -1)) // 중앙 블록 보호
                 continue;
-            }
+
+            TileBase tb = tilemap.GetTile<TileBase>(pos);
+            if (tb == null) continue;
+
+            PlayDestroyParticles(pos);
             tilemap.SetTile(pos, null);
         }
+
+        // 로켓 발사 (제거 이후 십자 처리) — 여기서 점수 60/칸씩 즉시 가산, 카운트에는 미포함
+        foreach (var r in crossRockets)
+            FireCrossRocketAt(r);
     }
 
-    // 메인 피스 매칭
+    // 메인 피스 매칭(색 동치 기반으로 연결)
     private HashSet<Vector3Int> FindMainMatch(Piece piece)
     {
         HashSet<Vector3Int> matched = new HashSet<Vector3Int>();
@@ -299,13 +513,11 @@ public class Board : MonoBehaviour
             {
                 Vector3Int cross = new Vector3Int(x, y, 0);
 
-                // 이미 기존 matched에 들어있거나(중복방지) 범위 밖이면 패스
                 if (matched.Contains(cross) || bounds.Contains((Vector2Int)cross) == false)
                 {
                     continue;
                 }
 
-                // 실제로 타일이 있어야만 추가
                 if (tilemap.HasTile(cross))
                 {
                     bonusMatched.Add(cross);
@@ -324,25 +536,17 @@ public class Board : MonoBehaviour
             return false;
         }
 
-        // x좌표가 모두 같거나 y좌표가 모두 동일하면 일자모양
         int x = connections[0].x;
         int y = connections[0].y;
-        bool xCrosstraightCheck = true;
-        bool yStraightCheck = true;
+        bool xStraight = true;
+        bool yStraight = true;
         for (int i = 1; i < connections.Length; i++)
         {
-            if (connections[i].x != x)
-            {
-                xCrosstraightCheck = false;
-            }
-
-            if (connections[i].y != y)
-            {
-                yStraightCheck = false;
-            }
+            if (connections[i].x != x) xStraight = false;
+            if (connections[i].y != y) yStraight = false;
         }
 
-        if (xCrosstraightCheck || yStraightCheck)
+        if (xStraight || yStraight)
         {
             return false;
         }
@@ -350,15 +554,15 @@ public class Board : MonoBehaviour
         return true;
     }
 
-    // 연결을 확인함
+    // 연결을 확인함 (색 동치로 탐색)
     private Vector3Int[] FindConnections(Piece piece, int cellIdx)
     {
         Vector3Int start = piece.cells[cellIdx] + piece.position;
-        Tile matchTile = piece.tiles[cellIdx];
+        TileBase matchTile = tilemap.GetTile<TileBase>(start); // 시작칸의 '색' 기준
 
         List<Vector3Int> connections = new List<Vector3Int>();
-        Queue<Vector3Int> queue = new Queue<Vector3Int>(); 
-        HashSet<Vector3Int> visited = new HashSet<Vector3Int>(); 
+        Queue<Vector3Int> queue = new Queue<Vector3Int>();
+        HashSet<Vector3Int> visited = new HashSet<Vector3Int>();
         RectInt bounds = this.Bounds;
 
         queue.Enqueue(start);
@@ -378,8 +582,11 @@ public class Board : MonoBehaviour
                     continue;
                 }
 
-                Tile nextTile = tilemap.GetTile<Tile>(next);
-                if (nextTile == null || nextTile != matchTile)
+                TileBase nextTile = tilemap.GetTile<TileBase>(next);
+                if (nextTile == null) continue;
+
+                // 핵심: 같은 색이면 연결 (일반/로켓 구분 없이)
+                if (!IsSameColor(nextTile, matchTile))
                 {
                     continue;
                 }
@@ -390,5 +597,163 @@ public class Board : MonoBehaviour
         }
 
         return connections.ToArray();
+    }
+
+    // 파티클 효과를 생성하고 재생하는 함수
+    private void PlayDestroyParticles(Vector3 position)
+    {
+        if (destroyParticles == null)
+        {
+            return;
+        }
+
+        GameObject particles = Instantiate(destroyParticles, tilemap.GetCellCenterWorld(Vector3Int.FloorToInt(position)), Quaternion.identity);
+        float scaleMultiplier = 0.2f; // 파티클 크기를 줄임
+        particles.transform.localScale = new Vector3(scaleMultiplier, scaleMultiplier, scaleMultiplier);
+        Destroy(particles, 1f); // 1초 뒤에 파괴
+    }
+
+    // 십자 로켓 폭발 (가로+세로, 중앙 보호) — 점수 60/칸 즉시 가산, 카운트에는 미포함
+    private void FireCrossRocketAt(Vector3Int startPos)
+    {
+        // 가로 라인
+        for (int x = Bounds.xMin; x < Bounds.xMax; x++)
+        {
+            Vector3Int p = new Vector3Int(x, startPos.y, 0);
+            if ((Vector2Int)p == new Vector2Int(-1, -1)) // 중앙 보호
+                continue;
+
+            TileBase tb = tilemap.GetTile<TileBase>(p);
+            if (tb == null) continue;
+
+            PlayDestroyParticles(p);
+            tilemap.SetTile(p, null);
+
+            // 로켓 점수는 여기서 줌 (카운트는 X)
+            score += 60;
+        }
+
+        // 세로 라인
+        for (int y = Bounds.yMin; y < Bounds.yMax; y++)
+        {
+            Vector3Int p = new Vector3Int(startPos.x, y, 0);
+            if ((Vector2Int)p == new Vector2Int(-1, -1)) // 중앙 보호
+                continue;
+
+            TileBase tb = tilemap.GetTile<TileBase>(p);
+            if (tb == null) continue;
+
+            PlayDestroyParticles(p);
+            tilemap.SetTile(p, null);
+
+            // 로켓 점수는 여기서 줌 (카운트는 X)
+            score += 60;
+        }
+    }
+
+    // 중앙 보호칸 체크
+    private bool IsCenterCell(Vector3Int p)
+    {
+        return (Vector2Int)p == new Vector2Int(-1, -1);
+    }
+
+    // 장애물 1줄 드랍(총 19칸) — 방향에 따라 칸별로 독립 낙하(즉시 배치 버전)
+    private void DropObstacleLine(DropDir dir)
+    {
+        if (obstacleTile == null) return;
+
+        RectInt b = this.Bounds;
+        int xMin = b.xMin + 1;
+        int xMax = b.xMax - 2; // 포함 범위
+        int yMin = b.yMin + 1;
+        int yMax = b.yMax - 2; // 포함 범위
+
+        if (dir == DropDir.Up)
+        {
+            // 아래 → 위
+            for (int x = xMin; x <= xMax; x++)
+            {
+                int? firstOccY = null;
+                for (int y = yMin; y <= yMax; y++)
+                {
+                    if (tilemap.HasTile(new Vector3Int(x, y, 0))) { firstOccY = y; break; }
+                }
+                if (firstOccY.HasValue)
+                {
+                    int restY = firstOccY.Value - 1;
+                    if (restY >= yMin)
+                    {
+                        Vector3Int pos = new Vector3Int(x, restY, 0);
+                        if (!IsCenterCell(pos) && !tilemap.HasTile(pos))
+                            tilemap.SetTile(pos, obstacleTile);
+                    }
+                }
+            }
+        }
+        else if (dir == DropDir.Down)
+        {
+            // 위 → 아래
+            for (int x = xMin; x <= xMax; x++)
+            {
+                int? firstOccY = null;
+                for (int y = yMax; y >= yMin; y--)
+                {
+                    if (tilemap.HasTile(new Vector3Int(x, y, 0))) { firstOccY = y; break; }
+                }
+                if (firstOccY.HasValue)
+                {
+                    int restY = firstOccY.Value + 1;
+                    if (restY <= yMax)
+                    {
+                        Vector3Int pos = new Vector3Int(x, restY, 0);
+                        if (!IsCenterCell(pos) && !tilemap.HasTile(pos))
+                            tilemap.SetTile(pos, obstacleTile);
+                    }
+                }
+            }
+        }
+        else if (dir == DropDir.Right)
+        {
+            // 좌 → 우
+            for (int y = yMin; y <= yMax; y++)
+            {
+                int? firstOccX = null;
+                for (int x = xMin; x <= xMax; x++)
+                {
+                    if (tilemap.HasTile(new Vector3Int(x, y, 0))) { firstOccX = x; break; }
+                }
+                if (firstOccX.HasValue)
+                {
+                    int restX = firstOccX.Value - 1;
+                    if (restX >= xMin)
+                    {
+                        Vector3Int pos = new Vector3Int(restX, y, 0);
+                        if (!IsCenterCell(pos) && !tilemap.HasTile(pos))
+                            tilemap.SetTile(pos, obstacleTile);
+                    }
+                }
+            }
+        }
+        else // 우 → 좌
+        {
+            for (int y = yMin; y <= yMax; y++)
+            {
+                int? firstOccX = null;
+                for (int x = xMax; x >= xMin; x--)
+                {
+                    if (tilemap.HasTile(new Vector3Int(x, y, 0))) { firstOccX = x; break; }
+                }
+                if (firstOccX.HasValue)
+                {
+                    int restX = firstOccX.Value + 1;
+                    if (restX <= xMax)
+                    {
+                        Vector3Int pos = new Vector3Int(restX, y, 0);
+                        if (!IsCenterCell(pos) && !tilemap.HasTile(pos))
+                            tilemap.SetTile(pos, obstacleTile);
+                    }
+                }
+            }
+        }
     }
 }

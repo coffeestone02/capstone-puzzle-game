@@ -13,13 +13,15 @@ public class Piece : MonoBehaviour
     public Tile[] tiles { get; private set; } // 셀들의 색상 정보
     public int rotationIdx { get; private set; }
 
-    public float stepDelay = 3f; 
-    public float moveDelay = 0.1f;   
-    public float lockDelay = 0.5f;   
+    private float[] stepDelayByDifficulty = { 1.25f, 0.8f, 0.3f };
 
-    private float stepTime;
-    private float moveTime;
-    private float lockTime;
+    public float stepDelay = 1.25f; // 중심으로 이동하는 속도. 자동으로 stepDelay의 시간만큼 중심으로 이동함
+    public float moveDelay = 0.1f; // 플레이어의 입력 이동 속도를 정함. 값이 클수록 입력을 많이 못함
+    public float lockDelay = 0.5f; // 이 시간만큼 못 움직이면 피스를 Lock함
+
+    private float stepTime; // 중심으로 이동하는 시기
+    private float moveTime; // 다음 입력을 받을 수 있는 시기
+    private float lockTime; // 고정되는 시기(lockTime이 lockDelay를 넘기는 순간 고정됨)
 
     //DAS(딜레이), ARR(이동속도)
     public float das = 0.15f;    // 좌/우(측면) 연사 시작 지연
@@ -54,10 +56,11 @@ public class Piece : MonoBehaviour
 
     private float soundMuteUntil = 0f; // 스폰 직후 음소거
 
+
     // piece가 처음 생성됐을 때 색을 결정함
     private void ColorSet(Piece piece, out Tile firstTile, out Tile secondTile, out Tile thirdTile)
     {
-        int randomIdx = UnityEngine.Random.Range(0, 3);
+        int randomIdx = Random.Range(0, 3); // switch의 조건 개수
         switch (randomIdx)
         {
             case 0:
@@ -87,8 +90,8 @@ public class Piece : MonoBehaviour
 
         rotationIdx = 0;
 
-        stepTime = Time.time + stepDelay;
-        moveTime = Time.time + moveDelay;
+        stepTime = Time.time + stepDelay; // 중심으로 이동하는 시기 계산
+        moveTime = Time.time + moveDelay; // 다음 입력을 받을 수 있는 시기 계산
         lockTime = 0f;
 
         // 타이머 상태 초기화
@@ -122,11 +125,18 @@ public class Piece : MonoBehaviour
 
     private void Update()
     {
-        // 지우고 위치를 옮겨서 다시 그린다
-        board.Clear(this);
-
-        lockTime += Time.deltaTime;
+        if (board.gameManager.isOver)
+        {
+            return;
+        }
         
+        SetDifficulty();
+
+        // 지우고 위치를 옮겨서 다시 그린다.
+        this.board.Clear(this);
+
+        lockTime += Time.deltaTime; 
+
         // 회전 입력
         RotationInput();
 
@@ -135,35 +145,100 @@ public class Piece : MonoBehaviour
         HandleSoftDrop();    // 중력 키 '홀드' → 빠른 낙하
         HandleAutoShift();   // 측면 DAS/ARR
 
+        // HardDrop
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            HardDrop();
+        }
+        
         if (Time.time > stepTime)
+        {
             Step();
+        }
 
-        board.Set(this);
+        this.board.Set(this);
+    }
+
+    private void HardDrop()
+    {
+        switch (board.currentSpawnIdx)
+        {
+            case 0:
+                while (Move(Vector2Int.down))
+                {
+                    continue;
+                }
+                Lock();
+                break;
+            case 1:
+                while (Move(Vector2Int.left))
+                {
+                    continue;
+                }
+                Lock();
+                break;
+            case 2:
+                while (Move(Vector2Int.up))
+                {
+                    continue;
+                }
+                Lock();
+                break;
+            case 3:
+                while (Move(Vector2Int.right))
+                {
+                    continue;
+                }
+                Lock();
+                break;
+            default:
+                break;
+        }
+    }
+
+    // 레벨은 3레벨까지 존재 -> 5레벨 이상으로 늘어나면 반복문으로 변경 가능
+    private void SetDifficulty()
+    {
+        if (board.score < board.difficultyLines[0])
+        {
+            stepDelay = stepDelayByDifficulty[0];
+        }
+        else if (board.score < board.difficultyLines[1])
+        {
+            stepDelay = stepDelayByDifficulty[1];
+        }
+        else
+        {
+            stepDelay = stepDelayByDifficulty[2];
+        }
+
+        // for (int idx = 0;idx < board.difficultyLines.Length;idx++)
+        // {
+        //     if (board.score < board.difficultyLines[idx])
+        //     {
+        //         stepDelay = stepDelayByDifficulty[idx];
+        //         break;
+        //     }
+        // }
     }
 
     // 고정
     private void Lock()
     {
-        if (board.IsGameover(this))
-        {
-            board.gameManager.GameOver();
-            board.gameManager.SendGameData(board.score);
-            UnityEngine.Debug.Log(board.currentSpawnIdx);
-        }
+        if (board.DestroyIfEdgeSolo(this)) return; //모서리 접촉이면 즉시 제거
 
-        // 고정 Sound
         PlaySound(soundLock, 1.0f);
 
         board.Set(this); // 고정하고
         board.NextSpawnIdx(); // 스폰 위치를 변경
         board.TryMatch(this); // 피스 제거 시도
-        board.ChangeGray(this); // 가장자리 혹은 회색블록에 낙하시 회색 블록으로 변화
-        board.SpawnPiece(); // 다른 피스 스폰
-    }
+        board.SpawnPiece(); // 다른 피스 스폰      
+    } 
 
+    // 정해진 시간마다 중심으로 한 칸씩 내려감
     private void Step()
     {
-        stepTime = Time.time + stepDelay;
+        stepTime = Time.time + stepDelay; // 다음에 이동해야할 시기 계산
 
         switch (board.currentSpawnIdx)
         {
@@ -189,6 +264,7 @@ public class Piece : MonoBehaviour
         }
     }
 
+    // 옆으로 움직임
     private bool Move(Vector2Int translation)
     {
         // 이동할 위치를 계산
@@ -196,14 +272,14 @@ public class Piece : MonoBehaviour
         newPosition.x += translation.x;
         newPosition.y += translation.y;
 
-        bool valid = board.IsValidPosition(this, newPosition);
+        bool valid = board.IsValidPosition(this, newPosition); // 유효한 위치인지 확인
 
         // 유효하다면 위치를 이동
         if (valid)
         {
             this.position = newPosition;
-            moveTime = Time.time + moveDelay;
-            lockTime = 0f;
+            moveTime = Time.time + moveDelay; // 다음 입력을 받을 수 있는 시기 계산
+            lockTime = 0f; // lockTime 초기화
 
             // 이동 Sound: 중력 이동과 측면 이동을 구분
             bool isGravityMove = (translation == gravityVec);
@@ -230,7 +306,7 @@ public class Piece : MonoBehaviour
     // 회전
     public void Rotate(int direction)
     {
-        int originalRotation = rotationIdx;
+        int originalRotation = rotationIdx; // 기존 방향
 
         // 회전
         rotationIdx = Wrap(rotationIdx + direction, 0, 4);
@@ -240,7 +316,7 @@ public class Piece : MonoBehaviour
         if (TestWallKicks(rotationIdx, direction) == false)
         {
             rotationIdx = originalRotation;
-            ApplyRotationMatrix(-direction);    // 회전 실패음 재생
+            ApplyRotationMatrix(-direction);
         }
         else
         {
@@ -257,13 +333,15 @@ public class Piece : MonoBehaviour
         for (int i = 0; i < cells.Length; i++)
         {
             Vector3 cell = cells[i];
+
             int x, y;
 
             // 회전 행렬을 사용해서 회전 시킴
             switch (data.triomino)
             {
                 case ETriomino.I:
-                    cell.x -= 0.5f; cell.y -= 0.5f;
+                    cell.x -= 0.5f;
+                    cell.y -= 0.5f;
                     x = Mathf.CeilToInt((cell.x * matrix[0] * direction) + (cell.y * matrix[1] * direction));
                     y = Mathf.CeilToInt((cell.x * matrix[2] * direction) + (cell.y * matrix[3] * direction));
                     break;

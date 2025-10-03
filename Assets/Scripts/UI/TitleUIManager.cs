@@ -25,7 +25,7 @@ public class TitleUIManager : MonoBehaviour
 
     private void OnNewGameClicked()
     {
-        SceneManager.LoadScene("DeleteTestScene"); // 게임 씬 이름으로 교체
+        SceneManager.LoadScene("GamePlayScene"); // 게임 씬 이름으로 교체
     }
 
     public void Ranking()
