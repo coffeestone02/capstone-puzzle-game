@@ -25,11 +25,6 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public void GameOver()
-    {
-        Debug.Log("Game Over");
-    }
-
     public void MainMenu()
     {
         SceneManager.LoadScene("Title");

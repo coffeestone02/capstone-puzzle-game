@@ -197,9 +197,9 @@ public class Piece : MonoBehaviour
     // 고정
     private void Lock()
     {
-        if (board.IsGameover(this))
+        if (board.DestroyIfEdgeSolo(this))
         {
-            board.gameManager.GameOver();
+            return;
         }
 
         board.Set(this); // 고정하고
@@ -207,7 +207,6 @@ public class Piece : MonoBehaviour
         
         board.NextSpawnIdx(); // 스폰 위치를 변경
         board.TryMatch(this); // 피스 제거 시도
-        board.ChangeGray(this); // 가장자리 혹은 회색블록에 낙하시 회색 블록으로 변화
         board.SpawnPiece(); // 다른 피스 스폰
     } 
 
