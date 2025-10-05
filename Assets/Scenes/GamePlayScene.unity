@@ -1397,6 +1397,9 @@ MonoBehaviour:
   height: 19
   bombTile: {fileID: 11400000, guid: ef3566dbedb038f42af8771dbb192c11, type: 2}
   bombParticles: {fileID: 8176850701479282271, guid: b219c04f384e7f345bb8ae1fef443965, type: 3}
+  audioSource: {fileID: 1065328092}
+  bombExplodeSound: {fileID: 8300000, guid: 7e26c9daf4c32483b9c2790e662d3f1b, type: 3}
+  bombSoundVolume: 2
   difficultyLines: b80b0000a00f000088130000
   currentSpawnIdx: 0
 --- !u!114 &1935108064

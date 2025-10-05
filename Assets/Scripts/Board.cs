@@ -18,7 +18,7 @@ public class Board : MonoBehaviour
     public GameObject destroyParticles;
     public float playTime { get; private set; }
 
-    // ⭐ 보호 Tile 변수 추가
+    // 보호 Tile 변수 추가
     public Tile protectedFloorTile;
 
     // 폭탄 파티클 크기 조절 변수 이름 복원
@@ -41,9 +41,15 @@ public class Board : MonoBehaviour
     private bool spawnNextPieceAsBomb = false; // 다음에 스폰될 Piece에 폭탄을 심을지 여부
     private int bombCellIndexInActivePiece = -1; // ActivePiece 내에서 폭탄 타일이 있는 cells 인덱스
 
-    // ⭐ 게이지 관련 델리게이트 및 변수 추가
+    // 게이지 관련 델리게이트 및 변수 추가
     public Action<float> OnBombGaugeUpdate; // 게이지 업데이트 이벤트를 외부에 알림
     private const float GaugeMaxValue = 0.55f; // 게이지의 최대 값 (폭탄 생성 임계값에 도달하지 않았을 때의 값)
+
+    // Sound (추가된 부분)
+    [Header("Sound")]
+    public AudioSource audioSource; // Board에 붙일 AudioSource
+    public AudioClip bombExplodeSound; // 폭탄 폭발 사운드 클립
+    public float bombSoundVolume = 1.0f; // 폭발 사운드 볼륨
 
     public RectInt Bounds // 보드 범위를 확인하는데 사용함.
     {
@@ -77,6 +83,18 @@ public class Board : MonoBehaviour
         activePiece = GetComponentInChildren<Piece>();
         boardSize = new Vector2Int(height, width);
 
+        // Board에 AudioSource가 없으면 GetComponent를 시도 (추가된 부분)
+        if (audioSource == null)
+        {
+            audioSource = GetComponent<AudioSource>();
+        }
+
+        // AudioSource가 없으면 경고 (추가된 부분)
+        if (audioSource == null)
+        {
+            Debug.LogWarning("AudioSource component not found on Board object. Bomb sound will not play.");
+        }
+
         // 인스펙터에서 만들어진 트리오미노의 수만큼 진행
         for (int i = 0; i < triominos.Length; i++)
         {
@@ -87,7 +105,7 @@ public class Board : MonoBehaviour
     void Start()
     {
         SpawnPiece();
-        UpdateBombGauge(); // ⭐ 초기 게이지 값 설정
+        UpdateBombGauge(); // 초기 게이지 값 설정
     }
 
     private void Update()
@@ -121,7 +139,7 @@ public class Board : MonoBehaviour
 
             // 폭탄 블록이 ActivePiece에 심겼음을 표시. Lock되기 전까지는 lockedBombPosition은 null 유지
             spawnNextPieceAsBomb = false; // 플래그 리셋
-            UpdateBombGauge(); // ⭐ 폭탄이 스폰되면서 플래그 리셋 -> 게이지 초기값(0.55)으로 복귀
+            UpdateBombGauge(); // 폭탄이 스폰되면서 플래그 리셋 -> 게이지 초기값(0.55)으로 복귀
         }
 
 
@@ -276,7 +294,7 @@ public class Board : MonoBehaviour
             bombCellIndexInActivePiece = -1;
 
             ExplodeBomb(bombPos);
-            UpdateBombGauge(); // ⭐ 폭발 후 게이지 업데이트 (lockedBombPosition이 설정됨)
+            UpdateBombGauge(); // 폭발 후 게이지 업데이트 (lockedBombPosition이 설정됨)
 
             // 폭탄이 터졌으므로, 이 턴의 나머지 매칭 로직은 스킵합니다.
             isMatching = false;
@@ -316,7 +334,7 @@ public class Board : MonoBehaviour
             clearedBlockCount = 0; // 폭탄 생성 플래그를 켰으므로 카운트 초기화
         }
 
-        UpdateBombGauge(); // ⭐ 블록 파괴 후 게이지 업데이트
+        UpdateBombGauge(); // 블록 파괴 후 게이지 업데이트
 
         isMatching = false;
     }
@@ -491,6 +509,12 @@ public class Board : MonoBehaviour
 
         isBombExploding = true;
 
+        // 폭발 사운드 재생 (추가된 부분)
+        if (audioSource != null && bombExplodeSound != null)
+        {
+            audioSource.PlayOneShot(bombExplodeSound, bombSoundVolume);
+        }
+
         // 5x5 폭발 범위 계산
         int radius = 2; // (5-1)/2 = 2
         HashSet<Vector3Int> explodedCells = new HashSet<Vector3Int>();
@@ -562,7 +586,7 @@ public class Board : MonoBehaviour
         isBombExploding = false;
     }
 
-    // ⭐ 폭탄 게이지 업데이트 함수 추가
+    // 폭탄 게이지 업데이트 함수 추가
     private void UpdateBombGauge()
     {
         float currentGaugeValue;
