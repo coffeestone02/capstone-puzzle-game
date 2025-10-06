@@ -13,6 +13,7 @@ public class AudioManager : MonoBehaviour
     public AudioClip soundClear;           // 블록 파괴(클리어)
     public AudioClip soundButton;
     public AudioClip soundLock;
+    public AudioClip soundBomb;
 
     void Start()
     {
@@ -41,9 +42,14 @@ public class AudioManager : MonoBehaviour
     {
         instance.sfxPlayer.PlayOneShot(soundButton);
     }
-    
+
     public void PlayLockSound()
     {
         instance.sfxPlayer.PlayOneShot(soundLock);
+    }
+
+    public void PlayBombSound()
+    {
+        instance.sfxPlayer.PlayOneShot(soundBomb);
     }
 }

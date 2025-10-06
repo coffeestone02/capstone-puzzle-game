@@ -82,6 +82,8 @@ public class Board : MonoBehaviour
     public TMP_Text scoreText;
     public TMP_Text levelText;
     public TMP_Text playtimeText;
+    public TMP_Text brokenBlockText;
+    public TMP_Text bombThresholdText;
     public int score { get; private set; }
     private int combo = 0;
     public int level = 1;
@@ -105,6 +107,8 @@ public class Board : MonoBehaviour
     void Start()
     {
         SpawnPiece();
+
+
     }
 
     private void Update()
@@ -315,6 +319,7 @@ public class Board : MonoBehaviour
         // 매치/보너스만 카운트(로켓 폭발분은 카운트 제외)
         int clearedByMatchOnly = matched.Count + bonusMatched.Count;
         brokenBlockCount += clearedByMatchOnly;
+        brokenBlockText.text = brokenBlockCount.ToString();
 
         mainPoint = matched.Count * 100; // 메인 피스 점수 계산
         bonusPoint = bonusMatched.Count * 60; // 추가 제거 점수 계산
@@ -336,6 +341,7 @@ public class Board : MonoBehaviour
         if (brokenBlockCount >= bombSpawnThreshold)
         {
             brokenBlockCount = 0;
+            brokenBlockText.text = brokenBlockCount.ToString();
             nextSpawnHasBomb = true;
         }
         else if (clearedByMatchOnly >= rocketThreshold && !nextSpawnHasRocket)
@@ -390,9 +396,11 @@ public class Board : MonoBehaviour
             tilemap.SetTile(pos, null);
         }
 
+        if(bombs.Count > 0)
+            AudioManager.instance.PlayBombSound();
         foreach (var b in bombs)
         {
-            ExplodeBomb(b); 
+            ExplodeBomb(b);
         }
 
         // 로켓 발사 (제거 이후 십자 처리) — 여기서 점수 60/칸씩 즉시 가산, 카운트에는 미포함
@@ -740,9 +748,9 @@ public class Board : MonoBehaviour
     private void ExplodeBomb(Vector3Int startPos)
     {
         // 5x5 범위로 폭발
-        for (int x = startPos.x - 2 ; x <= startPos.x + 2; x++)
+        for (int x = startPos.x - 2; x <= startPos.x + 2; x++)
         {
-            for (int y = startPos.y - 2 ; y <= startPos.y + 2; y++)
+            for (int y = startPos.y - 2; y <= startPos.y + 2; y++)
             {
                 if (x < Bounds.xMin || x >= Bounds.xMax || y < Bounds.yMin || y >= Bounds.yMax)
                 {
