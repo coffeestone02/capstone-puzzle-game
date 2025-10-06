@@ -11,12 +11,17 @@ public class Board : MonoBehaviour
 {
     [Header("필요한 컴포넌트와 관련 변수")]
     public GameManager gameManager; // UI 연결용
-    public GameObject destroyParticles; // 파괴 이펙트
+    public GameObject destroyParticle; // 파괴 이펙트
+    public GameObject bombParticle; // 폭발 파티클 (인스펙터에서 설정)
+
     public Tilemap tilemap { get; private set; } // 그려질 타일맵
     public Piece activePiece { get; private set; } // 현재 조작중인 피스
     public TriominoData[] triominos; // 게임에서 쓸 수 있는 트리오미노(인스펙터에서 설정)
+
+    public Tile obstacleTile; // 장애물 타일(1x1)
     private int spawnObstacleCounter = 0;  // 장애물 스폰 카운트
     [SerializeField] private int obstacleEverySpawns = 7; // n번째마다 장애물 스폰
+
     [SerializeField] private int rocketThreshold = 9;   // 로켓 조건, 한 번에 n개 제거하면 다음 피스에 로켓 포함
     private bool nextSpawnHasRocket = false; // 다음 스폰에 로켓 넣을지
     private enum ColorId { Unknown, Purple, Blue, Red } // 색 아이디/유틸 
@@ -26,8 +31,15 @@ public class Board : MonoBehaviour
     public Tile rocketCross_Blue;
     public Tile rocketCross_Red;
 
-    // 장애물 타일(1x1)
-    public Tile obstacleTile;
+    // 폭탄 관련 변수 추가
+    private int brokenBlockCount = 0; // 부숴진 블록 카운트
+    [SerializeField] private int bombSpawnThreshold = 66; // 블록을 이 변수값만큼 제거하면 다음 피스에 폭탄 포함
+    private bool nextSpawnHasBomb = false; // 다음 스폰에 폭탄 넣을지
+
+    // 폭탄 타일
+    public Tile bomb_Purple;
+    public Tile bomb_Blue;
+    public Tile bomb_Red;
 
     // 2-Bag 방향 관리
     private enum DropDir { Up, Right, Down, Left }
@@ -181,8 +193,19 @@ public class Board : MonoBehaviour
         // 이 피스의 출발 방향 기록(해당 피스의 소멸 모서리 계산용)
         pieceSpawnFrom[activePiece] = (DropDir)currentSpawnIdx;
 
-        // 로켓 추가 (십자형)
-        if (nextSpawnHasRocket)
+        if (nextSpawnHasBomb) // 폭탄 추가
+        {
+            int cell = UnityEngine.Random.Range(0, activePiece.cells.Length); // 3칸 중 1칸만
+            TileBase baseTile = activePiece.tiles[cell];                      // 그 칸의 색을 읽음
+            ColorId c = GetColorId(baseTile);
+            Tile bombVariant = ChooseBombForColor(c);
+
+            if (bombVariant != null) // 색을 알 수 없으면 넣지 않음
+                activePiece.tiles[cell] = bombVariant;
+
+            nextSpawnHasBomb = false;
+        }
+        else if (nextSpawnHasRocket) // 로켓 추가 (십자형)
         {
             int cell = UnityEngine.Random.Range(0, activePiece.cells.Length); // 3칸 중 1칸만
             TileBase baseTile = activePiece.tiles[cell];                      // 그 칸의 색을 읽음
@@ -291,6 +314,7 @@ public class Board : MonoBehaviour
 
         // 매치/보너스만 카운트(로켓 폭발분은 카운트 제외)
         int clearedByMatchOnly = matched.Count + bonusMatched.Count;
+        brokenBlockCount += clearedByMatchOnly;
 
         mainPoint = matched.Count * 100; // 메인 피스 점수 계산
         bonusPoint = bonusMatched.Count * 60; // 추가 제거 점수 계산
@@ -308,8 +332,13 @@ public class Board : MonoBehaviour
 
         DeleteMatchedPiece(bonusMatched); // 추가 피스 제거
 
-        // 로켓 스폰 조건(한 번만 세팅) — 로켓 폭발로 지운 칸은 포함하지 않음
-        if (clearedByMatchOnly >= rocketThreshold && !nextSpawnHasRocket)
+        // 폭탄과 로켓 스폰(로켓 폭발로 지운 칸은 포함하지 않음)
+        if (brokenBlockCount >= bombSpawnThreshold)
+        {
+            brokenBlockCount = 0;
+            nextSpawnHasBomb = true;
+        }
+        else if (clearedByMatchOnly >= rocketThreshold && !nextSpawnHasRocket)
         {
             nextSpawnHasRocket = true;
         }
@@ -319,7 +348,7 @@ public class Board : MonoBehaviour
             combo++;
         }
 
-        // 최종 점수 계산 (로켓 폭발 점수는 FireCrossRocketAt에서 즉시 가산됨)
+        // 최종 점수 계산 (로켓 폭발 점수는 FireCrossRocketAt, 폭탄 폭발 점수는 ExplodeBomb에서 바로 계산됨)
         score += (mainPoint + bonusPoint) * (1 + combo) * (int)(1 + 0.1 * level);
         scoreText.text = score.ToString();
     }
@@ -339,6 +368,15 @@ public class Board : MonoBehaviour
             if (IsCrossRocket(tb)) crossRockets.Add(pos);
         }
 
+        // 폭탄 수집
+        List<Vector3Int> bombs = new List<Vector3Int>();
+        foreach (Vector3Int pos in matched)
+        {
+            TileBase tb = tilemap.GetTile<TileBase>(pos);
+            if (tb == null) continue;
+            if (IsBomb(tb)) bombs.Add(pos);
+        }
+
         // 일반 제거(중앙 보호)
         foreach (Vector3Int pos in matched)
         {
@@ -348,13 +386,20 @@ public class Board : MonoBehaviour
             TileBase tb = tilemap.GetTile<TileBase>(pos);
             if (tb == null) continue;
 
-            PlayDestroyParticles(pos);
+            PlayDestroyParticle(pos);
             tilemap.SetTile(pos, null);
+        }
+
+        foreach (var b in bombs)
+        {
+            ExplodeBomb(b); 
         }
 
         // 로켓 발사 (제거 이후 십자 처리) — 여기서 점수 60/칸씩 즉시 가산, 카운트에는 미포함
         foreach (var r in crossRockets)
+        {
             FireCrossRocketAt(r);
+        }
     }
 
     // 메인 피스 매칭
@@ -371,11 +416,6 @@ public class Board : MonoBehaviour
                     matched.Add(pos);
                 }
             }
-        }
-
-        if (matched.Count > 0)
-        {
-            combo++;
         }
 
         return matched;
@@ -506,25 +546,18 @@ public class Board : MonoBehaviour
     }
 
     // 파티클 효과를 생성하고 재생하는 함수
-    private void PlayDestroyParticles(Vector3 position)
+    private void PlayDestroyParticle(Vector3 position)
     {
-        if (destroyParticles == null)
+        if (destroyParticle == null)
         {
             return;
         }
 
-        GameObject particles = Instantiate(destroyParticles, tilemap.GetCellCenterWorld(Vector3Int.FloorToInt(position)), Quaternion.identity);
+        GameObject particles = Instantiate(destroyParticle, tilemap.GetCellCenterWorld(Vector3Int.FloorToInt(position)), Quaternion.identity);
         float scaleMultiplier = 0.2f; // 파티클 크기를 줄임
         particles.transform.localScale = new Vector3(scaleMultiplier, scaleMultiplier, scaleMultiplier);
         Destroy(particles, 1f); // 1초 뒤에 파괴
     }
-
-    /// ///////////////////////////////////////////////////////////////////////////////////////////
-    /// ///////////////////////////////////////////////////////////////////////////////////////////
-    /// ///////////////////////////////////////////////////////////////////////////////////////////
-    /// ///////////////////////////////////////////////////////////////////////////////////////////
-    /// ///////////////////////////////////////////////////////////////////////////////////////////
-    /// ///////////////////////////////////////////////////////////////////////////////////////////
 
     private ColorId GetColorId(TileBase t)
     {
@@ -556,6 +589,11 @@ public class Board : MonoBehaviour
         return t == rocketCross_Purple || t == rocketCross_Blue || t == rocketCross_Red;
     }
 
+    private bool IsBomb(TileBase t)
+    {
+        return t == bomb_Blue || t == bomb_Purple || t == bomb_Red;
+    }
+
     private Tile ChooseCrossRocketForColor(ColorId c)
     {
         switch (c)
@@ -563,6 +601,17 @@ public class Board : MonoBehaviour
             case ColorId.Purple: return rocketCross_Purple;
             case ColorId.Blue: return rocketCross_Blue;
             case ColorId.Red: return rocketCross_Red;
+            default: return null;
+        }
+    }
+
+    private Tile ChooseBombForColor(ColorId c)
+    {
+        switch (c)
+        {
+            case ColorId.Purple: return bomb_Purple;
+            case ColorId.Blue: return bomb_Blue;
+            case ColorId.Red: return bomb_Red;
             default: return null;
         }
     }
@@ -662,7 +711,7 @@ public class Board : MonoBehaviour
             TileBase tb = tilemap.GetTile<TileBase>(p);
             if (tb == null) continue;
 
-            PlayDestroyParticles(p);
+            PlayDestroyParticle(p);
             tilemap.SetTile(p, null);
 
             // 로켓 점수는 여기서 줌 (카운트는 X)
@@ -679,11 +728,40 @@ public class Board : MonoBehaviour
             TileBase tb = tilemap.GetTile<TileBase>(p);
             if (tb == null) continue;
 
-            PlayDestroyParticles(p);
+            PlayDestroyParticle(p);
             tilemap.SetTile(p, null);
 
             // 로켓 점수는 여기서 줌 (카운트는 X)
             score += 60;
+        }
+    }
+
+    // 폭탄 폭발
+    private void ExplodeBomb(Vector3Int startPos)
+    {
+        // 5x5 범위로 폭발
+        for (int x = startPos.x - 2 ; x <= startPos.x + 2; x++)
+        {
+            for (int y = startPos.y - 2 ; y <= startPos.y + 2; y++)
+            {
+                if (x < Bounds.xMin || x >= Bounds.xMax || y < Bounds.yMin || y >= Bounds.yMax)
+                {
+                    continue;
+                }
+
+                Vector3Int p = new Vector3Int(x, y, 0);
+                if ((Vector2Int)p == new Vector2Int(-1, -1)) // 중앙 보호
+                    continue;
+
+                TileBase tb = tilemap.GetTile<TileBase>(p);
+                if (tb == null) continue;
+
+                PlayDestroyParticle(p);
+                tilemap.SetTile(p, null);
+
+                // 폭탄 점수는 여기서 줌 (카운트는 X)
+                score += 60;
+            }
         }
     }
 

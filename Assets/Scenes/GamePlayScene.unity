@@ -3311,7 +3311,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   gameManager: {fileID: 1781456882}
-  destroyParticles: {fileID: 1449242181322416601, guid: 052d5f6cf7d3ebc44bba49fbe653f9a8, type: 3}
+  destroyParticle: {fileID: 1449242181322416601, guid: 052d5f6cf7d3ebc44bba49fbe653f9a8, type: 3}
+  bombParticle: {fileID: 0}
   triominos:
   - triomino: 0
     tiles:
@@ -3337,12 +3338,16 @@ MonoBehaviour:
     tiles:
     - {fileID: 11400000, guid: 347fa28aa98d5de4383662c20183f593, type: 2}
     - {fileID: 11400000, guid: 049b954554f6e404c8631c78668f64ab, type: 2}
+  obstacleTile: {fileID: 11400000, guid: 113ac11ae386b2b449933e0676b681f8, type: 2}
   obstacleEverySpawns: 7
   rocketThreshold: 6
-  rocketCross_Purple: {fileID: 11400000, guid: c979af25611192e45ae7e63562c4f6da, type: 2}
-  rocketCross_Blue: {fileID: 11400000, guid: d8baa55bdf62a5c439977369371a77d5, type: 2}
-  rocketCross_Red: {fileID: 11400000, guid: 89d0f73c0a028d54dbae8d42624cc49d, type: 2}
-  obstacleTile: {fileID: 11400000, guid: 06a023a2ae731154e90d8ee015a4fa76, type: 2}
+  rocketCross_Purple: {fileID: 11400000, guid: b26734931e2a79d4ea84c23cba19c316, type: 2}
+  rocketCross_Blue: {fileID: 11400000, guid: 434079dd6be3ed5438a90404107fbde9, type: 2}
+  rocketCross_Red: {fileID: 11400000, guid: 4d780d4370517274e8cda83dbfe5d98a, type: 2}
+  bombSpawnThreshold: 66
+  bomb_Purple: {fileID: 11400000, guid: 811391191a1605e4fb9177d9546cc8b5, type: 2}
+  bomb_Blue: {fileID: 11400000, guid: 83edb8941e5f757468d25e08249b3a42, type: 2}
+  bomb_Red: {fileID: 11400000, guid: 99adebf1eeadc314782ff8db8b77789f, type: 2}
   width: 19
   height: 19
   spawnPositions:
