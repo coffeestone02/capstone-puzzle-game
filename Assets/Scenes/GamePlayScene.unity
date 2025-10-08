@@ -3736,8 +3736,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   gameManager: {fileID: 1781456882}
-  destroyParticle: {fileID: 1449242181322416601, guid: 052d5f6cf7d3ebc44bba49fbe653f9a8, type: 3}
-  bombParticle: {fileID: 0}
+  destroyParticle: {fileID: 3384366999043453948, guid: 7c19ad7a926fc084ea69d9ba4fedeeab, type: 3}
+  bombParticle: {fileID: 4035903591278710484, guid: aa122f157eac1c8428ae5db8a315ccd8, type: 3}
   triominos:
   - triomino: 0
     tiles:
@@ -3769,7 +3769,7 @@ MonoBehaviour:
   rocketCross_Purple: {fileID: 11400000, guid: b26734931e2a79d4ea84c23cba19c316, type: 2}
   rocketCross_Blue: {fileID: 11400000, guid: 434079dd6be3ed5438a90404107fbde9, type: 2}
   rocketCross_Red: {fileID: 11400000, guid: 4d780d4370517274e8cda83dbfe5d98a, type: 2}
-  bombSpawnThreshold: 66
+  bombSpawnThreshold: 10
   bomb_Purple: {fileID: 11400000, guid: 811391191a1605e4fb9177d9546cc8b5, type: 2}
   bomb_Blue: {fileID: 11400000, guid: 83edb8941e5f757468d25e08249b3a42, type: 2}
   bomb_Red: {fileID: 11400000, guid: 99adebf1eeadc314782ff8db8b77789f, type: 2}
@@ -3777,7 +3777,7 @@ MonoBehaviour:
   height: 19
   spawnPositions:
   - {x: -1, y: 7, z: 0}
-  - {x: 7, y: -2, z: 0}
+  - {x: 7, y: -1, z: 0}
   - {x: -1, y: -10, z: 0}
   - {x: -9, y: -2, z: 0}
   currentSpawnIdx: 0

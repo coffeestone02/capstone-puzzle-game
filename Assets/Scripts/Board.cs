@@ -291,7 +291,7 @@ public class Board : MonoBehaviour
             }
 
             // 이미 타일이 있는지 검사
-            if (this.tilemap.HasTile(tilePosition))
+            if (tilemap.HasTile(tilePosition))
             {
                 return false;
             }
@@ -392,7 +392,7 @@ public class Board : MonoBehaviour
             TileBase tb = tilemap.GetTile<TileBase>(pos);
             if (tb == null) continue;
 
-            PlayDestroyParticle(pos);
+            PlayDestroyParticle(destroyParticle, pos);
             tilemap.SetTile(pos, null);
         }
 
@@ -554,15 +554,24 @@ public class Board : MonoBehaviour
     }
 
     // 파티클 효과를 생성하고 재생하는 함수
-    private void PlayDestroyParticle(Vector3 position)
+    private void PlayDestroyParticle(GameObject effect, Vector3 position)
     {
-        if (destroyParticle == null)
+        if (effect == null)
         {
             return;
         }
 
-        GameObject particles = Instantiate(destroyParticle, tilemap.GetCellCenterWorld(Vector3Int.FloorToInt(position)), Quaternion.identity);
-        float scaleMultiplier = 0.2f; // 파티클 크기를 줄임
+        float scaleMultiplier;
+        if (effect == bombParticle)
+        {
+            scaleMultiplier = 0.8f;
+        }
+        else
+        {
+            scaleMultiplier = 0.2f;
+        }
+
+        GameObject particles = Instantiate(effect, tilemap.GetCellCenterWorld(Vector3Int.FloorToInt(position)), Quaternion.identity);
         particles.transform.localScale = new Vector3(scaleMultiplier, scaleMultiplier, scaleMultiplier);
         Destroy(particles, 1f); // 1초 뒤에 파괴
     }
@@ -719,7 +728,7 @@ public class Board : MonoBehaviour
             TileBase tb = tilemap.GetTile<TileBase>(p);
             if (tb == null) continue;
 
-            PlayDestroyParticle(p);
+            PlayDestroyParticle(destroyParticle, p);
             tilemap.SetTile(p, null);
 
             // 로켓 점수는 여기서 줌 (카운트는 X)
@@ -736,7 +745,7 @@ public class Board : MonoBehaviour
             TileBase tb = tilemap.GetTile<TileBase>(p);
             if (tb == null) continue;
 
-            PlayDestroyParticle(p);
+            PlayDestroyParticle(destroyParticle, p);
             tilemap.SetTile(p, null);
 
             // 로켓 점수는 여기서 줌 (카운트는 X)
@@ -747,6 +756,8 @@ public class Board : MonoBehaviour
     // 폭탄 폭발
     private void ExplodeBomb(Vector3Int startPos)
     {
+        PlayDestroyParticle(bombParticle, startPos);
+
         // 5x5 범위로 폭발
         for (int x = startPos.x - 2; x <= startPos.x + 2; x++)
         {
@@ -764,7 +775,6 @@ public class Board : MonoBehaviour
                 TileBase tb = tilemap.GetTile<TileBase>(p);
                 if (tb == null) continue;
 
-                PlayDestroyParticle(p);
                 tilemap.SetTile(p, null);
 
                 // 폭탄 점수는 여기서 줌 (카운트는 X)
