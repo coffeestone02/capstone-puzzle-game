@@ -5,14 +5,14 @@ using UnityEngine;
 public static class Data
 {
     // 행렬 회전에 쓰일 변수들
-    public static readonly float cos = Mathf.Cos(Mathf.PI / 2f);
-    public static readonly float sin = Mathf.Sin(Mathf.PI / 2f);
-    public static readonly float[] RotationMatrix = new float[] { cos, sin, -sin, cos };
+    // public static readonly float cos = Mathf.Cos(Mathf.PI / 2f);
+    // public static readonly float sin = Mathf.Sin(Mathf.PI / 2f);
+    // public static readonly float[] RotationMatrix = new float[] { cos, sin, -sin, cos };
 
     // 셀들이 그려질 위치. 셀들이 그려져서 피스가 만들어짐
     public static readonly Dictionary<ETriomino, Vector2Int[]> Cells = new Dictionary<ETriomino, Vector2Int[]>()
     {
-        { ETriomino.I, new Vector2Int[] { new Vector2Int(-1, 1), new Vector2Int( 0, 1), new Vector2Int( 1, 1) } },
+        { ETriomino.I, new Vector2Int[] { new Vector2Int(-1, 0), new Vector2Int(0, 0), new Vector2Int(1, 0) } },
         { ETriomino.L, new Vector2Int[] { new Vector2Int( 0, 1), new Vector2Int( 0, 0), new Vector2Int( 1, 0) } },
     };
 

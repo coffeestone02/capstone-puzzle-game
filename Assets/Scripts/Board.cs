@@ -20,9 +20,10 @@ public class Board : MonoBehaviour
 
     public Tile obstacleTile; // 장애물 타일(1x1)
     private int spawnObstacleCounter = 0;  // 장애물 스폰 카운트
-    [SerializeField] private int obstacleEverySpawns = 7; // n번째마다 장애물 스폰
+    public int obstacleEverySpawns = 12; // n번째마다 장애물 스폰
+    public int[] obstacleByDifficulty = { 12, 11, 9 };
 
-    [SerializeField] private int rocketThreshold = 9;   // 로켓 조건, 한 번에 n개 제거하면 다음 피스에 로켓 포함
+    [SerializeField] private int rocketThreshold = 6;   // 로켓 조건, 한 번에 n개 제거하면 다음 피스에 로켓 포함
     private bool nextSpawnHasRocket = false; // 다음 스폰에 로켓 넣을지
     private enum ColorId { Unknown, Purple, Blue, Red } // 색 아이디/유틸 
 
@@ -33,7 +34,7 @@ public class Board : MonoBehaviour
 
     // 폭탄 관련 변수 추가
     private int brokenBlockCount = 0; // 부숴진 블록 카운트
-    [SerializeField] private int bombSpawnThreshold = 66; // 블록을 이 변수값만큼 제거하면 다음 피스에 폭탄 포함
+    [SerializeField] private int bombSpawnThreshold = 20; // 블록을 이 변수값만큼 제거하면 다음 피스에 폭탄 포함
     private bool nextSpawnHasBomb = false; // 다음 스폰에 폭탄 넣을지
 
     // 폭탄 타일
@@ -77,7 +78,7 @@ public class Board : MonoBehaviour
     };
 
     [Header("점수 및 UI와 관련 변수")]
-    public int[] difficultyLines = { 10000, 30000, 50000 };
+    public int[] difficultyLines = { 50000, 100000, 200000 };
     public float playTime { get; private set; }
     public TMP_Text scoreText;
     public TMP_Text levelText;
@@ -107,8 +108,6 @@ public class Board : MonoBehaviour
     void Start()
     {
         SpawnPiece();
-
-
     }
 
     private void Update()

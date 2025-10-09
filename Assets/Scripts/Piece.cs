@@ -182,13 +182,23 @@ public class Piece : MonoBehaviour
     // 레벨은 3레벨까지 존재 -> 5레벨 이상으로 늘어나면 반복문으로 변경 가능
     private void SetDifficulty()
     {
+        // for (int idx = 0;idx < board.difficultyLines.Length;idx++)
+        // {
+        //     if (board.score < board.difficultyLines[idx])
+        //     {
+        //         board.level = idx + 1;
+        //         board.levelText.text = board.level.ToString();
+        //         stepDelay = stepDelayByDifficulty[idx];
+        //         break;
+        //     }
+        // }
         for (int idx = 0;idx < board.difficultyLines.Length;idx++)
         {
             if (board.score < board.difficultyLines[idx])
             {
                 board.level = idx + 1;
                 board.levelText.text = board.level.ToString();
-                stepDelay = stepDelayByDifficulty[idx];
+                board.obstacleEverySpawns = board.obstacleByDifficulty[idx];
                 break;
             }
         }
@@ -288,27 +298,44 @@ public class Piece : MonoBehaviour
     // 실제적으로 회전시키는 메소드
     private void ApplyRotationMatrix(int direction)
     {
-        float[] matrix = Data.RotationMatrix;
+        // float[] matrix = Data.RotationMatrix;
+
+        // for (int i = 0; i < cells.Length; i++)
+        // {
+        //     Vector3 cell = cells[i];
+
+        //     int x, y;
+
+        //     // 회전 행렬을 사용해서 회전 시킴
+        //     switch (data.triomino)
+        //     {
+        //         case ETriomino.I:
+        //             cell.x -= 0.5f;
+        //             cell.y -= 0.5f;
+        //             x = Mathf.CeilToInt((cell.x * matrix[0] * direction) + (cell.y * matrix[1] * direction));
+        //             y = Mathf.CeilToInt((cell.x * matrix[2] * direction) + (cell.y * matrix[3] * direction));
+        //             break;
+        //         default:
+        //             x = Mathf.RoundToInt((cell.x * matrix[0] * direction) + (cell.y * matrix[1] * direction));
+        //             y = Mathf.RoundToInt((cell.x * matrix[2] * direction) + (cell.y * matrix[3] * direction));
+        //             break;
+        //     }
+
+        //     cells[i] = new Vector3Int(x, y, 0);
+        // }
 
         for (int i = 0; i < cells.Length; i++)
         {
-            Vector3 cell = cells[i];
-
             int x, y;
-
-            // 회전 행렬을 사용해서 회전 시킴
-            switch (data.triomino)
+            if (direction > 0) // 시계방향
             {
-                case ETriomino.I:
-                    cell.x -= 0.5f;
-                    cell.y -= 0.5f;
-                    x = Mathf.CeilToInt((cell.x * matrix[0] * direction) + (cell.y * matrix[1] * direction));
-                    y = Mathf.CeilToInt((cell.x * matrix[2] * direction) + (cell.y * matrix[3] * direction));
-                    break;
-                default:
-                    x = Mathf.RoundToInt((cell.x * matrix[0] * direction) + (cell.y * matrix[1] * direction));
-                    y = Mathf.RoundToInt((cell.x * matrix[2] * direction) + (cell.y * matrix[3] * direction));
-                    break;
+                x =  cells[i].y;
+                y = -cells[i].x;
+            }	
+            else // 반시계방향
+            {   
+                x = -cells[i].y;
+                y =  cells[i].x;
             }
 
             cells[i] = new Vector3Int(x, y, 0);
