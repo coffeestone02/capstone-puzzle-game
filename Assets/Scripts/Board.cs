@@ -55,7 +55,7 @@ public class Board : MonoBehaviour
     [SerializeField] private int width;
     [SerializeField] private int height;
     public Vector3Int[] spawnPositions; // 피스가 스폰될 위치(인스펙터에서 설정)
-    private Vector2Int boardSize; // 게임보드 사이즈
+    public Vector2Int boardSize; // 게임보드 사이즈
     public int currentSpawnIdx = 0; // 스폰 위치 인덱스. 0 : 위쪽, 1 : 오른쪽, 2 : 아래쪽, 3: 왼쪽
 
     // 보드 범위를 확인하는데 사용함
