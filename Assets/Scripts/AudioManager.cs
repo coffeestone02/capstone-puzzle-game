@@ -9,6 +9,8 @@ public class AudioManager : MonoBehaviour
     // Sound
     public AudioSource bgmPlayer;
     public AudioSource sfxPlayer;
+
+    public AudioClip[] bgmClips;
     public AudioClip soundRotate;          // 회전 성공
     public AudioClip soundClear;           // 블록 파괴(클리어)
     public AudioClip soundButton;

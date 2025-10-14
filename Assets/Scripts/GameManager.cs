@@ -35,6 +35,13 @@ public class GameManager : MonoBehaviour
         SceneManager.LoadScene("GamePlayScene");
     }
 
+    public void Restart()
+    {
+        AudioManager.instance.bgmPlayer.clip = AudioManager.instance.bgmClips[2];
+        AudioManager.instance.bgmPlayer.Play();
+        SceneManager.LoadScene("GamePlayScene");
+    }
+
     public void Resume()
     {
         isPause = false;

@@ -112,8 +112,6 @@ public class Piece : MonoBehaviour
         {
             return;
         }
-        
-        SetDifficulty();
 
         // 지우고 위치를 옮겨서 다시 그린다.
         this.board.Clear(this);
@@ -176,31 +174,6 @@ public class Piece : MonoBehaviour
                 break;
             default:
                 break;
-        }
-    }
-
-    // 레벨은 3레벨까지 존재 -> 5레벨 이상으로 늘어나면 반복문으로 변경 가능
-    private void SetDifficulty()
-    {
-        // for (int idx = 0;idx < board.difficultyLines.Length;idx++)
-        // {
-        //     if (board.score < board.difficultyLines[idx])
-        //     {
-        //         board.level = idx + 1;
-        //         board.levelText.text = board.level.ToString();
-        //         stepDelay = stepDelayByDifficulty[idx];
-        //         break;
-        //     }
-        // }
-        for (int idx = 0;idx < board.difficultyLines.Length;idx++)
-        {
-            if (board.score < board.difficultyLines[idx])
-            {
-                board.level = idx + 1;
-                board.levelText.text = board.level.ToString();
-                board.obstacleEverySpawns = board.obstacleByDifficulty[idx];
-                break;
-            }
         }
     }
 

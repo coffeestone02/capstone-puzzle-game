@@ -21,7 +21,6 @@ public class Board : MonoBehaviour
     public Tile obstacleTile; // 장애물 타일(1x1)
     private int spawnObstacleCounter = 0;  // 장애물 스폰 카운트
     public int obstacleEverySpawns = 12; // n번째마다 장애물 스폰
-    public int[] obstacleByDifficulty = { 12, 11, 9 };
 
     [SerializeField] private int rocketThreshold = 6;   // 로켓 조건, 한 번에 n개 제거하면 다음 피스에 로켓 포함
     private bool nextSpawnHasRocket = false; // 다음 스폰에 로켓 넣을지
@@ -78,7 +77,8 @@ public class Board : MonoBehaviour
     };
 
     [Header("점수 및 UI와 관련 변수")]
-    public int[] difficultyLines = { 50000, 100000, 200000 };
+    public int[] difficultyLines = { 50000, 100000 };
+    public int[] obstacleByDifficulty = { 10, 8 };
     public float playTime { get; private set; }
     public TMP_Text scoreText;
     public TMP_Text levelText;
@@ -117,7 +117,27 @@ public class Board : MonoBehaviour
             return;
         }
 
+        SetDifficulty();
         TimeTextUpdate();
+    }
+
+    private void SetDifficulty()
+    {
+        for (int idx = 0; idx < difficultyLines.Length; idx++)
+        {
+            if (level < 3 && score >= difficultyLines[idx])
+            {
+                obstacleEverySpawns = obstacleByDifficulty[idx];
+                if (AudioManager.instance.bgmPlayer.clip != AudioManager.instance.bgmClips[idx])
+                {
+                    AudioManager.instance.bgmPlayer.clip = AudioManager.instance.bgmClips[idx];
+                    AudioManager.instance.bgmPlayer.Play();
+                }
+
+                level = idx + 2;
+                levelText.text = level.ToString();
+            }
+        }
     }
 
     private void TimeTextUpdate()

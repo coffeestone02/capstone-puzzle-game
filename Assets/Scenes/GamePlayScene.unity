@@ -804,7 +804,7 @@ MonoBehaviour:
         m_CallState: 2
       - m_Target: {fileID: 1781456882}
         m_TargetAssemblyTypeName: GameManager, Assembly-CSharp
-        m_MethodName: GamePlay
+        m_MethodName: Restart
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -2369,7 +2369,7 @@ MonoBehaviour:
         m_CallState: 2
       - m_Target: {fileID: 1781456882}
         m_TargetAssemblyTypeName: GameManager, Assembly-CSharp
-        m_MethodName: GamePlay
+        m_MethodName: Restart
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -3937,7 +3937,6 @@ MonoBehaviour:
     - {fileID: 11400000, guid: 3254dae3730c477438f2a011679f5794, type: 2}
   obstacleTile: {fileID: 11400000, guid: 113ac11ae386b2b449933e0676b681f8, type: 2}
   obstacleEverySpawns: 12
-  obstacleByDifficulty: 0c0000000b00000009000000
   rocketThreshold: 6
   rocketCross_Purple: {fileID: 11400000, guid: b26734931e2a79d4ea84c23cba19c316, type: 2}
   rocketCross_Blue: {fileID: 11400000, guid: 434079dd6be3ed5438a90404107fbde9, type: 2}
@@ -3955,7 +3954,8 @@ MonoBehaviour:
   - {x: -9, y: -2, z: 0}
   boardSize: {x: 0, y: 0}
   currentSpawnIdx: 0
-  difficultyLines: 10270000204e000030750000
+  difficultyLines: 50c30000a0860100
+  obstacleByDifficulty: 0a00000008000000
   scoreText: {fileID: 907729088}
   levelText: {fileID: 542448050}
   playtimeText: {fileID: 985090910}
@@ -4141,7 +4141,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 66
+  m_text: 20
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 963954133c37b044a8f69c44eb9ac8ea, type: 2}
   m_sharedMaterial: {fileID: -5745829389551495224, guid: 963954133c37b044a8f69c44eb9ac8ea, type: 2}
