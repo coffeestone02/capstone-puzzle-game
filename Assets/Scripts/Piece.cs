@@ -48,19 +48,19 @@ public class Piece : MonoBehaviour
         switch (randomIdx)
         {
             case 0:
-                firstTile = piece.data.tiles[0];
-                secondTile = piece.data.tiles[1];
-                thirdTile = piece.data.tiles[1];
+                firstTile = piece.data.normalTiles[0];
+                secondTile = piece.data.normalTiles[1];
+                thirdTile = piece.data.normalTiles[1];
                 break;
             case 1:
-                firstTile = piece.data.tiles[1];
-                secondTile = piece.data.tiles[0];
-                thirdTile = piece.data.tiles[1];
+                firstTile = piece.data.normalTiles[1];
+                secondTile = piece.data.normalTiles[0];
+                thirdTile = piece.data.normalTiles[1];
                 break;
             default:
-                firstTile = piece.data.tiles[1];
-                secondTile = piece.data.tiles[1];
-                thirdTile = piece.data.tiles[0];
+                firstTile = piece.data.normalTiles[1];
+                secondTile = piece.data.normalTiles[1];
+                thirdTile = piece.data.normalTiles[0];
                 break;
         }
     }
@@ -238,9 +238,6 @@ public class Piece : MonoBehaviour
             this.position = newPosition;
             moveTime = Time.time + moveDelay; // 다음 입력을 받을 수 있는 시기 계산
             lockTime = 0f; // lockTime 초기화
-
-            // 이동 Sound: 중력 이동과 측면 이동을 구분
-            bool isGravityMove = (translation == gravityVec);
         }
 
         return valid;
@@ -271,32 +268,6 @@ public class Piece : MonoBehaviour
     // 실제적으로 회전시키는 메소드
     private void ApplyRotationMatrix(int direction)
     {
-        // float[] matrix = Data.RotationMatrix;
-
-        // for (int i = 0; i < cells.Length; i++)
-        // {
-        //     Vector3 cell = cells[i];
-
-        //     int x, y;
-
-        //     // 회전 행렬을 사용해서 회전 시킴
-        //     switch (data.triomino)
-        //     {
-        //         case ETriomino.I:
-        //             cell.x -= 0.5f;
-        //             cell.y -= 0.5f;
-        //             x = Mathf.CeilToInt((cell.x * matrix[0] * direction) + (cell.y * matrix[1] * direction));
-        //             y = Mathf.CeilToInt((cell.x * matrix[2] * direction) + (cell.y * matrix[3] * direction));
-        //             break;
-        //         default:
-        //             x = Mathf.RoundToInt((cell.x * matrix[0] * direction) + (cell.y * matrix[1] * direction));
-        //             y = Mathf.RoundToInt((cell.x * matrix[2] * direction) + (cell.y * matrix[3] * direction));
-        //             break;
-        //     }
-
-        //     cells[i] = new Vector3Int(x, y, 0);
-        // }
-
         for (int i = 0; i < cells.Length; i++)
         {
             int x, y;
@@ -359,7 +330,6 @@ public class Piece : MonoBehaviour
         }
     }
 
-    // 인풋들
     // 회전 입력
     private void RotationInput()
     {

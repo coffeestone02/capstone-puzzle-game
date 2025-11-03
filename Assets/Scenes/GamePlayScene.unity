@@ -3923,6 +3923,58 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1385304952}
   m_CullTransparentMesh: 1
+--- !u!1 &1698040018
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1698040020}
+  - component: {fileID: 1698040019}
+  m_Layer: 0
+  m_Name: UI Manager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1698040019
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1698040018}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 945840b6ab7710c49aa98d385ec56b76, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  scoreText: {fileID: 907729088}
+  levelText: {fileID: 542448050}
+  playtimeText: {fileID: 985090910}
+  brokenBlockText: {fileID: 146218209}
+  bombThresholdText: {fileID: 1989012506}
+  mainBoard: {fileID: 1935108063}
+  scoreManager: {fileID: 1772873726}
+  gameManager: {fileID: 1781456882}
+--- !u!4 &1698040020
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1698040018}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1743016185
 GameObject:
   m_ObjectHideFlags: 0
@@ -4057,6 +4109,52 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1743016185}
   m_CullTransparentMesh: 1
+--- !u!1 &1772873724
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1772873725}
+  - component: {fileID: 1772873726}
+  m_Layer: 0
+  m_Name: Score Manager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1772873725
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1772873724}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1772873726
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1772873724}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a8e87fc2526e2214186705d4a8e3f1bd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gameManager: {fileID: 1781456882}
+  mainBoard: {fileID: 1935108063}
 --- !u!1001 &1781456881
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4297,19 +4395,19 @@ MonoBehaviour:
   bombParticle: {fileID: 4035903591278710484, guid: aa122f157eac1c8428ae5db8a315ccd8, type: 3}
   triominos:
   - triomino: 1
-    tiles:
+    normalTiles:
     - {fileID: 11400000, guid: 3254dae3730c477438f2a011679f5794, type: 2}
     - {fileID: 11400000, guid: 049b954554f6e404c8631c78668f64ab, type: 2}
   - triomino: 0
-    tiles:
+    normalTiles:
     - {fileID: 11400000, guid: 3254dae3730c477438f2a011679f5794, type: 2}
     - {fileID: 11400000, guid: 049b954554f6e404c8631c78668f64ab, type: 2}
   - triomino: 1
-    tiles:
+    normalTiles:
     - {fileID: 11400000, guid: 049b954554f6e404c8631c78668f64ab, type: 2}
     - {fileID: 11400000, guid: 3254dae3730c477438f2a011679f5794, type: 2}
   - triomino: 0
-    tiles:
+    normalTiles:
     - {fileID: 11400000, guid: 049b954554f6e404c8631c78668f64ab, type: 2}
     - {fileID: 11400000, guid: 3254dae3730c477438f2a011679f5794, type: 2}
   obstacleTile: {fileID: 11400000, guid: 113ac11ae386b2b449933e0676b681f8, type: 2}
@@ -4333,11 +4431,6 @@ MonoBehaviour:
   currentSpawnIdx: 0
   difficultyLines: 50c30000a0860100
   obstacleByDifficulty: 0a00000008000000
-  scoreText: {fileID: 907729088}
-  levelText: {fileID: 542448050}
-  playtimeText: {fileID: 985090910}
-  brokenBlockText: {fileID: 146218209}
-  bombThresholdText: {fileID: 1989012506}
   level: 1
 --- !u!114 &1935108064
 MonoBehaviour:
@@ -5117,3 +5210,5 @@ SceneRoots:
   - {fileID: 32254797}
   - {fileID: 1946993152}
   - {fileID: 1781456881}
+  - {fileID: 1698040020}
+  - {fileID: 1772873725}

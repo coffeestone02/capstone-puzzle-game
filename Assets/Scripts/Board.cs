@@ -13,6 +13,7 @@ public class Board : MonoBehaviour
     public GameManager gameManager; // UI 연결용
     public GameObject destroyParticle; // 파괴 이펙트
     public GameObject bombParticle; // 폭발 파티클 (인스펙터에서 설정)
+    public event Action<int> OnBombChanged;
 
     public Tilemap tilemap { get; private set; } // 그려질 타일맵
     public Piece activePiece { get; private set; } // 현재 조작중인 피스
@@ -33,7 +34,7 @@ public class Board : MonoBehaviour
 
     // 폭탄 관련 변수 추가
     private int brokenBlockCount = 0; // 부숴진 블록 카운트
-    [SerializeField] private int bombSpawnThreshold = 20; // 블록을 이 변수값만큼 제거하면 다음 피스에 폭탄 포함
+    public int bombSpawnThreshold = 20; // 블록을 이 변수값만큼 제거하면 다음 피스에 폭탄 포함
     private bool nextSpawnHasBomb = false; // 다음 스폰에 폭탄 넣을지
 
     // 폭탄 타일
@@ -76,15 +77,9 @@ public class Board : MonoBehaviour
         new Vector3Int(0, -1, 0)
     };
 
-    [Header("점수 및 UI와 관련 변수")]
+    [Header("점수와 관련된 변수")]
     public int[] difficultyLines = { 50000, 100000 };
     public int[] obstacleByDifficulty = { 10, 8 };
-    public float playTime { get; private set; }
-    public TMP_Text scoreText;
-    public TMP_Text levelText;
-    public TMP_Text playtimeText;
-    public TMP_Text brokenBlockText;
-    public TMP_Text bombThresholdText;
     public int score { get; private set; }
     private int combo = 0;
     public int level = 1;
@@ -118,9 +113,9 @@ public class Board : MonoBehaviour
         }
 
         SetDifficulty();
-        TimeTextUpdate();
     }
 
+    // 공사중
     private void SetDifficulty()
     {
         for (int idx = 0; idx < difficultyLines.Length; idx++)
@@ -133,44 +128,9 @@ public class Board : MonoBehaviour
                     AudioManager.instance.bgmPlayer.clip = AudioManager.instance.bgmClips[idx];
                     AudioManager.instance.bgmPlayer.Play();
                 }
-
                 level = idx + 2;
-                levelText.text = level.ToString();
             }
         }
-    }
-
-    private void TimeTextUpdate()
-    {
-        playTime += Time.deltaTime;
-        string min;
-        string sec;
-
-        // 분
-        if (playTime < 60f)
-        {
-            min = "00";
-        }
-        else if (playTime < 600f)
-        {
-            min = "0" + Math.Truncate(playTime / 60f).ToString();
-        }
-        else
-        {
-            min = Math.Truncate(playTime / 60f).ToString();
-        }
-
-        // 초
-        if (Math.Truncate(playTime % 60f) < 10f)
-        {
-            sec = "0" + Math.Truncate(playTime % 60f).ToString();
-        }
-        else
-        {
-            sec = Math.Truncate(playTime % 60f).ToString();
-        }
-
-        playtimeText.text = min + ":" + sec;
     }
 
     // 지정된 위치에 트리오미노를 랜덤으로 골라 스폰
@@ -265,24 +225,6 @@ public class Board : MonoBehaviour
         return false;
     }
 
-    // 게임 오버인지 확인
-    public bool IsGameover(Piece piece)
-    {
-        for (int i = 0; i < piece.cells.Length; i++)
-        {
-            Vector3Int cellPos = piece.cells[i] + piece.position;
-
-            // 보드 가장자리인지 확인
-            if (InEdge(cellPos.x, cellPos.y))
-            {
-                gameManager.isOver = true;
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     // Piece를 지움
     public void Clear(Piece piece)
     {
@@ -329,19 +271,15 @@ public class Board : MonoBehaviour
     // 매칭 시도 및 점수 획득
     public void TryMatch(Piece piece)
     {
-        int mainPoint = 0;
-        int bonusPoint = 0;
-
         HashSet<Vector3Int> matched = FindMainMatch(piece); // 메인 피스 매칭
         HashSet<Vector3Int> bonusMatched = FindBonusMatch(matched); // 추가 제거 매칭
 
         // 매치/보너스만 카운트(로켓 폭발분은 카운트 제외)
         int clearedByMatchOnly = matched.Count + bonusMatched.Count;
         brokenBlockCount += clearedByMatchOnly;
-        brokenBlockText.text = brokenBlockCount.ToString();
 
-        mainPoint = matched.Count * 100; // 메인 피스 점수 계산
-        bonusPoint = bonusMatched.Count * 60; // 추가 제거 점수 계산
+        int mainPoint = matched.Count * 100; // 메인 피스 점수 계산
+        int bonusPoint = bonusMatched.Count * 60; // 추가 제거 점수 계산
 
         DeleteMatchedPiece(matched); // 메인 피스 제거
 
@@ -360,7 +298,6 @@ public class Board : MonoBehaviour
         if (brokenBlockCount >= bombSpawnThreshold)
         {
             brokenBlockCount = 0;
-            brokenBlockText.text = brokenBlockCount.ToString();
             nextSpawnHasBomb = true;
         }
         else if (clearedByMatchOnly >= rocketThreshold && !nextSpawnHasRocket)
@@ -375,7 +312,14 @@ public class Board : MonoBehaviour
 
         // 최종 점수 계산 (로켓 폭발 점수는 FireCrossRocketAt, 폭탄 폭발 점수는 ExplodeBomb에서 바로 계산됨)
         score += (mainPoint + bonusPoint) * (1 + combo) * (int)(1 + 0.1 * level);
-        scoreText.text = score.ToString();
+        if (OnBombChanged != null)
+        {
+            OnBombChanged.Invoke(brokenBlockCount);
+        }
+        else
+        {
+            Debug.LogError("TryMatch(): OnBombChanged is null.");
+        }
     }
 
     // 매치된 피스를 제거
@@ -671,6 +615,7 @@ public class Board : MonoBehaviour
             RefillBag();
         return dirBag[dirBagIdx++];
     }
+    
     // 모서리 닿았는지
     private bool IsTouchingEdge(Piece piece)
     {
