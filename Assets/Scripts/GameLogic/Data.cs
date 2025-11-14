@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Tilemaps;
 
 // 월킥 테이블과 회전 행렬. 정적 변수로 만들어서 접근하기 쉽게 만듦
 public static class Data

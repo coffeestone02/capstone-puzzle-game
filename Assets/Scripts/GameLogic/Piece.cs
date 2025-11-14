@@ -13,7 +13,7 @@ public class Piece : MonoBehaviour
     public Tile[] tiles { get; private set; } // 셀들의 색상 정보
     public int rotationIdx { get; private set; }
 
-    private float[] stepDelayByDifficulty = { 1.25f, 0.8f, 0.3f };
+    private float[] stepDelayByDifficulty = { 1.25f, 0.8f, 0.3f }; // 미사용
 
     public float stepDelay = 1.25f; // 중심으로 이동하는 속도. 자동으로 stepDelay의 시간만큼 중심으로 이동함
     public float moveDelay = 0.1f; // 플레이어의 입력 이동 속도를 정함. 값이 클수록 입력을 많이 못함
@@ -79,9 +79,9 @@ public class Piece : MonoBehaviour
         lockTime = 0f;
 
         // 타이머 상태 초기화
-        holdDir = 0;         
-        repeatTimer = 0f;    
-        softDropTimer = 0f; 
+        holdDir = 0;
+        repeatTimer = 0f;
+        softDropTimer = 0f;
 
         Tile firstTile;
         Tile secondTile;
@@ -114,9 +114,9 @@ public class Piece : MonoBehaviour
         }
 
         // 지우고 위치를 옮겨서 다시 그린다.
-        this.board.Clear(this);
+        board.Clear(this);
 
-        lockTime += Time.deltaTime; 
+        lockTime += Time.deltaTime;
 
         // 회전 입력
         RotationInput();
@@ -131,13 +131,13 @@ public class Piece : MonoBehaviour
         {
             HardDrop();
         }
-        
+
         if (Time.time > stepTime)
         {
             Step();
         }
 
-        this.board.Set(this);
+        board.Set(this);
     }
 
     private void HardDrop()
@@ -145,31 +145,19 @@ public class Piece : MonoBehaviour
         switch (board.currentSpawnIdx)
         {
             case 0:
-                while (Move(Vector2Int.down))
-                {
-                    continue;
-                }
+                MoveUntilEnd(Vector2Int.down);
                 Lock();
                 break;
             case 1:
-                while (Move(Vector2Int.left))
-                {
-                    continue;
-                }
+                MoveUntilEnd(Vector2Int.left);
                 Lock();
                 break;
             case 2:
-                while (Move(Vector2Int.up))
-                {
-                    continue;
-                }
+                MoveUntilEnd(Vector2Int.up);
                 Lock();
                 break;
             case 3:
-                while (Move(Vector2Int.right))
-                {
-                    continue;
-                }
+                MoveUntilEnd(Vector2Int.right);
                 Lock();
                 break;
             default:
@@ -177,21 +165,24 @@ public class Piece : MonoBehaviour
         }
     }
 
+    private void MoveUntilEnd(Vector2Int dir)
+    {
+        while (Move(dir))
+        {
+            continue;
+        }
+    }
+
     // 고정
     private void Lock()
     {
-        if (board.DestroyIfEdgeSolo(this))
-        {
-            return;
-        }
-
         board.Set(this); // 고정하고
         AudioManager.instance.PlayLockSound();
-        
+
         board.NextSpawnIdx(); // 스폰 위치를 변경
         board.TryMatch(this); // 피스 제거 시도
         board.SpawnPiece(); // 다른 피스 스폰
-    } 
+    }
 
     // 정해진 시간마다 중심으로 한 칸씩 내려감
     private void Step()
@@ -258,7 +249,7 @@ public class Piece : MonoBehaviour
             rotationIdx = originalRotation;
             ApplyRotationMatrix(-direction);
         }
-        else if(isSpawn == false)
+        else if (isSpawn == false)
         {
             // 회전 성공 Sound
             AudioManager.instance.PlayRotateSound();
@@ -273,13 +264,13 @@ public class Piece : MonoBehaviour
             int x, y;
             if (direction > 0) // 시계방향
             {
-                x =  cells[i].y;
+                x = cells[i].y;
                 y = -cells[i].x;
-            }	
+            }
             else // 반시계방향
-            {   
+            {
                 x = -cells[i].y;
-                y =  cells[i].x;
+                y = cells[i].x;
             }
 
             cells[i] = new Vector3Int(x, y, 0);

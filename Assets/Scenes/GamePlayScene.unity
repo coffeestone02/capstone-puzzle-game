@@ -4343,6 +4343,9 @@ GameObject:
   - component: {fileID: 1935108061}
   - component: {fileID: 1935108063}
   - component: {fileID: 1935108064}
+  - component: {fileID: 1935108065}
+  - component: {fileID: 1935108066}
+  - component: {fileID: 1935108067}
   m_Layer: 0
   m_Name: Board
   m_TagString: Untagged
@@ -4393,6 +4396,9 @@ MonoBehaviour:
   gameManager: {fileID: 1781456882}
   destroyParticle: {fileID: 3384366999043453948, guid: 7c19ad7a926fc084ea69d9ba4fedeeab, type: 3}
   bombParticle: {fileID: 4035903591278710484, guid: aa122f157eac1c8428ae5db8a315ccd8, type: 3}
+  obstacleSpawner: {fileID: 1935108065}
+  pieceDestroyer: {fileID: 1935108066}
+  itemSpawner: {fileID: 1935108067}
   triominos:
   - triomino: 1
     normalTiles:
@@ -4410,16 +4416,10 @@ MonoBehaviour:
     normalTiles:
     - {fileID: 11400000, guid: 049b954554f6e404c8631c78668f64ab, type: 2}
     - {fileID: 11400000, guid: 3254dae3730c477438f2a011679f5794, type: 2}
-  obstacleTile: {fileID: 11400000, guid: 113ac11ae386b2b449933e0676b681f8, type: 2}
-  obstacleEverySpawns: 12
-  rocketThreshold: 6
-  rocketCross_Purple: {fileID: 11400000, guid: b26734931e2a79d4ea84c23cba19c316, type: 2}
-  rocketCross_Blue: {fileID: 11400000, guid: 434079dd6be3ed5438a90404107fbde9, type: 2}
-  rocketCross_Red: {fileID: 11400000, guid: 4d780d4370517274e8cda83dbfe5d98a, type: 2}
+  obstacleThreshold: 12
   bombSpawnThreshold: 20
-  bomb_Purple: {fileID: 11400000, guid: 811391191a1605e4fb9177d9546cc8b5, type: 2}
-  bomb_Blue: {fileID: 11400000, guid: 83edb8941e5f757468d25e08249b3a42, type: 2}
-  bomb_Red: {fileID: 11400000, guid: 99adebf1eeadc314782ff8db8b77789f, type: 2}
+  rocketThreshold: 6
+  obstacleCounter: 0
   width: 19
   height: 19
   spawnPositions:
@@ -4444,12 +4444,48 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2381c650a8c51a349ae1265e2d85eab7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  stepDelay: 0.9
-  moveDelay: 0.05
-  lockDelay: 0.225
+  stepDelay: 1.25
+  moveDelay: 0.1
+  lockDelay: 0.5
   das: 0.15
-  arr: 0.045
-  softDropArr: 0.09
+  arr: 0.03
+  softDropArr: 0.03
+--- !u!114 &1935108065
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1935108060}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8e6a19297a868d1409dd6d3e9fd4b9b0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1935108066
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1935108060}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f412ba20181c7354281acfe077eeba1d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1935108067
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1935108060}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f1f09dc55d92c5247bd4f38e23508e51, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1946993148
 GameObject:
   m_ObjectHideFlags: 0
