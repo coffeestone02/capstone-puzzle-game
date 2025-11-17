@@ -6,12 +6,12 @@ using UnityEngine.Tilemaps;
 // 피스의 이동, 회전을 담당, 플레이어 조작도 여기서 받음
 public class Piece : MonoBehaviour
 {
-    public Board board { get; private set; } // 현재 사용중인 보드
-    public TriominoData data { get; private set; } // 현재 트리오미노의 데이터
+    private Board board; // 현재 사용중인 보드
+    private TriominoData data;// 현재 트리오미노의 데이터
     public Vector3Int[] cells { get; private set; } // 셀들의 위치 정보
     public Vector3Int position { get; private set; } // 피스의 위치 정보
     public Tile[] tiles { get; private set; } // 셀들의 색상 정보
-    public int rotationIdx { get; private set; }
+    private int rotationIdx;
 
     private float[] stepDelayByDifficulty = { 1.25f, 0.8f, 0.3f }; // 미사용
 
@@ -145,19 +145,19 @@ public class Piece : MonoBehaviour
         switch (board.currentSpawnIdx)
         {
             case 0:
-                MoveUntilEnd(Vector2Int.down);
+                MoveToEnd(Vector2Int.down);
                 Lock();
                 break;
             case 1:
-                MoveUntilEnd(Vector2Int.left);
+                MoveToEnd(Vector2Int.left);
                 Lock();
                 break;
             case 2:
-                MoveUntilEnd(Vector2Int.up);
+                MoveToEnd(Vector2Int.up);
                 Lock();
                 break;
             case 3:
-                MoveUntilEnd(Vector2Int.right);
+                MoveToEnd(Vector2Int.right);
                 Lock();
                 break;
             default:
@@ -165,7 +165,7 @@ public class Piece : MonoBehaviour
         }
     }
 
-    private void MoveUntilEnd(Vector2Int dir)
+    private void MoveToEnd(Vector2Int dir)
     {
         while (Move(dir))
         {
@@ -176,11 +176,18 @@ public class Piece : MonoBehaviour
     // 고정
     private void Lock()
     {
-        board.Set(this); // 고정하고
-        AudioManager.instance.PlayLockSound();
+        if (Util.IsTouchEdge(board, this, this.position)) // 스폰 장소에서 바로 아래로 떨어진 경우
+        {
+            board.Clear(this);
+        }
+        else // 정상적으로 고정된 경우
+        {
+            board.Set(this); // 고정하고
+            board.TryMatch(this); // 피스 제거 시도
+            AudioManager.instance.PlayLockSound();
+        }
 
         board.NextSpawnIdx(); // 스폰 위치를 변경
-        board.TryMatch(this); // 피스 제거 시도
         board.SpawnPiece(); // 다른 피스 스폰
     }
 
@@ -221,7 +228,7 @@ public class Piece : MonoBehaviour
         newPosition.x += translation.x;
         newPosition.y += translation.y;
 
-        bool valid = board.IsValidPosition(this, newPosition); // 유효한 위치인지 확인
+        bool valid = Util.IsValidPosition(board, this, newPosition); // 유효한 위치인지 확인
 
         // 유효하다면 위치를 이동
         if (valid)

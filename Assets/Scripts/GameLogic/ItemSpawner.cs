@@ -5,15 +5,15 @@ using UnityEngine.Tilemaps;
 
 public class ItemSpawner : MonoBehaviour
 {
-    private Board mainBoard;
+    private Board board;
 
     private void Start()
     {
-        mainBoard = FindObjectOfType<Board>();
+        board = FindObjectOfType<Board>();
 
-        if (mainBoard == null)
+        if (board == null)
         {
-            Debug.LogError("ObstacleSpawner.cs : mainBoard is null");
+            Debug.LogError("ObstacleSpawner.cs : board is null");
         }
     }
 

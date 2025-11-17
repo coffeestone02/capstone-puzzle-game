@@ -12,7 +12,7 @@ public class Board : MonoBehaviour
     [Header("필요한 컴포넌트와 관련 변수")]
     public GameManager gameManager; // UI 연결용
     public GameObject destroyParticle; // 파괴 이펙트
-    public GameObject bombParticle; // 폭발 파티클 (인스펙터에서 설정)
+    public GameObject bombParticle; // 폭발 파티클
     public event Action<int> OnBombChanged;
     public ObstacleSpawner obstacleSpawner;
     public PieceDestroyer pieceDestroyer;
@@ -77,13 +77,12 @@ public class Board : MonoBehaviour
     private void Update()
     {
         if (gameManager.isOver || gameManager.isPause)
-        {
             return;
-        }
 
         SetDifficulty();
     }
 
+    // 난이도 조정
     private void SetDifficulty()
     {
         for (int idx = 0; idx < difficultyLines.Length; idx++)
@@ -104,6 +103,7 @@ public class Board : MonoBehaviour
     // 지정된 위치에 트리오미노를 랜덤으로 골라 스폰
     public void SpawnPiece()
     {
+        // 방해물 생성
         obstacleCounter++;
         if (obstacleCounter >= obstacleThreshold)
         {
@@ -113,10 +113,9 @@ public class Board : MonoBehaviour
 
         int randomIdx = UnityEngine.Random.Range(0, triominos.Length);
         TriominoData data = triominos[randomIdx];
-
         activePiece.Initialize(this, spawnPositions[currentSpawnIdx], data);
 
-        if (!IsValidPosition(activePiece, activePiece.position)) //블록 생성 후 겹칠 시 게임 오버
+        if (Util.IsValidPosition(this, activePiece, activePiece.position) == false) //블록 생성 후 겹칠 시 게임 오버
         {
             gameManager.isOver = true;
             return;
@@ -139,12 +138,13 @@ public class Board : MonoBehaviour
                 break;
         }
 
-        if (nextSpawnHasBomb) // 폭탄 추가
+        // 아이템 추가(폭탄, 로켓 등)
+        if (nextSpawnHasBomb)
         {
             activePiece = itemSpawner.AddBombTile(activePiece);
             nextSpawnHasBomb = false;
         }
-        else if (nextSpawnHasRocket) // 로켓 추가 (십자형)
+        else if (nextSpawnHasRocket)
         {
             activePiece = itemSpawner.AddRocketTile(activePiece);
             nextSpawnHasRocket = false;
@@ -172,32 +172,6 @@ public class Board : MonoBehaviour
         }
     }
 
-    // 셀의 자리가 유효한지 검사하는 함수
-    public bool IsValidPosition(Piece piece, Vector3Int position)
-    {
-        RectInt bounds = this.Bounds;
-
-        // 각 셀마다 검사해야함
-        for (int i = 0; i < piece.cells.Length; i++)
-        {
-            Vector3Int tilePosition = piece.cells[i] + position;
-
-            // 보드 범위 안에 있는지 검사
-            if (bounds.Contains((Vector2Int)tilePosition) == false)
-            {
-                return false;
-            }
-
-            // 이미 타일이 있는지 검사
-            if (tilemap.HasTile(tilePosition))
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
     // 스폰 위치를 계산
     public void NextSpawnIdx()
     {
@@ -218,7 +192,8 @@ public class Board : MonoBehaviour
         int mainPoint = matched.Count * 100; // 메인 피스 점수 계산
         int bonusPoint = bonusMatched.Count * 60; // 추가 제거 점수 계산
 
-        pieceDestroyer.DeleteMatchedPiece(matched); // 메인 피스 제거
+        score += pieceDestroyer.DeleteMatchedPiece(matched); // 메인 피스 제거 + 아이템 점수 계산
+        score += pieceDestroyer.DeleteMatchedPiece(bonusMatched); // 추가 피스 제거 + 아이템 점수 계산
 
         if (matched.Count == 0)
         {
@@ -226,10 +201,9 @@ public class Board : MonoBehaviour
         }
         else
         {
+            combo++;
             AudioManager.instance.PlayClearSound();
         }
-
-        pieceDestroyer.DeleteMatchedPiece(bonusMatched); // 추가 피스 제거
 
         // 폭탄과 로켓 스폰(로켓 폭발로 지운 칸은 포함하지 않음)
         if (brokenBlockCount >= bombSpawnThreshold)
@@ -242,12 +216,7 @@ public class Board : MonoBehaviour
             nextSpawnHasRocket = true;
         }
 
-        if (clearedByMatchOnly > 0)
-        {
-            combo++;
-        }
-
-        // 최종 점수 계산 (로켓 폭발 점수는 FireCrossRocketAt, 폭탄 폭발 점수는 ExplodeBomb에서 바로 계산됨)
+        // 최종 점수 계산 (로켓 폭발 점수는 UseRocket, 폭탄 폭발 점수는 UseBomb에서 바로 계산됨)
         score += (mainPoint + bonusPoint) * (1 + combo) * (int)(1 + 0.1 * level);
         if (OnBombChanged != null)
         {

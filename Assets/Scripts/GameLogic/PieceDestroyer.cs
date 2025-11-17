@@ -6,15 +6,15 @@ using UnityEngine.Tilemaps;
 
 public class PieceDestroyer : MonoBehaviour
 {
-    private Board mainBoard;
+    private Board board;
 
     private void Start()
     {
-        mainBoard = FindObjectOfType<Board>();
+        board = FindObjectOfType<Board>();
 
-        if (mainBoard == null)
+        if (board == null)
         {
-            Debug.LogError("ObstacleSpawner.cs : mainBoard is null");
+            Debug.LogError("ObstacleSpawner.cs : board is null");
         }
     }
 
@@ -42,11 +42,9 @@ public class PieceDestroyer : MonoBehaviour
     {
         HashSet<Vector3Int> bonusMatched = new HashSet<Vector3Int>();
         if (matched == null || matched.Count == 0)
-        {
             return bonusMatched;
-        }
 
-        RectInt bounds = mainBoard.Bounds;
+        RectInt bounds = board.Bounds;
 
         // 후보 범위 찾기
         HashSet<int> xCross = new HashSet<int>();
@@ -66,15 +64,12 @@ public class PieceDestroyer : MonoBehaviour
 
                 // 이미 기존 matched에 들어있거나(중복방지) 범위 밖이면 패스
                 if (matched.Contains(cross) || bounds.Contains((Vector2Int)cross) == false)
-                {
                     continue;
-                }
+
 
                 // 실제로 타일이 있어야만 추가
-                if (mainBoard.tilemap.HasTile(cross))
-                {
+                if (board.tilemap.HasTile(cross))
                     bonusMatched.Add(cross);
-                }
             }
         }
 
@@ -85,9 +80,7 @@ public class PieceDestroyer : MonoBehaviour
     private bool CanDelete(Vector3Int[] connections)
     {
         if (connections.Length < 4)
-        {
             return false;
-        }
 
         // x좌표가 모두 같거나 y좌표가 모두 동일하면 일자모양
         int x = connections[0].x;
@@ -97,20 +90,14 @@ public class PieceDestroyer : MonoBehaviour
         for (int i = 1; i < connections.Length; i++)
         {
             if (connections[i].x != x)
-            {
                 xStraightCheck = false;
-            }
 
             if (connections[i].y != y)
-            {
                 yStraightCheck = false;
-            }
         }
 
         if (xStraightCheck || yStraightCheck)
-        {
             return false;
-        }
 
         return true;
     }
@@ -119,12 +106,12 @@ public class PieceDestroyer : MonoBehaviour
     private Vector3Int[] FindConnections(Piece piece, int cellIdx)
     {
         Vector3Int start = piece.cells[cellIdx] + piece.position;
-        Tile matchTile = mainBoard.tilemap.GetTile<Tile>(start); // 시작칸의 '색' 기준
+        Tile matchTile = board.tilemap.GetTile<Tile>(start); // 시작칸의 '색' 기준
 
         List<Vector3Int> connections = new List<Vector3Int>();
         Queue<Vector3Int> queue = new Queue<Vector3Int>();
         HashSet<Vector3Int> visited = new HashSet<Vector3Int>();
-        RectInt bounds = mainBoard.Bounds;
+        RectInt bounds = board.Bounds;
 
         queue.Enqueue(start);
         visited.Add(start);
@@ -139,17 +126,16 @@ public class PieceDestroyer : MonoBehaviour
                 Vector3Int next = current + dir;
 
                 if (bounds.Contains((Vector2Int)next) == false || visited.Contains(next))
-                {
                     continue;
-                }
 
-                Tile nextTile = mainBoard.tilemap.GetTile<Tile>(next); if (nextTile == null) continue;
+                Tile nextTile = board.tilemap.GetTile<Tile>(next);
+                if (nextTile == null)
+                    continue;
+
                 string matchTileColor = matchTile.name.ToLowerInvariant();
                 string nextTileColor = nextTile.name.ToLowerInvariant();
                 if (IsSameColor(matchTileColor, nextTileColor) == false)
-                {
                     continue;
-                }
 
                 queue.Enqueue(next);
                 visited.Add(next);
@@ -159,24 +145,26 @@ public class PieceDestroyer : MonoBehaviour
         return connections.ToArray();
     }
 
+    // 두 타일이 같은 색인지 확인
     private bool IsSameColor(string color1, string color2)
     {
-        if ((color1.Contains("purple") && color2.Contains("purple")) ||
-            (color1.Contains("blue") && color2.Contains("blue")) ||
-            (color1.Contains("red") && color2.Contains("red")))
-        {
+        if (color1.Contains("purple") && color2.Contains("purple"))
             return true;
-        }
+        if (color1.Contains("blue") && color2.Contains("blue"))
+            return true;
+        if (color1.Contains("red") && color2.Contains("red"))
+            return true;
 
         return false;
     }
 
-    // 매치된 피스를 제거
-    public void DeleteMatchedPiece(HashSet<Vector3Int> matched)
+    // 매치된 피스를 제거(아이템 파괴 점수만 반환)
+    public int DeleteMatchedPiece(HashSet<Vector3Int> matched)
     {
         if (matched == null || matched.Count == 0)
-            return;
+            return 0;
 
+        int itemScore = 0;
         List<Vector3Int> bombs = new List<Vector3Int>();
         List<Vector3Int> rockets = new List<Vector3Int>();
 
@@ -186,40 +174,41 @@ public class PieceDestroyer : MonoBehaviour
             if (Util.IsCenterCell(pos)) // 중앙 블록 보호
                 continue;
 
+            Tile tile = board.tilemap.GetTile<Tile>(pos);
+            if (tile == null) // 이미 제거된 경우
+                continue;
+
             // 폭탄과 로켓 위치 수집
-            Tile tile = mainBoard.tilemap.GetTile<Tile>(pos);
             string tileName = tile.name.ToLowerInvariant();
             if (tileName.Contains("bomb"))
-            {
                 bombs.Add(pos);
-            }
             else if (tileName.Contains("rocket"))
-            {
                 rockets.Add(pos);
-            }
 
-            Util.PlayDestroyParticle(mainBoard.destroyParticle, pos);
-            mainBoard.tilemap.SetTile(pos, null);
+            PlayDestroyParticle(board.destroyParticle, pos);
+            board.tilemap.SetTile(pos, null);
         }
 
         // 폭탄 사용
         foreach (Vector3Int pos in bombs)
         {
-            UseBomb(pos);
+            itemScore += UseBomb(pos);
         }
 
         // 로켓 사용
-        foreach (Vector3Int pos in bombs)
+        foreach (Vector3Int pos in rockets)
         {
-            UseRocket(pos);
+            itemScore += UseRocket(pos);
         }
+
+        return itemScore;
     }
 
     // 폭탄 폭발
     private int UseBomb(Vector3Int startPos)
     {
-        Util.PlayDestroyParticle(mainBoard.bombParticle, startPos);
-        RectInt bounds = mainBoard.Bounds;
+        PlayDestroyParticle(board.bombParticle, startPos);
+        RectInt bounds = board.Bounds;
         int bombScore = 0;
 
         // 5x5 범위로 폭발
@@ -228,17 +217,13 @@ public class PieceDestroyer : MonoBehaviour
             for (int y = startPos.y - 2; y <= startPos.y + 2; y++)
             {
                 if (x < bounds.xMin || x >= bounds.xMax || y < bounds.yMin || y >= bounds.yMax)
-                {
                     continue;
-                }
 
                 Vector3Int pos = new Vector3Int(x, y, 0);
                 if (Util.IsCenterCell(pos)) // 중앙 보호
                     continue;
 
-                mainBoard.tilemap.SetTile(pos, null);
-
-                // 폭탄 점수는 여기서 줌 (카운트는 X)
+                board.tilemap.SetTile(pos, null);
                 bombScore += 60;
             }
         }
@@ -249,20 +234,18 @@ public class PieceDestroyer : MonoBehaviour
     // 십자 로켓 폭발. 로켓 파괴 점수 반환
     private int UseRocket(Vector3Int startPos)
     {
-        RectInt bounds = mainBoard.Bounds;
+        RectInt bounds = board.Bounds;
         int rocketScore = 0;
 
         // 가로 라인
         for (int x = bounds.xMin; x < bounds.xMax; x++)
         {
             Vector3Int pos = new Vector3Int(x, startPos.y, 0);
-            if (Util.IsCenterCell(pos)) // 중앙 보호
+            if (Util.IsCenterCell(pos) || board.tilemap.GetTile(pos) == null)
                 continue;
 
-            Util.PlayDestroyParticle(mainBoard.destroyParticle, pos);
-            mainBoard.tilemap.SetTile(pos, null);
-
-            // 로켓 점수는 여기서 줌 (카운트는 X)
+            PlayDestroyParticle(board.destroyParticle, pos);
+            board.tilemap.SetTile(pos, null);
             rocketScore += 60;
         }
 
@@ -270,17 +253,29 @@ public class PieceDestroyer : MonoBehaviour
         for (int y = bounds.yMin; y < bounds.yMax; y++)
         {
             Vector3Int pos = new Vector3Int(startPos.x, y, 0);
-            if (Util.IsCenterCell(pos)) // 중앙 보호
+            if (Util.IsCenterCell(pos) || board.tilemap.GetTile(pos) == null)
                 continue;
 
-            Util.PlayDestroyParticle(mainBoard.destroyParticle, pos);
-            mainBoard.tilemap.SetTile(pos, null);
-
-            // 로켓 점수는 여기서 줌 (카운트는 X)
+            PlayDestroyParticle(board.destroyParticle, pos);
+            board.tilemap.SetTile(pos, null);
             rocketScore += 60;
         }
 
         return rocketScore;
+    }
+
+
+    // 파티클 재생
+    public void PlayDestroyParticle(GameObject effect, Vector3Int position)
+    {
+        if (effect == null)
+        {
+            Debug.LogError("Util.cs : effect is null");
+            return;
+        }
+
+        GameObject particle = Instantiate(effect, board.tilemap.GetCellCenterWorld(Vector3Int.FloorToInt(position)), Quaternion.identity);
+        Destroy(particle, 1f); // 1초 뒤에 파괴
     }
 
 }

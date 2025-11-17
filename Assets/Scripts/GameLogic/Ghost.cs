@@ -74,14 +74,10 @@ public class Ghost : MonoBehaviour
         {
             position.y = pos;
 
-            if (mainBoard.IsValidPosition(trackingPiece, position))
-            {
+            if (Util.IsValidPosition(mainBoard, trackingPiece, position))
                 this.position = position;
-            }
             else
-            {
                 break;
-            }
         }
     }
 
@@ -95,14 +91,10 @@ public class Ghost : MonoBehaviour
         {
             position.x = pos;
 
-            if (mainBoard.IsValidPosition(trackingPiece, position))
-            {
+            if (Util.IsValidPosition(mainBoard, trackingPiece, position))
                 this.position = position;
-            }
             else
-            {
                 break;
-            }
         }
     }
 
@@ -116,14 +108,10 @@ public class Ghost : MonoBehaviour
         {
             position.y = pos;
 
-            if (mainBoard.IsValidPosition(trackingPiece, position))
-            {
+            if (Util.IsValidPosition(mainBoard, trackingPiece, position))
                 this.position = position;
-            }
             else
-            {
                 break;
-            }
         }
     }
 
@@ -137,14 +125,10 @@ public class Ghost : MonoBehaviour
         {
             position.x = pos;
 
-            if (mainBoard.IsValidPosition(trackingPiece, position))
-            {
+            if (Util.IsValidPosition(mainBoard, trackingPiece, position))
                 this.position = position;
-            }
             else
-            {
                 break;
-            }
         }
     }
 

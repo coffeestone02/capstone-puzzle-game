@@ -6,17 +6,17 @@ using UnityEngine.Tilemaps;
 
 public class ObstacleSpawner : MonoBehaviour
 {
-    private Board mainBoard;
-    private Tile obstacleTile; // 장애물 타일(1x1)
+    private Board board;
+    private Tile obstacleTile; // 장애물 타일
 
     private void Start()
     {
-        mainBoard = FindObjectOfType<Board>();
+        board = FindObjectOfType<Board>();
         obstacleTile = Resources.Load<Tile>("VisualAssets/Tiles/stone03");
 
-        if (mainBoard == null)
+        if (board == null)
         {
-            Debug.LogError("ObstacleSpawner.cs : mainBoard is null");
+            Debug.LogError("ObstacleSpawner.cs : board is null");
         }
         if (obstacleTile == null)
         {
@@ -26,20 +26,11 @@ public class ObstacleSpawner : MonoBehaviour
 
     public void SpawnObstacle()
     {
-        if (mainBoard.obstacleCounter >= mainBoard.obstacleThreshold)
-        {
-            DropObstacleLine();
-        }
-    }
-
-    // 장애물 1줄 드랍(총 19칸) — 방향에 따라 칸별로 독립 낙하(즉시 배치 버전)
-    private void DropObstacleLine()
-    {
-        RectInt b = mainBoard.Bounds;
-        int xMin = b.xMin + 1;
-        int xMax = b.xMax - 2; // 포함 범위
-        int yMin = b.yMin + 1;
-        int yMax = b.yMax - 2; // 포함 범위
+        RectInt bounds = board.Bounds;
+        int xMin = bounds.xMin + 1;
+        int xMax = bounds.xMax - 2; // 포함 범위
+        int yMin = bounds.yMin + 1;
+        int yMax = bounds.yMax - 2; // 포함 범위
 
         int randomPos = UnityEngine.Random.Range(0, 4);
         switch (randomPos)
@@ -63,23 +54,24 @@ public class ObstacleSpawner : MonoBehaviour
     {
         for (int x = xMin; x <= xMax; x++)
         {
-            int? firstOccY = 0;
+            int? firstOccY = null;
             for (int y = yMin; y <= yMax; y++)
             {
-                if (mainBoard.tilemap.HasTile(new Vector3Int(x, y, 0)))
+                if (board.tilemap.HasTile(new Vector3Int(x, y, 0)))
                 {
                     firstOccY = y;
                     break;
                 }
             }
+
             if (firstOccY.HasValue)
             {
                 int restY = firstOccY.Value - 1;
                 if (restY >= yMin)
                 {
                     Vector3Int pos = new Vector3Int(x, restY, 0);
-                    if (!Util.IsCenterCell(pos) && !mainBoard.tilemap.HasTile(pos))
-                        mainBoard.tilemap.SetTile(pos, obstacleTile);
+                    if (Util.IsCenterCell(pos) == false && board.tilemap.HasTile(pos) == false)
+                        board.tilemap.SetTile(pos, obstacleTile);
                 }
             }
         }
@@ -92,20 +84,21 @@ public class ObstacleSpawner : MonoBehaviour
             int? firstOccX = null;
             for (int x = xMin; x <= xMax; x++)
             {
-                if (mainBoard.tilemap.HasTile(new Vector3Int(x, y, 0)))
+                if (board.tilemap.HasTile(new Vector3Int(x, y, 0)))
                 {
                     firstOccX = x;
                     break;
                 }
             }
+
             if (firstOccX.HasValue)
             {
                 int restX = firstOccX.Value - 1;
                 if (restX >= xMin)
                 {
                     Vector3Int pos = new Vector3Int(restX, y, 0);
-                    if (!Util.IsCenterCell(pos) && !mainBoard.tilemap.HasTile(pos))
-                        mainBoard.tilemap.SetTile(pos, obstacleTile);
+                    if (Util.IsCenterCell(pos) == false && board.tilemap.HasTile(pos) == false)
+                        board.tilemap.SetTile(pos, obstacleTile);
                 }
             }
         }
@@ -118,20 +111,21 @@ public class ObstacleSpawner : MonoBehaviour
             int? firstOccY = null;
             for (int y = yMax; y >= yMin; y--)
             {
-                if (mainBoard.tilemap.HasTile(new Vector3Int(x, y, 0)))
+                if (board.tilemap.HasTile(new Vector3Int(x, y, 0)))
                 {
                     firstOccY = y;
                     break;
                 }
             }
+
             if (firstOccY.HasValue)
             {
                 int restY = firstOccY.Value + 1;
                 if (restY <= yMax)
                 {
                     Vector3Int pos = new Vector3Int(x, restY, 0);
-                    if (!Util.IsCenterCell(pos) && !mainBoard.tilemap.HasTile(pos))
-                        mainBoard.tilemap.SetTile(pos, obstacleTile);
+                    if (Util.IsCenterCell(pos) == false && board.tilemap.HasTile(pos) == false)
+                        board.tilemap.SetTile(pos, obstacleTile);
                 }
             }
         }
@@ -144,20 +138,21 @@ public class ObstacleSpawner : MonoBehaviour
             int? firstOccX = null;
             for (int x = xMax; x >= xMin; x--)
             {
-                if (mainBoard.tilemap.HasTile(new Vector3Int(x, y, 0)))
+                if (board.tilemap.HasTile(new Vector3Int(x, y, 0)))
                 {
                     firstOccX = x;
                     break;
                 }
             }
+
             if (firstOccX.HasValue)
             {
                 int restX = firstOccX.Value + 1;
                 if (restX <= xMax)
                 {
                     Vector3Int pos = new Vector3Int(restX, y, 0);
-                    if (!Util.IsCenterCell(pos) && !mainBoard.tilemap.HasTile(pos))
-                        mainBoard.tilemap.SetTile(pos, obstacleTile);
+                    if (Util.IsCenterCell(pos) == false && board.tilemap.HasTile(pos) == false)
+                        board.tilemap.SetTile(pos, obstacleTile);
                 }
             }
         }
