@@ -1104,7 +1104,7 @@ GameObject:
   - component: {fileID: 260505442}
   - component: {fileID: 260505443}
   m_Layer: 5
-  m_Name: Layout
+  m_Name: StatusLayout
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

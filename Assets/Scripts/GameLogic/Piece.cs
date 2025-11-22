@@ -13,8 +13,6 @@ public class Piece : MonoBehaviour
     public Tile[] tiles { get; private set; } // 셀들의 색상 정보
     private int rotationIdx;
 
-    private float[] stepDelayByDifficulty = { 1.25f, 0.8f, 0.3f }; // 미사용
-
     public float stepDelay = 1.25f; // 중심으로 이동하는 속도. 자동으로 stepDelay의 시간만큼 중심으로 이동함
     public float moveDelay = 0.1f; // 플레이어의 입력 이동 속도를 정함. 값이 클수록 입력을 많이 못함
     public float lockDelay = 0.5f; // 이 시간만큼 못 움직이면 피스를 Lock함
@@ -83,6 +81,7 @@ public class Piece : MonoBehaviour
         repeatTimer = 0f;
         softDropTimer = 0f;
 
+        // 타일 색 설정
         Tile firstTile;
         Tile secondTile;
         Tile thirdTile;
@@ -104,6 +103,11 @@ public class Piece : MonoBehaviour
         tiles[0] = firstTile;
         tiles[1] = secondTile;
         tiles[2] = thirdTile;
+
+        if (board.currentSpawnIdx == 2 && data.triomino == ETriomino.I)
+        {
+            Move(Vector2Int.left);
+        }
     }
 
     private void Update()
@@ -122,8 +126,8 @@ public class Piece : MonoBehaviour
         RotationInput();
 
         SetupDirections();   // 측면 + 중력 키/벡터 셋업
-        GravityTap();        // 중력 키 '탭' → 한 칸
-        HandleSoftDrop();    // 중력 키 '홀드' → 빠른 낙하
+        GravityTap();        // 중력 키 '탭' -> 한 칸
+        HandleSoftDrop();    // 중력 키 '홀드' -> 빠른 낙하
         HandleAutoShift();   // 측면 DAS/ARR
 
         // HardDrop
@@ -383,7 +387,7 @@ public class Piece : MonoBehaviour
         }
     }
 
-    // 낙하 키 홀드 → 빠른 낙하
+    // 낙하 키 홀드 -> 빠른 낙하
     private void HandleSoftDrop()
     {
         if (Input.GetKey(gravityKey))
@@ -443,8 +447,11 @@ public class Piece : MonoBehaviour
 
     private void StartHold(int dir)
     {
-        holdDir = dir;
-        Move(holdDir == -1 ? lateralNeg : lateralPos);
+        if (dir == -1)
+            Move(lateralNeg);
+        else
+            Move(lateralPos);
+
         repeatTimer = das;
     }
 

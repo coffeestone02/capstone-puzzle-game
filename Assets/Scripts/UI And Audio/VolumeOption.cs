@@ -7,6 +7,7 @@ public class VolumeOption : MonoBehaviour
     public GameObject OptionPanel;
     public AudioSource bgmPlayer;
     public AudioSource sfxPlayer;
+    private float volumeValue = 0f;
 
     private void Start()
     {
