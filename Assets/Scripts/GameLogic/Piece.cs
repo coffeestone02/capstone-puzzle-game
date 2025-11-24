@@ -27,15 +27,15 @@ public class Piece : MonoBehaviour
     private int holdDir = 0;         // -1=측면 음(-), +1=측면 양(+), 0=없음
     private float repeatTimer = 0f;
 
-    private Vector2Int lateralNeg;   // holdDir=-1일 때 이동 벡터
-    private Vector2Int lateralPos;   // holdDir=+1일 때 이동 벡터
-    private KeyCode negKey;
-    private KeyCode posKey;
+    private Vector2Int lateralNegative;   // holdDir=-1일 때 이동 벡터
+    private Vector2Int lateralPositive;   // holdDir=+1일 때 이동 벡터
+    private KeyCode negativeKeyCode;
+    private KeyCode positiveKeyCode;
 
     //빠른 낙하
     public float softDropArr = 0.03f; // 낙하 키 홀드 시 연사 간격(작을수록 빠름)
     private float softDropTimer = 0f;
-    private KeyCode gravityKey;       // 스폰 방향에 따라 달라지는 '중력 키'
+    private KeyCode inputKeyCode;       // 스폰 방향에 따라 달라지는 '중력 키'
     private Vector2Int gravityVec;    // 스폰 방향에 따른 '중력 벡터'
 
 
@@ -336,13 +336,9 @@ public class Piece : MonoBehaviour
     private void RotationInput()
     {
         if (Input.GetKeyDown(KeyCode.S))
-        {
             Rotate(1);
-        }
         else if (Input.GetKeyDown(KeyCode.A))
-        {
             Rotate(-1);
-        }
     }
 
     // 스폰 방향에 맞춰 '측면'과 '중력' 키/벡터 정의
@@ -352,26 +348,26 @@ public class Piece : MonoBehaviour
         {
             // 중력 상/하 : 측면 = 좌/우
             case 0:
-                gravityKey = KeyCode.DownArrow; gravityVec = Vector2Int.down;
-                lateralNeg = Vector2Int.left; lateralPos = Vector2Int.right;
-                negKey = KeyCode.LeftArrow; posKey = KeyCode.RightArrow;
+                inputKeyCode = KeyCode.DownArrow; gravityVec = Vector2Int.down;
+                lateralNegative = Vector2Int.left; lateralPositive = Vector2Int.right;
+                negativeKeyCode = KeyCode.LeftArrow; positiveKeyCode = KeyCode.RightArrow;
                 break;
             case 2:
-                gravityKey = KeyCode.UpArrow; gravityVec = Vector2Int.up;
-                lateralNeg = Vector2Int.left; lateralPos = Vector2Int.right;
-                negKey = KeyCode.LeftArrow; posKey = KeyCode.RightArrow;
+                inputKeyCode = KeyCode.UpArrow; gravityVec = Vector2Int.up;
+                lateralNegative = Vector2Int.left; lateralPositive = Vector2Int.right;
+                negativeKeyCode = KeyCode.LeftArrow; positiveKeyCode = KeyCode.RightArrow;
                 break;
 
             // 중력 좌/우 : 측면 = 상/하
             case 1:
-                gravityKey = KeyCode.LeftArrow; gravityVec = Vector2Int.left;
-                lateralNeg = Vector2Int.down; lateralPos = Vector2Int.up;
-                negKey = KeyCode.DownArrow; posKey = KeyCode.UpArrow;
+                inputKeyCode = KeyCode.LeftArrow; gravityVec = Vector2Int.left;
+                lateralNegative = Vector2Int.down; lateralPositive = Vector2Int.up;
+                negativeKeyCode = KeyCode.DownArrow; positiveKeyCode = KeyCode.UpArrow;
                 break;
             case 3:
-                gravityKey = KeyCode.RightArrow; gravityVec = Vector2Int.right;
-                lateralNeg = Vector2Int.down; lateralPos = Vector2Int.up;
-                negKey = KeyCode.DownArrow; posKey = KeyCode.UpArrow;
+                inputKeyCode = KeyCode.RightArrow; gravityVec = Vector2Int.right;
+                lateralNegative = Vector2Int.down; lateralPositive = Vector2Int.up;
+                negativeKeyCode = KeyCode.DownArrow; positiveKeyCode = KeyCode.UpArrow;
                 break;
         }
     }
@@ -379,7 +375,7 @@ public class Piece : MonoBehaviour
     // 중력 방향으로 '한 칸' 탭
     private void GravityTap()
     {
-        if (Input.GetKeyDown(gravityKey))
+        if (Input.GetKeyDown(inputKeyCode))
         {
             Move(gravityVec);
             softDropTimer = softDropArr;           // 같은 프레임 중복 방지
@@ -390,12 +386,16 @@ public class Piece : MonoBehaviour
     // 낙하 키 홀드 -> 빠른 낙하
     private void HandleSoftDrop()
     {
-        if (Input.GetKey(gravityKey))
+        if (Input.GetKey(inputKeyCode))
         {
             softDropTimer -= Time.unscaledDeltaTime;
             while (softDropTimer <= 0f)
             {
-                softDropTimer += (softDropArr <= 0f) ? 0.0001f : softDropArr;
+                if (softDropArr <= 0f)
+                    softDropTimer += 0.0001f;
+                else
+                    softDropTimer += softDropArr;
+
                 Move(gravityVec);
                 stepTime = Time.time + stepDelay;  // 자연 낙하와 중복 방지
             }
@@ -409,26 +409,26 @@ public class Piece : MonoBehaviour
     // 좌/우(or 상/하) DAS/ARR
     private void HandleAutoShift()
     {
-        bool negDown = Input.GetKeyDown(negKey);
-        bool posDown = Input.GetKeyDown(posKey);
-        bool negHeld = Input.GetKey(negKey);
-        bool posHeld = Input.GetKey(posKey);
-        bool negUp = Input.GetKeyUp(negKey);
-        bool posUp = Input.GetKeyUp(posKey);
+        bool negativeDown = Input.GetKeyDown(negativeKeyCode);
+        bool positiveDown = Input.GetKeyDown(positiveKeyCode);
+        bool negativeHeld = Input.GetKey(negativeKeyCode);
+        bool positiveHeld = Input.GetKey(positiveKeyCode);
+        bool negativeUp = Input.GetKeyUp(negativeKeyCode);
+        bool positiveUp = Input.GetKeyUp(positiveKeyCode);
 
-        if (negDown && !posHeld) StartHold(-1);
-        else if (posDown && !negHeld) StartHold(+1);
-        else if (negDown && posHeld) StartHold(-1);
-        else if (posDown && negHeld) StartHold(+1);
+        if (negativeDown && !positiveHeld) StartHold(-1);
+        else if (positiveDown && !negativeHeld) StartHold(1);
+        else if (negativeDown && positiveHeld) StartHold(-1);
+        else if (positiveDown && negativeHeld) StartHold(1);
 
-        if (negDown && holdDir == +1) StartHold(-1);
-        if (posDown && holdDir == -1) StartHold(+1);
+        if (negativeDown && holdDir == 1) StartHold(-1);
+        if (positiveDown && holdDir == -1) StartHold(1);
 
-        if ((negUp && holdDir == -1) || (posUp && holdDir == +1)) StopHold();
+        if ((negativeUp && holdDir == -1) || (positiveUp && holdDir == 1)) StopHold();
 
         if (holdDir != 0)
         {
-            bool stillHolding = (holdDir == -1) ? negHeld : posHeld;
+            bool stillHolding = (holdDir == -1) ? negativeHeld : positiveHeld;
             if (!stillHolding)
             {
                 StopHold();
@@ -439,7 +439,7 @@ public class Piece : MonoBehaviour
                 while (repeatTimer <= 0f)
                 {
                     repeatTimer += (arr <= 0f) ? 0.0001f : arr;
-                    Move(holdDir == -1 ? lateralNeg : lateralPos);
+                    Move(holdDir == -1 ? lateralNegative : lateralPositive);
                 }
             }
         }
@@ -447,10 +447,12 @@ public class Piece : MonoBehaviour
 
     private void StartHold(int dir)
     {
-        if (dir == -1)
-            Move(lateralNeg);
+        holdDir = dir;
+
+        if (holdDir == -1)
+            Move(lateralNegative);
         else
-            Move(lateralPos);
+            Move(lateralPositive);
 
         repeatTimer = das;
     }
