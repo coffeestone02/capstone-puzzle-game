@@ -21,22 +21,14 @@ public class Piece : MonoBehaviour
     private float moveTime; // 다음 입력을 받을 수 있는 시기
     private float lockTime; // 고정되는 시기(lockTime이 lockDelay를 넘기는 순간 고정됨)
 
-    //DAS(딜레이), ARR(이동속도)
-    public float das = 0.15f;    // 좌/우(측면) 연사 시작 지연
-    public float arr = 0.03f;    // 좌/우(측면) 연사 간격
-    private int holdDir = 0;         // -1=측면 음(-), +1=측면 양(+), 0=없음
-    private float repeatTimer = 0f;
-
-    private Vector2Int lateralNegative;   // holdDir=-1일 때 이동 벡터
-    private Vector2Int lateralPositive;   // holdDir=+1일 때 이동 벡터
-    private KeyCode negativeKeyCode;
-    private KeyCode positiveKeyCode;
-
-    //빠른 낙하
-    public float softDropArr = 0.03f; // 낙하 키 홀드 시 연사 간격(작을수록 빠름)
-    private float softDropTimer = 0f;
-    private KeyCode inputKeyCode;       // 스폰 방향에 따라 달라지는 '중력 키'
-    private Vector2Int gravityVec;    // 스폰 방향에 따른 '중력 벡터'
+    private Vector2 fingerStartPosition;
+    private Vector2 fingerEndPosition;
+    [SerializeField] private float swipeThreshold = 50f;
+    private float swipeTime;
+    private Vector2Int gravityDir;
+    private Vector2 accumulatedDrag; // 누적된 드래그 거리
+    [SerializeField] private float pixelsPerGridCell = 80f; // 한 칸 이동에 필요한 픽셀 거리
+    private bool isMove;
 
 
     // piece가 처음 생성됐을 때 색을 결정함
@@ -76,11 +68,6 @@ public class Piece : MonoBehaviour
         moveTime = Time.time + moveDelay; // 다음 입력을 받을 수 있는 시기 계산
         lockTime = 0f;
 
-        // 타이머 상태 초기화
-        holdDir = 0;
-        repeatTimer = 0f;
-        softDropTimer = 0f;
-
         // 타일 색 설정
         Tile firstTile;
         Tile secondTile;
@@ -105,76 +92,30 @@ public class Piece : MonoBehaviour
         tiles[2] = thirdTile;
 
         if (board.currentSpawnIdx == 2 && data.triomino == ETriomino.I)
-        {
             Move(Vector2Int.left);
-        }
     }
 
     private void Update()
     {
         if (board.gameManager.isOver || board.gameManager.isPause)
-        {
             return;
-        }
 
-        // 지우고 위치를 옮겨서 다시 그린다.
         board.Clear(this);
+        SetGravityDirection();
+        HandleInput();
+        Step();
+        board.Set(this);
 
         lockTime += Time.deltaTime;
-
-        // 회전 입력
-        RotationInput();
-
-        SetupDirections();   // 측면 + 중력 키/벡터 셋업
-        GravityTap();        // 중력 키 '탭' -> 한 칸
-        HandleSoftDrop();    // 중력 키 '홀드' -> 빠른 낙하
-        HandleAutoShift();   // 측면 DAS/ARR
-
-        // HardDrop
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            HardDrop();
-        }
-
-        if (Time.time > stepTime)
-        {
-            Step();
-        }
-
-        board.Set(this);
     }
 
-    private void HardDrop()
-    {
-        switch (board.currentSpawnIdx)
-        {
-            case 0:
-                MoveToEnd(Vector2Int.down);
-                Lock();
-                break;
-            case 1:
-                MoveToEnd(Vector2Int.left);
-                Lock();
-                break;
-            case 2:
-                MoveToEnd(Vector2Int.up);
-                Lock();
-                break;
-            case 3:
-                MoveToEnd(Vector2Int.right);
-                Lock();
-                break;
-            default:
-                break;
-        }
-    }
-
-    private void MoveToEnd(Vector2Int dir)
+    private void HardDrop(Vector2Int dir)
     {
         while (Move(dir))
         {
             continue;
         }
+        Lock();
     }
 
     // 고정
@@ -198,6 +139,9 @@ public class Piece : MonoBehaviour
     // 정해진 시간마다 중심으로 한 칸씩 내려감
     private void Step()
     {
+        if (Time.time <= stepTime)
+            return;
+
         stepTime = Time.time + stepDelay; // 다음에 이동해야할 시기 계산
 
         switch (board.currentSpawnIdx)
@@ -224,7 +168,156 @@ public class Piece : MonoBehaviour
         }
     }
 
-    // 옆으로 움직임
+    private void SetGravityDirection()
+    {
+        switch (board.currentSpawnIdx)
+        {
+            case 0:
+                gravityDir = Vector2Int.down;
+                break;
+            case 1:
+                gravityDir = Vector2Int.left;
+                break;
+            case 2:
+                gravityDir = Vector2Int.up;
+                break;
+            case 3:
+                gravityDir = Vector2Int.right;
+                break;
+            default:
+                gravityDir = Vector2Int.down;
+                break;
+        }
+
+    }
+
+    private void DragMove()
+    {
+        // 현재 터치 위치와 마지막으로 이동한 위치 사이의 델타 계산
+        Vector2 currentDrag = fingerEndPosition - fingerStartPosition;
+
+        accumulatedDrag += currentDrag; // 누적 드래그에 추가
+        fingerStartPosition = fingerEndPosition; // 마지막 위치 업데이트
+
+        // 좌우
+        if (Mathf.Abs(accumulatedDrag.x) >= pixelsPerGridCell)
+        {
+            int moveSteps = (int)(accumulatedDrag.x / pixelsPerGridCell);
+
+            if (moveSteps > 0 && board.currentSpawnIdx != 1) // 오른쪽
+            {
+                for (int i = 0; i < moveSteps; i++)
+                {
+                    Move(Vector2Int.right);
+                }
+
+                accumulatedDrag.x -= moveSteps * pixelsPerGridCell;
+            }
+            else if (moveSteps < 0 && board.currentSpawnIdx != 3) // 왼쪽
+            {
+                for (int i = 0; i < Mathf.Abs(moveSteps); i++)
+                {
+                    Move(Vector2Int.left);
+                }
+
+                accumulatedDrag.x -= moveSteps * pixelsPerGridCell;
+            }
+
+            isMove = true;
+        }
+
+        // 상하
+        if (Mathf.Abs(accumulatedDrag.y) >= pixelsPerGridCell)
+        {
+            int moveSteps = (int)(accumulatedDrag.y / pixelsPerGridCell);
+
+            if (moveSteps > 0 && board.currentSpawnIdx != 0) // 위
+            {
+                for (int i = 0; i < moveSteps; i++)
+                {
+                    Move(Vector2Int.up);
+                }
+
+                accumulatedDrag.y -= moveSteps * pixelsPerGridCell;
+            }
+            else if (moveSteps < 0 && board.currentSpawnIdx != 2) // 아래
+            {
+                for (int i = 0; i < Mathf.Abs(moveSteps); i++)
+                {
+                    Move(Vector2Int.down);
+                }
+
+                accumulatedDrag.y -= moveSteps * pixelsPerGridCell;
+            }
+
+            isMove = true;
+        }
+    }
+
+
+    private void RotateAndHardDrop()
+    {
+        // 처음 터치 위치와 손을 뗀 위치 사이의 거리
+        float swipeDistanceX = Mathf.Abs(fingerEndPosition.x - fingerStartPosition.x);
+        float swipeDistanceY = Mathf.Abs(fingerEndPosition.y - fingerStartPosition.y);
+
+        if (isMove == false && swipeDistanceX < swipeThreshold && swipeDistanceY < swipeThreshold) // 터치하고 끝(회전)
+        {
+            Rotate(1);
+        }
+        else if (swipeTime <= 0.3f && swipeDistanceX > swipeDistanceY)
+        {
+            if (fingerStartPosition.x - fingerEndPosition.x > 0 && gravityDir == Vector2Int.left)
+            {
+                HardDrop(Vector2Int.left); // 왼쪽으로 하드드랍
+            }
+            else if (gravityDir == Vector2Int.right)
+            {
+                HardDrop(Vector2Int.right); // 오른쪽으로 하드드랍
+            }
+        }
+        else if (swipeTime <= 0.3f && swipeDistanceY > swipeDistanceX) // 상하 하드드랍
+        {
+            if (fingerStartPosition.y - fingerEndPosition.y > 0 && gravityDir == Vector2Int.down)
+            {
+                HardDrop(Vector2Int.down); // 아래로 하드드랍 
+            }
+            else if (gravityDir == Vector2Int.up)
+            {
+                HardDrop(Vector2Int.up); // 위로 하드드랍
+            }
+        }
+    }
+
+    // 입력
+    private void HandleInput()
+    {
+        if (Input.touchCount <= 0)
+            return;
+
+        Touch touch = Input.GetTouch(0); // 터치 정보 가져옴
+        if (touch.phase == TouchPhase.Began)
+        {
+            fingerStartPosition = touch.position;
+            accumulatedDrag = Vector2.zero;
+        }
+        else if (touch.phase == TouchPhase.Moved)
+        {
+            fingerEndPosition = touch.position;
+            swipeTime += Time.deltaTime;
+            DragMove(); // 이동
+        }
+        else if (touch.phase == TouchPhase.Ended)
+        {
+            fingerEndPosition = touch.position;
+            RotateAndHardDrop(); // 회전과 하드드랍
+            swipeTime = 0f;
+            accumulatedDrag = Vector2.zero;
+            isMove = false;
+        }
+    }
+
+    // 움직임
     private bool Move(Vector2Int translation)
     {
         // 이동할 위치를 계산
@@ -298,9 +391,7 @@ public class Piece : MonoBehaviour
             Vector2Int translation = data.wallKicks[wallKickIdx, i];
 
             if (Move(translation))
-            {
                 return true;
-            }
         }
 
         return false;
@@ -311,10 +402,7 @@ public class Piece : MonoBehaviour
     {
         int wallKickIdx = rotationIdx * 2;
 
-        if (rotationDirection < 0)
-        {
-            wallKickIdx--;
-        }
+        if (rotationDirection < 0) wallKickIdx--;
 
         return Wrap(wallKickIdx, 0, data.wallKicks.GetLength(0));
     }
@@ -323,143 +411,9 @@ public class Piece : MonoBehaviour
     private int Wrap(int input, int min, int max)
     {
         if (input < min)
-        {
             return max - (min - input) % (max - min);
-        }
         else
-        {
             return min + (input - min) % (max - min);
-        }
-    }
 
-    // 회전 입력
-    private void RotationInput()
-    {
-        if (Input.GetKeyDown(KeyCode.S))
-            Rotate(1);
-        else if (Input.GetKeyDown(KeyCode.A))
-            Rotate(-1);
-    }
-
-    // 스폰 방향에 맞춰 '측면'과 '중력' 키/벡터 정의
-    private void SetupDirections()
-    {
-        switch (board.currentSpawnIdx)
-        {
-            // 중력 상/하 : 측면 = 좌/우
-            case 0:
-                inputKeyCode = KeyCode.DownArrow; gravityVec = Vector2Int.down;
-                lateralNegative = Vector2Int.left; lateralPositive = Vector2Int.right;
-                negativeKeyCode = KeyCode.LeftArrow; positiveKeyCode = KeyCode.RightArrow;
-                break;
-            case 2:
-                inputKeyCode = KeyCode.UpArrow; gravityVec = Vector2Int.up;
-                lateralNegative = Vector2Int.left; lateralPositive = Vector2Int.right;
-                negativeKeyCode = KeyCode.LeftArrow; positiveKeyCode = KeyCode.RightArrow;
-                break;
-
-            // 중력 좌/우 : 측면 = 상/하
-            case 1:
-                inputKeyCode = KeyCode.LeftArrow; gravityVec = Vector2Int.left;
-                lateralNegative = Vector2Int.down; lateralPositive = Vector2Int.up;
-                negativeKeyCode = KeyCode.DownArrow; positiveKeyCode = KeyCode.UpArrow;
-                break;
-            case 3:
-                inputKeyCode = KeyCode.RightArrow; gravityVec = Vector2Int.right;
-                lateralNegative = Vector2Int.down; lateralPositive = Vector2Int.up;
-                negativeKeyCode = KeyCode.DownArrow; positiveKeyCode = KeyCode.UpArrow;
-                break;
-        }
-    }
-
-    // 중력 방향으로 '한 칸' 탭
-    private void GravityTap()
-    {
-        if (Input.GetKeyDown(inputKeyCode))
-        {
-            Move(gravityVec);
-            softDropTimer = softDropArr;           // 같은 프레임 중복 방지
-            stepTime = Time.time + stepDelay;      // 자연 낙하와 겹치지 않게 밀어둠
-        }
-    }
-
-    // 낙하 키 홀드 -> 빠른 낙하
-    private void HandleSoftDrop()
-    {
-        if (Input.GetKey(inputKeyCode))
-        {
-            softDropTimer -= Time.unscaledDeltaTime;
-            while (softDropTimer <= 0f)
-            {
-                if (softDropArr <= 0f)
-                    softDropTimer += 0.0001f;
-                else
-                    softDropTimer += softDropArr;
-
-                Move(gravityVec);
-                stepTime = Time.time + stepDelay;  // 자연 낙하와 중복 방지
-            }
-        }
-        else
-        {
-            softDropTimer = 0f;
-        }
-    }
-
-    // 좌/우(or 상/하) DAS/ARR
-    private void HandleAutoShift()
-    {
-        bool negativeDown = Input.GetKeyDown(negativeKeyCode);
-        bool positiveDown = Input.GetKeyDown(positiveKeyCode);
-        bool negativeHeld = Input.GetKey(negativeKeyCode);
-        bool positiveHeld = Input.GetKey(positiveKeyCode);
-        bool negativeUp = Input.GetKeyUp(negativeKeyCode);
-        bool positiveUp = Input.GetKeyUp(positiveKeyCode);
-
-        if (negativeDown && !positiveHeld) StartHold(-1);
-        else if (positiveDown && !negativeHeld) StartHold(1);
-        else if (negativeDown && positiveHeld) StartHold(-1);
-        else if (positiveDown && negativeHeld) StartHold(1);
-
-        if (negativeDown && holdDir == 1) StartHold(-1);
-        if (positiveDown && holdDir == -1) StartHold(1);
-
-        if ((negativeUp && holdDir == -1) || (positiveUp && holdDir == 1)) StopHold();
-
-        if (holdDir != 0)
-        {
-            bool stillHolding = (holdDir == -1) ? negativeHeld : positiveHeld;
-            if (!stillHolding)
-            {
-                StopHold();
-            }
-            else
-            {
-                repeatTimer -= Time.unscaledDeltaTime;
-                while (repeatTimer <= 0f)
-                {
-                    repeatTimer += (arr <= 0f) ? 0.0001f : arr;
-                    Move(holdDir == -1 ? lateralNegative : lateralPositive);
-                }
-            }
-        }
-    }
-
-    private void StartHold(int dir)
-    {
-        holdDir = dir;
-
-        if (holdDir == -1)
-            Move(lateralNegative);
-        else
-            Move(lateralPositive);
-
-        repeatTimer = das;
-    }
-
-    private void StopHold()
-    {
-        holdDir = 0;
-        repeatTimer = 0f;
     }
 }
