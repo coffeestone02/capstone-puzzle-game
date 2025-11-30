@@ -292,6 +292,10 @@ public class Piece : MonoBehaviour
             moveTime = Time.time + moveDelay; // 다음 입력을 받을 수 있는 시기 계산
             lockTime = 0f; // lockTime 초기화
         }
+        else if (translation == gravityDir)
+        {
+            Lock();
+        }
 
         return valid;
     }
