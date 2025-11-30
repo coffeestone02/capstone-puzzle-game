@@ -4579,11 +4579,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2381c650a8c51a349ae1265e2d85eab7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  debugText: {fileID: 1716005060}
   stepDelay: 1.5
   moveDelay: 0.1
   lockDelay: 0.5
   swipeThreshold: 50
+  moveInterval: 0.15
 --- !u!114 &1935108065
 MonoBehaviour:
   m_ObjectHideFlags: 0

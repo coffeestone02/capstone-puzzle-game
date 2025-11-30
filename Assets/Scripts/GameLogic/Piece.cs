@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
@@ -21,15 +22,15 @@ public class Piece : MonoBehaviour
     private float moveTime; // 다음 입력을 받을 수 있는 시기
     private float lockTime; // 고정되는 시기(lockTime이 lockDelay를 넘기는 순간 고정됨)
 
-    private Vector2 fingerStartPosition;
-    private Vector2 fingerEndPosition;
+    private Vector2 touchStartPosition;
+    private Vector2 touchCurrentPosition;
     [SerializeField] private float swipeThreshold = 50f;
-    private float swipeTime;
     private Vector2Int gravityDir;
-    private Vector2 accumulatedDrag; // 누적된 드래그 거리
-    [SerializeField] private float pixelsPerGridCell = 80f; // 한 칸 이동에 필요한 픽셀 거리
-    private bool isMove;
-
+    private Vector2Int moveDir;
+    private bool isTouch;
+    private bool isSwipeStart;
+    private float moveTimer;
+    [SerializeField] private float moveInterval = 0.15f;
 
     // piece가 처음 생성됐을 때 색을 결정함
     private void ColorSet(Piece piece, out Tile firstTile, out Tile secondTile, out Tile thirdTile)
@@ -103,19 +104,11 @@ public class Piece : MonoBehaviour
         board.Clear(this);
         SetGravityDirection();
         HandleInput();
+        HandleKeepMove();
         Step();
         board.Set(this);
 
         lockTime += Time.deltaTime;
-    }
-
-    private void HardDrop(Vector2Int dir)
-    {
-        while (Move(dir))
-        {
-            continue;
-        }
-        Lock();
     }
 
     // 고정
@@ -191,129 +184,94 @@ public class Piece : MonoBehaviour
 
     }
 
-    private void DragMove()
+    private void HandleKeepMove()
     {
-        // 현재 터치 위치와 마지막으로 이동한 위치 사이의 델타 계산
-        Vector2 currentDrag = fingerEndPosition - fingerStartPosition;
-
-        accumulatedDrag += currentDrag; // 누적 드래그에 추가
-        fingerStartPosition = fingerEndPosition; // 마지막 위치 업데이트
-
-        // 좌우
-        if (Mathf.Abs(accumulatedDrag.x) >= pixelsPerGridCell)
+        if (isSwipeStart && isTouch)
         {
-            int moveSteps = (int)(accumulatedDrag.x / pixelsPerGridCell);
+            moveTimer += Time.deltaTime;
 
-            if (moveSteps > 0 && board.currentSpawnIdx != 1) // 오른쪽
+            if (moveTimer >= moveInterval)
             {
-                for (int i = 0; i < moveSteps; i++)
-                {
-                    Move(Vector2Int.right);
-                }
-
-                accumulatedDrag.x -= moveSteps * pixelsPerGridCell;
+                Move(moveDir);
+                stepTime = Time.time + stepDelay;
+                moveTimer = 0f;
             }
-            else if (moveSteps < 0 && board.currentSpawnIdx != 3) // 왼쪽
-            {
-                for (int i = 0; i < Mathf.Abs(moveSteps); i++)
-                {
-                    Move(Vector2Int.left);
-                }
-
-                accumulatedDrag.x -= moveSteps * pixelsPerGridCell;
-            }
-
-            isMove = true;
-        }
-
-        // 상하
-        if (Mathf.Abs(accumulatedDrag.y) >= pixelsPerGridCell)
-        {
-            int moveSteps = (int)(accumulatedDrag.y / pixelsPerGridCell);
-
-            if (moveSteps > 0 && board.currentSpawnIdx != 0) // 위
-            {
-                for (int i = 0; i < moveSteps; i++)
-                {
-                    Move(Vector2Int.up);
-                }
-
-                accumulatedDrag.y -= moveSteps * pixelsPerGridCell;
-            }
-            else if (moveSteps < 0 && board.currentSpawnIdx != 2) // 아래
-            {
-                for (int i = 0; i < Mathf.Abs(moveSteps); i++)
-                {
-                    Move(Vector2Int.down);
-                }
-
-                accumulatedDrag.y -= moveSteps * pixelsPerGridCell;
-            }
-
-            isMove = true;
         }
     }
 
-
-    private void RotateAndHardDrop()
+    private void OnTouchEnd()
     {
-        // 처음 터치 위치와 손을 뗀 위치 사이의 거리
-        float swipeDistanceX = Mathf.Abs(fingerEndPosition.x - fingerStartPosition.x);
-        float swipeDistanceY = Mathf.Abs(fingerEndPosition.y - fingerStartPosition.y);
-
-        if (isMove == false && swipeDistanceX < swipeThreshold && swipeDistanceY < swipeThreshold) // 터치하고 끝(회전)
+        Vector2 swipeDistance = touchCurrentPosition - touchStartPosition;
+        if (isSwipeStart == false && isTouch && swipeDistance.magnitude < swipeThreshold)
         {
             Rotate(1);
         }
-        else if (swipeTime <= 0.3f && swipeDistanceX > swipeDistanceY)
+
+        isTouch = false;
+        isSwipeStart = false;
+        moveTimer = 0f;
+    }
+
+    private void OnTouchHold(Vector2 position)
+    {
+        if (isSwipeStart) return;
+
+        touchCurrentPosition = position;
+        Vector2 swipeDistance = touchCurrentPosition - touchStartPosition;
+
+        float absX = Mathf.Abs(swipeDistance.x);
+        float absY = Mathf.Abs(swipeDistance.y);
+        if (absX > swipeThreshold || absY > swipeThreshold)
         {
-            if (fingerStartPosition.x - fingerEndPosition.x > 0 && gravityDir == Vector2Int.left)
+            isSwipeStart = true;
+
+            if (absX > absY)
+                moveDir = swipeDistance.x > 0 ? Vector2Int.right : Vector2Int.left;
+            else
+                moveDir = swipeDistance.y > 0 ? Vector2Int.up : Vector2Int.down;
+
+            if ((moveDir == Vector2Int.up && gravityDir == Vector2Int.down) ||
+               (moveDir == Vector2Int.down && gravityDir == Vector2Int.up) ||
+               (moveDir == Vector2Int.left && gravityDir == Vector2Int.right) ||
+               (moveDir == Vector2Int.right && gravityDir == Vector2Int.left))
             {
-                HardDrop(Vector2Int.left); // 왼쪽으로 하드드랍
+                isSwipeStart = false;
+                return;
             }
-            else if (gravityDir == Vector2Int.right)
-            {
-                HardDrop(Vector2Int.right); // 오른쪽으로 하드드랍
-            }
-        }
-        else if (swipeTime <= 0.3f && swipeDistanceY > swipeDistanceX) // 상하 하드드랍
-        {
-            if (fingerStartPosition.y - fingerEndPosition.y > 0 && gravityDir == Vector2Int.down)
-            {
-                HardDrop(Vector2Int.down); // 아래로 하드드랍 
-            }
-            else if (gravityDir == Vector2Int.up)
-            {
-                HardDrop(Vector2Int.up); // 위로 하드드랍
-            }
+
+            Move(moveDir);
+            moveTimer = 0f;
         }
     }
 
-    // 입력
+    private void OnTouchBegan(Vector2 position)
+    {
+        touchStartPosition = position;
+        touchCurrentPosition = position;
+        isTouch = true;
+        isSwipeStart = false;
+        moveTimer = 0f;
+    }
+
     private void HandleInput()
     {
-        if (Input.touchCount <= 0)
-            return;
+        if (Input.touchCount <= 0) return;
 
         Touch touch = Input.GetTouch(0); // 터치 정보 가져옴
-        if (touch.phase == TouchPhase.Began)
+
+        switch (touch.phase)
         {
-            fingerStartPosition = touch.position;
-            accumulatedDrag = Vector2.zero;
-        }
-        else if (touch.phase == TouchPhase.Moved)
-        {
-            fingerEndPosition = touch.position;
-            swipeTime += Time.deltaTime;
-            DragMove(); // 이동
-        }
-        else if (touch.phase == TouchPhase.Ended)
-        {
-            fingerEndPosition = touch.position;
-            RotateAndHardDrop(); // 회전과 하드드랍
-            swipeTime = 0f;
-            accumulatedDrag = Vector2.zero;
-            isMove = false;
+            case TouchPhase.Began:
+                OnTouchBegan(touch.position);
+                break;
+            case TouchPhase.Moved:
+            case TouchPhase.Stationary:
+                OnTouchHold(touch.position);
+                break;
+            case TouchPhase.Ended:
+            case TouchPhase.Canceled:
+                OnTouchEnd();
+                break;
         }
     }
 

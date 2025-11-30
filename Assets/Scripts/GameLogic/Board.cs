@@ -115,12 +115,6 @@ public class Board : MonoBehaviour
         TriominoData data = triominos[randomIdx];
         activePiece.Initialize(this, spawnPositions[currentSpawnIdx], data);
 
-        if (Util.IsValidPosition(this, activePiece, activePiece.position) == false) //블록 생성 후 겹칠 시 게임 오버
-        {
-            gameManager.isOver = true;
-            return;
-        }
-
         // 방향에 맞게 회전
         switch (currentSpawnIdx)
         {
@@ -137,6 +131,13 @@ public class Board : MonoBehaviour
                 activePiece.Rotate(1, true);
                 break;
         }
+
+        if (Util.IsValidPosition(this, activePiece, activePiece.position) == false) //블록 생성 후 겹칠 시 게임 오버
+        {
+            gameManager.isOver = true;
+            return;
+        }
+
 
         // 아이템 추가(폭탄, 로켓 등)
         if (nextSpawnHasBomb)
