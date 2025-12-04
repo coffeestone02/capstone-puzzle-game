@@ -42,11 +42,11 @@ AudioSource:
   m_Enabled: 1
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
-  m_audioClip: {fileID: 8300000, guid: 458dd8822518c4f37bc3edba9b6c57d9, type: 3}
-  m_PlayOnAwake: 0
+  m_audioClip: {fileID: 8300000, guid: b2259d56b1381f34ebfc451b91a09317, type: 3}
+  m_PlayOnAwake: 1
   m_Volume: 1
   m_Pitch: 1
-  Loop: 0
+  Loop: 1
   Mute: 0
   Spatialize: 0
   SpatializePostEffects: 0
@@ -304,7 +304,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   bgmPlayer: {fileID: 2032981344192581410}
   sfxPlayer: {fileID: 9010709281204395827}
+  bgmClips:
+  - {fileID: 8300000, guid: b2259d56b1381f34ebfc451b91a09317, type: 3}
+  - {fileID: 8300000, guid: a034a66564ffbb447bded3a5f53473f1, type: 3}
+  - {fileID: 8300000, guid: 52914a8970426b649b161894558a7365, type: 3}
+  - {fileID: 8300000, guid: c817ac3f52ec69f418046eca881cb5a1, type: 3}
+  - {fileID: 8300000, guid: f176fc5f4b2e0f545b641403e62c447d, type: 3}
   soundRotate: {fileID: 8300000, guid: 6e8772b49f34d402a90016ed445d8a2f, type: 3}
   soundClear: {fileID: 8300000, guid: 7e26c9daf4c32483b9c2790e662d3f1b, type: 3}
   soundButton: {fileID: 8300000, guid: 7a4c4b5d7ffae4646b53e27c39ffc487, type: 3}
   soundLock: {fileID: 8300000, guid: e49874f19fdb7114bbf776cb9e5f53c0, type: 3}
+  soundBomb: {fileID: 8300000, guid: 7bef0064f8567430cac22499c6b93d4f, type: 3}
+  soundMove: {fileID: 8300000, guid: 1d2b103dba1f1f74696103d1b04be029, type: 3}

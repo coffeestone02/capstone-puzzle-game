@@ -4429,8 +4429,8 @@ MonoBehaviour:
   - {x: -9, y: -2, z: 0}
   boardSize: {x: 0, y: 0}
   currentSpawnIdx: 0
-  difficultyLines: 50c30000a0860100
-  obstacleByDifficulty: 0a00000008000000
+  difficultyLines: 3075000060ea0000a0860100f0490200
+  obstacleByDifficulty: 0a000000080000000600000005000000
   level: 1
 --- !u!114 &1935108064
 MonoBehaviour:

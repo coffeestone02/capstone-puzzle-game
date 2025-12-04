@@ -1276,18 +1276,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 2032981344192581410, guid: 919141ab6457f9343816fb4cb83224ae, type: 3}
-      propertyPath: Loop
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 2032981344192581410, guid: 919141ab6457f9343816fb4cb83224ae, type: 3}
-      propertyPath: m_Volume
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 2032981344192581410, guid: 919141ab6457f9343816fb4cb83224ae, type: 3}
-      propertyPath: m_PlayOnAwake
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 3616107637443015879, guid: 919141ab6457f9343816fb4cb83224ae, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -1328,26 +1316,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 3822036317076625836, guid: 919141ab6457f9343816fb4cb83224ae, type: 3}
-      propertyPath: soundBomb
-      value: 
-      objectReference: {fileID: 8300000, guid: 7bef0064f8567430cac22499c6b93d4f, type: 3}
-    - target: {fileID: 3822036317076625836, guid: 919141ab6457f9343816fb4cb83224ae, type: 3}
-      propertyPath: bgmClips.Array.size
-      value: 3
-      objectReference: {fileID: 0}
-    - target: {fileID: 3822036317076625836, guid: 919141ab6457f9343816fb4cb83224ae, type: 3}
-      propertyPath: bgmClips.Array.data[0]
-      value: 
-      objectReference: {fileID: 8300000, guid: 384a9c1d841b1224a86eb13fad19ff0b, type: 3}
-    - target: {fileID: 3822036317076625836, guid: 919141ab6457f9343816fb4cb83224ae, type: 3}
-      propertyPath: bgmClips.Array.data[1]
-      value: 
-      objectReference: {fileID: 8300000, guid: 1dad09a07b6eefb4ebe55654d9308203, type: 3}
-    - target: {fileID: 3822036317076625836, guid: 919141ab6457f9343816fb4cb83224ae, type: 3}
-      propertyPath: bgmClips.Array.data[2]
-      value: 
-      objectReference: {fileID: 8300000, guid: 458dd8822518c4f37bc3edba9b6c57d9, type: 3}
     - target: {fileID: 9132908685848629848, guid: 919141ab6457f9343816fb4cb83224ae, type: 3}
       propertyPath: m_Name
       value: Audio Manager

@@ -29,7 +29,9 @@ public class Piece : MonoBehaviour
     private Vector2Int moveDir;
     private bool isTouch;
     private bool isSwipeStart;
+    private bool isHardLock;
     private float moveTimer;
+    private float hardLockTimer;
     [SerializeField] private float moveInterval = 0.15f;
 
     // piece가 처음 생성됐을 때 색을 결정함
@@ -105,6 +107,7 @@ public class Piece : MonoBehaviour
         SetGravityDirection();
         HandleInput();
         HandleKeepMove();
+        HardLock();
         Step();
         board.Set(this);
 
@@ -184,18 +187,36 @@ public class Piece : MonoBehaviour
 
     }
 
+    private void HardLock()
+    {
+        if (isHardLock)
+            hardLockTimer += Time.deltaTime;
+        else
+            hardLockTimer = 0f;
+
+        if (hardLockTimer >= 0.3f)
+        {
+            Lock();
+            hardLockTimer = 0f;
+            isHardLock = false;
+        }
+    }
+
     private void HandleKeepMove()
     {
-        if (isSwipeStart && isTouch)
-        {
-            moveTimer += Time.deltaTime;
+        if (isSwipeStart == false || isTouch == false) return;
 
-            if (moveTimer >= moveInterval)
-            {
-                Move(moveDir);
+        moveTimer += Time.deltaTime;
+
+        if (moveTimer >= moveInterval)
+        {
+            if (moveDir == gravityDir) // 중심 방향으로 갈 경우엔 스텝 시간을 재조정
                 stepTime = Time.time + stepDelay;
-                moveTimer = 0f;
-            }
+
+            if (Move(moveDir) == false && moveDir == gravityDir) // 중심으로 이동이 불가능한데 계속 이동하려는 경우 강제 고정
+                isHardLock = true;
+
+            moveTimer = 0f;
         }
     }
 
@@ -288,13 +309,10 @@ public class Piece : MonoBehaviour
         // 유효하다면 위치를 이동
         if (valid)
         {
+            AudioManager.instance.PlayMoveSound();
             this.position = newPosition;
             moveTime = Time.time + moveDelay; // 다음 입력을 받을 수 있는 시기 계산
             lockTime = 0f; // lockTime 초기화
-        }
-        else if (translation == gravityDir)
-        {
-            Lock();
         }
 
         return valid;

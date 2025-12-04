@@ -16,7 +16,7 @@ public class GameManager : MonoBehaviour
     {
         if (gameOverPanel != null && isOver)
         {
-            gameOverPanel.SetActive(true);            
+            gameOverPanel.SetActive(true);
         }
         else if (optionPanel.activeSelf == false && gamePausePanel != null && Input.GetKeyDown(KeyCode.Escape))
         {
@@ -37,8 +37,7 @@ public class GameManager : MonoBehaviour
 
     public void Restart()
     {
-        AudioManager.instance.bgmPlayer.clip = AudioManager.instance.bgmClips[2];
-        AudioManager.instance.bgmPlayer.Play();
+        AudioManager.instance.PlayBgm(1);
         SceneManager.LoadScene("GamePlayScene");
     }
 

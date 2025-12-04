@@ -50,8 +50,8 @@ public class Board : MonoBehaviour
     }
 
     [Header("점수와 관련된 변수")]
-    public int[] difficultyLines = { 50000, 100000 };
-    public int[] obstacleByDifficulty = { 10, 8 };
+    public int[] difficultyLines = { 30000, 60000, 100000, 150000 };
+    public int[] obstacleByDifficulty = { 10, 8, 6, 5 };
     public int score { get; private set; }
     private int combo = 0;
     public int level = 1;
@@ -74,29 +74,24 @@ public class Board : MonoBehaviour
         SpawnPiece();
     }
 
-    private void Update()
-    {
-        if (gameManager.isOver || gameManager.isPause)
-            return;
-
-        SetDifficulty();
-    }
-
     // 난이도 조정
     private void SetDifficulty()
     {
+        int newLevel = 0;
+
         for (int idx = 0; idx < difficultyLines.Length; idx++)
         {
-            if (level < 3 && score >= difficultyLines[idx])
+            if (score >= difficultyLines[idx])
             {
-                obstacleThreshold = obstacleByDifficulty[idx];
-                if (AudioManager.instance.bgmPlayer.clip != AudioManager.instance.bgmClips[idx])
-                {
-                    AudioManager.instance.bgmPlayer.clip = AudioManager.instance.bgmClips[idx];
-                    AudioManager.instance.bgmPlayer.Play();
-                }
-                level = idx + 2;
+                newLevel = idx + 2;
             }
+        }
+
+        if (newLevel != level)
+        {
+            obstacleThreshold = obstacleByDifficulty[newLevel];
+            level = newLevel;
+            AudioManager.instance.PlayBgm(level);
         }
     }
 
@@ -219,14 +214,13 @@ public class Board : MonoBehaviour
 
         // 최종 점수 계산 (로켓 폭발 점수는 UseRocket, 폭탄 폭발 점수는 UseBomb에서 바로 계산됨)
         score += (mainPoint + bonusPoint) * (1 + combo) * (int)(1 + 0.1 * level);
+        SetDifficulty();
+
         if (OnBombChanged != null)
-        {
             OnBombChanged.Invoke(brokenBlockCount);
-        }
         else
-        {
             Debug.LogError("TryMatch(): OnBombChanged is null.");
-        }
+
     }
 
 }

@@ -16,6 +16,7 @@ public class AudioManager : MonoBehaviour
     public AudioClip soundButton;
     public AudioClip soundLock;
     public AudioClip soundBomb;
+    public AudioClip soundMove;
 
     void Start()
     {
@@ -53,6 +54,26 @@ public class AudioManager : MonoBehaviour
     public void PlayBombSound()
     {
         instance.sfxPlayer.PlayOneShot(soundBomb);
+    }
+
+    public void PlayMoveSound()
+    {
+        instance.sfxPlayer.PlayOneShot(soundMove);
+    }
+
+    public void PlayBgm(int level)
+    {
+        if (level == 0)
+        {
+            Debug.LogError("레벨은 0이 될 수 없습니다");
+            return;
+        }
+
+        if (instance.bgmPlayer.clip != instance.bgmClips[level - 1])
+        {
+            instance.bgmPlayer.clip = instance.bgmClips[level - 1];
+            bgmPlayer.Play();
+        }
     }
 
     // public void OpneOptionPanel()
