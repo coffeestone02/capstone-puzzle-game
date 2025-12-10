@@ -4431,6 +4431,7 @@ MonoBehaviour:
   currentSpawnIdx: 0
   difficultyLines: 3075000060ea0000a0860100f0490200
   obstacleByDifficulty: 0a000000080000000600000005000000
+  score: 140000
   level: 1
 --- !u!114 &1935108064
 MonoBehaviour:
