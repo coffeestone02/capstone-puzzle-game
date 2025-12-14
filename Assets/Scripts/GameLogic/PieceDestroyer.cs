@@ -264,6 +264,33 @@ public class PieceDestroyer : MonoBehaviour
         return rocketScore;
     }
 
+    public void AllPieceDestroy()
+    {
+        RectInt bounds = board.Bounds;
+        bool broken = false;
+
+        for (int x = bounds.xMin; x < bounds.xMax; x++)
+        {
+            for (int y = bounds.yMin; y < bounds.yMax; y++)
+            {
+                Vector3Int pos = new Vector3Int(x, y, 0);
+                if (Util.IsCenterCell(pos) || Util.IsActivePieceCell(pos, board.activePiece))
+                    continue;
+
+                if (board.tilemap.GetTile(pos))
+                {
+                    broken = true;
+                    PlayDestroyParticle(board.destroyParticle, pos);
+                    board.tilemap.SetTile(pos, null);
+                }
+            }
+        }
+
+        if(broken)
+        {
+            AudioManager.instance.PlayClearSound();
+        }
+    }
 
     // 파티클 재생
     public void PlayDestroyParticle(GameObject effect, Vector3Int position)
@@ -277,5 +304,4 @@ public class PieceDestroyer : MonoBehaviour
         GameObject particle = Instantiate(effect, board.tilemap.GetCellCenterWorld(Vector3Int.FloorToInt(position)), Quaternion.identity);
         Destroy(particle, 1f); // 1초 뒤에 파괴
     }
-
 }
