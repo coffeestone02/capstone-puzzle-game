@@ -10,7 +10,7 @@ public class DestroyButton : MonoBehaviour
     [SerializeField] private Button button;
     [SerializeField] private Image hideImage;
     public PieceDestroyer pieceDestroyer;
-    private float coolTime = 10f;
+    private float coolTime = 30f;
 
     private void Start()
     {
