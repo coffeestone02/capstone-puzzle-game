@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.Tilemaps;
 
 // 피스의 이동, 회전을 담당, 플레이어 조작도 여기서 받음
@@ -280,19 +281,23 @@ public class Piece : MonoBehaviour
 
         Touch touch = Input.GetTouch(0); // 터치 정보 가져옴
 
-        switch (touch.phase)
+        if (EventSystem.current.IsPointerOverGameObject(Input.GetTouch(0).fingerId) == false)
         {
-            case TouchPhase.Began:
-                OnTouchBegan(touch.position);
-                break;
-            case TouchPhase.Moved:
-            case TouchPhase.Stationary:
-                OnTouchHold(touch.position);
-                break;
-            case TouchPhase.Ended:
-            case TouchPhase.Canceled:
-                OnTouchEnd();
-                break;
+            //터치 처리
+            switch (touch.phase)
+            {
+                case TouchPhase.Began:
+                    OnTouchBegan(touch.position);
+                    break;
+                case TouchPhase.Moved:
+                case TouchPhase.Stationary:
+                    OnTouchHold(touch.position);
+                    break;
+                case TouchPhase.Ended:
+                case TouchPhase.Canceled:
+                    OnTouchEnd();
+                    break;
+            }
         }
     }
 

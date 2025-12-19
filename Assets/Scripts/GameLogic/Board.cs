@@ -52,7 +52,7 @@ public class Board : MonoBehaviour
     [Header("점수와 관련된 변수")]
     public int[] difficultyLines = { 30000, 60000, 100000, 150000 };
     public int[] obstacleByDifficulty = { 10, 8, 6, 5 };
-    public int score { get; private set; }
+    public int score = 140000;
     private int combo = 0;
     public int level = 1;
 
@@ -78,18 +78,20 @@ public class Board : MonoBehaviour
     private void SetDifficulty()
     {
         int newLevel = 0;
+        int setIdx = 0;
 
         for (int idx = 0; idx < difficultyLines.Length; idx++)
         {
             if (score >= difficultyLines[idx])
             {
+                setIdx = idx;
                 newLevel = idx + 2;
             }
         }
 
         if (newLevel != level)
         {
-            obstacleThreshold = obstacleByDifficulty[newLevel];
+            obstacleThreshold = obstacleByDifficulty[setIdx];
             level = newLevel;
             AudioManager.instance.PlayBgm(level);
         }

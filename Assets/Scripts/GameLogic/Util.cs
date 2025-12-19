@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Tilemaps;
+using UnityEngine.UIElements;
 
 // 범위 확인
 public class Util : MonoBehaviour
@@ -80,5 +82,18 @@ public class Util : MonoBehaviour
     public static bool IsCenterCell(Vector3Int p)
     {
         return (Vector2Int)p == new Vector2Int(-1, -1);
+    }
+
+    // 조작중인 피스인지 확인
+    public static bool IsActivePieceCell(Vector3Int pos, Piece activePiece)
+    {
+        for (int i = 0; i < activePiece.cells.Length; i++)
+        {
+            Vector3Int tilePosition = activePiece.cells[i] + activePiece.position;
+            if (pos == tilePosition) // pos가 현재 조작중인 피스 셀의 위치인 경우
+                return true;
+        }
+
+        return false;
     }
 }
