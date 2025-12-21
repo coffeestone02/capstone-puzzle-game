@@ -17,16 +17,6 @@ public class UIManager : MonoBehaviour
     [SerializeField] private ScoreManager scoreManager;
     [SerializeField] private GameManager gameManager;
 
-    private void OnEnable()
-    {
-        mainBoard.OnBombChanged += UpdateBombText;
-    }
-
-    private void OnDisable()
-    {
-        mainBoard.OnBombChanged -= UpdateBombText;
-    }
-
     private void Update()
     {
         UpdateTimeText();
@@ -49,9 +39,9 @@ public class UIManager : MonoBehaviour
         levelText.text = mainBoard.level.ToString();
     }
 
-    private void UpdateBombText(int cnt)
+    private void UpdateBombText()
     {
-        brokenBlockText.text = cnt.ToString();
+        brokenBlockText.text = mainBoard.brokenBlockCount.ToString();
         bombThresholdText.text = mainBoard.bombSpawnThreshold.ToString();
     }
 }

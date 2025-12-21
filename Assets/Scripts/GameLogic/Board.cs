@@ -13,7 +13,6 @@ public class Board : MonoBehaviour
     public GameManager gameManager; // UI 연결용
     public GameObject destroyParticle; // 파괴 이펙트
     public GameObject bombParticle; // 폭발 파티클
-    public event Action<int> OnBombChanged;
     public ObstacleSpawner obstacleSpawner;
     public PieceDestroyer pieceDestroyer;
     public ItemSpawner itemSpawner;
@@ -27,10 +26,23 @@ public class Board : MonoBehaviour
     public int rocketThreshold = 6;   // 로켓 생성 임계값
 
     public int obstacleCounter = 0; // 장애물 스폰 카운트
-    private int brokenBlockCount = 0; // 부숴진 블록 카운트
+    public int brokenBlockCount // 부숴진 블록 카운트
+    {
+        get => brokenBlockCount;
+        set => brokenBlockCount = value;
+    }
 
-    private bool nextSpawnHasBomb = false; // 다음 스폰에 폭탄 넣을지
-    private bool nextSpawnHasRocket = false; // 다음 스폰에 로켓 넣을지
+    public bool nextSpawnHasBomb // 다음 스폰에 폭탄 넣을지
+    {
+        get => nextSpawnHasBomb;
+        set => nextSpawnHasBomb = value;
+    }
+
+    public bool nextSpawnHasRocket // 다음 스폰에 로켓 넣을지
+    {
+        get => nextSpawnHasRocket;
+        set => nextSpawnHasRocket = value;
+    }
 
     [Header("보드의 범위 및 피스 스폰 위치 관련 변수")]
     [SerializeField] private int width;
@@ -56,6 +68,18 @@ public class Board : MonoBehaviour
     private int combo = 0;
     public int level = 1;
 
+    [Header("저장 관련 변수")]
+    public bool wasLoadedBySaveController = false;
+    public int activeTriominoIndex
+    {
+        get => activeTriominoIndex;
+        set => activeTriominoIndex = value;
+    }
+    private TileBase[] baselineTiles;
+    private bool[] baselineProtected;
+    public ObstacleConvert obstacleConvert;
+
+
     private void Awake()
     {
         tilemap = GetComponentInChildren<Tilemap>();
@@ -71,6 +95,7 @@ public class Board : MonoBehaviour
 
     void Start()
     {
+        if (wasLoadedBySaveController) return;
         SpawnPiece();
     }
 
@@ -217,12 +242,139 @@ public class Board : MonoBehaviour
         // 최종 점수 계산 (로켓 폭발 점수는 UseRocket, 폭탄 폭발 점수는 UseBomb에서 바로 계산됨)
         score += (mainPoint + bonusPoint) * (1 + combo) * (int)(1 + 0.1 * level);
         SetDifficulty();
-
-        if (OnBombChanged != null)
-            OnBombChanged.Invoke(brokenBlockCount);
-        else
-            Debug.LogError("TryMatch(): OnBombChanged is null.");
-
     }
 
+    private void CaptureBaselineTiles()
+    {
+        if (tilemap == null) return;
+
+        RectInt b = Bounds;
+        int w = b.width;
+        int h = b.height;
+
+        baselineTiles = new TileBase[w * h];
+        baselineProtected = new bool[w * h];
+
+        for (int y = 0; y < h; y++)
+        {
+            for (int x = 0; x < w; x++)
+            {
+                int cx = b.xMin + x;
+                int cy = b.yMin + y;
+
+                var t = tilemap.GetTile(new Vector3Int(cx, cy, 0));
+
+                int idx = y * w + x;
+                baselineTiles[idx] = t;
+                baselineProtected[idx] = (t != null); // 씬에 미리 깔린 타일은 보호
+            }
+        }
+    }
+
+    public void ResetBoardKeepCenter()
+    {
+        if (tilemap == null) return;
+
+        RectInt b = Bounds;
+        int w = b.width;
+        int h = b.height;
+
+        // Bounds 영역 전부 비우기
+        for (int y = 0; y < h; y++)
+        {
+            for (int x = 0; x < w; x++)
+            {
+                int cx = b.xMin + x;
+                int cy = b.yMin + y;
+                tilemap.SetTile(new Vector3Int(cx, cy, 0), null);
+            }
+        }
+
+        // baselineTiles 복구(중심 블록 포함)
+        if (baselineTiles == null || baselineTiles.Length != w * h) return;
+
+        for (int y = 0; y < h; y++)
+        {
+            for (int x = 0; x < w; x++)
+            {
+                int idx = y * w + x;
+                TileBase t = baselineTiles[idx];
+                if (t == null) continue;
+
+                int cx = b.xMin + x;
+                int cy = b.yMin + y;
+                tilemap.SetTile(new Vector3Int(cx, cy, 0), t);
+            }
+        }
+    }
+
+
+    // 고정 블록을 포함한 보드를 Export (현재 activePiece 칸은 제외)
+    public TileBase[] ExportFixedTilesWithoutActivePiece_TileBase()
+    {
+        RectInt b = Bounds;
+        int w = b.width;
+        int h = b.height;
+        TileBase[] arr = new TileBase[w * h];
+
+        for (int y = 0; y < h; y++)
+        {
+            for (int x = 0; x < w; x++)
+            {
+                int cx = b.xMin + x;
+                int cy = b.yMin + y;
+                Vector3Int p = new Vector3Int(cx, cy, 0);
+
+                bool isActiveCell = false;
+                if (activePiece != null)
+                {
+                    for (int i = 0; i < activePiece.cells.Length; i++)
+                    {
+                        if (activePiece.cells[i] + activePiece.position == p)
+                        {
+                            isActiveCell = true;
+                            break;
+                        }
+                    }
+                }
+
+                arr[y * w + x] = isActiveCell ? null : tilemap.GetTile(p);
+            }
+        }
+
+        return arr;
+    }
+
+
+    // baselineProtected(씬 기본 타일)은 덮어쓰기 금지
+    public void ImportFixedTiles_TileBase(TileBase[] data)
+    {
+        if (tilemap == null) return;
+        if (data == null) return;
+
+        RectInt b = Bounds;
+        int w = b.width;
+        int h = b.height;
+
+        if (data.Length != w * h) return;
+
+        for (int y = 0; y < h; y++)
+        {
+            for (int x = 0; x < w; x++)
+            {
+                int idx = y * w + x;
+
+                // 중심 블록 등 씬에 깔린 타일 덮어쓰기 금지
+                if (baselineProtected != null && baselineProtected.Length == w * h && baselineProtected[idx])
+                    continue;
+
+                int cx = b.xMin + x;
+                int cy = b.yMin + y;
+                Vector3Int pos = new Vector3Int(cx, cy, 0);
+
+                // null이면 지우기
+                tilemap.SetTile(pos, data[idx]);
+            }
+        }
+    }
 }

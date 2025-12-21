@@ -75,24 +75,4 @@ public class AudioManager : MonoBehaviour
             bgmPlayer.Play();
         }
     }
-
-    // public void OpneOptionPanel()
-    // {
-    //     OptionPanel.SetActive(true);
-    // }
-
-    // public void CloseOptionPanel()
-    // {
-    //     OptionPanel.SetActive(false);
-    // }
-
-    public void SetMusicVolume(float volume)
-    {
-        bgmPlayer.volume = volume;
-    }
-
-    public void SetEffectVolume(float volume)
-    {
-        sfxPlayer.volume = volume;
-    }
 }

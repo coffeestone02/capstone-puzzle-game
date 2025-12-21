@@ -21,7 +21,7 @@ public class DestroyButton : MonoBehaviour
     // 쿨타임 대기 시간이면 버튼을 비활성화해서 클릭 못하게 만듦
     public void OnDestroyButtonClick()
     {
-        pieceDestroyer.AllPieceDestroy();
+        pieceDestroyer.StoneDestroy();
         hideImage.fillAmount = 1f;
         button.enabled = false;
         StartCoroutine(ButtonTimerCoroutine());
@@ -31,7 +31,7 @@ public class DestroyButton : MonoBehaviour
     {
         float elasedTime = 0f;
 
-        while(elasedTime < coolTime)
+        while (elasedTime < coolTime)
         {
             elasedTime += Time.deltaTime;
             hideImage.fillAmount = 1f - (elasedTime / coolTime);

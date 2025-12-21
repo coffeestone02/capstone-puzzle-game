@@ -1,4 +1,4 @@
-Library: D:\capstone-puzzle\Temp\BurstOutput\tempburstlibs\arm64-v8a\lib_burst_generated
+Library: E:\capstone-puzzle-game\Temp\BurstOutput\tempburstlibs\arm64-v8a\lib_burst_generated
 --platform=Android
 --backend=burst-llvm-18
 --target=ARMV8A_AARCH64
@@ -8,10 +8,10 @@ Library: D:\capstone-puzzle\Temp\BurstOutput\tempburstlibs\arm64-v8a\lib_burst_g
 --float-precision=Standard
 --target-framework=NetFramework
 --generate-link-xml=Temp\burst.link.xml
---temp-folder=D:\capstone-puzzle\Temp\Burst
+--temp-folder=E:\capstone-puzzle-game\Temp\Burst
 --key-folder=C:/Program Files/Unity/Hub/Editor/2022.3.62f1/Editor/Data/PlaybackEngines/AndroidPlayer
---decode-folder=D:\capstone-puzzle\Library\Burst
---output=D:\capstone-puzzle\Temp\BurstOutput\tempburstlibs\arm64-v8a\lib_burst_generated
+--decode-folder=E:\capstone-puzzle-game\Library\Burst
+--output=E:\capstone-puzzle-game\Temp\BurstOutput\tempburstlibs\arm64-v8a\lib_burst_generated
 --pdb-search-paths=Temp/ManagedSymbols/
 
 --method=Unity.Burst.BurstCompiler+BurstCompilerHelper, Unity.Burst, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::IsBurstEnabled()--8c2be93e18276203cbd918daa2748a10

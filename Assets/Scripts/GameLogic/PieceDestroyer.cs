@@ -7,15 +7,19 @@ using UnityEngine.Tilemaps;
 public class PieceDestroyer : MonoBehaviour
 {
     private Board board;
+    private ObstacleConvert obstacleConvert;
+
 
     private void Start()
     {
         board = FindObjectOfType<Board>();
+        obstacleConvert = FindObjectOfType<ObstacleConvert>();
 
         if (board == null)
-        {
-            Debug.LogError("ObstacleSpawner.cs : board is null");
-        }
+            UnityEngine.Debug.LogError("PieceDestroyer : board is null");
+
+        if (obstacleConvert == null)
+            UnityEngine.Debug.LogError("PieceDestroyer : obstacleConvert is null");
     }
 
     // 메인 피스 매칭
@@ -168,6 +172,9 @@ public class PieceDestroyer : MonoBehaviour
         List<Vector3Int> bombs = new List<Vector3Int>();
         List<Vector3Int> rockets = new List<Vector3Int>();
 
+        // 삭제된 좌표만 따로 기록
+        HashSet<Vector3Int> actuallyCleared = new HashSet<Vector3Int>();
+
         // 일반 제거
         foreach (Vector3Int pos in matched)
         {
@@ -187,19 +194,22 @@ public class PieceDestroyer : MonoBehaviour
 
             PlayDestroyParticle(board.destroyParticle, pos);
             board.tilemap.SetTile(pos, null);
+
+            //장애물 변환용으로 기록
+            actuallyCleared.Add(pos);
         }
+
+        //여기서 장애물 변환 실행
+        if (obstacleConvert != null)
+            obstacleConvert.ConvertAround(actuallyCleared);
 
         // 폭탄 사용
         foreach (Vector3Int pos in bombs)
-        {
             itemScore += UseBomb(pos);
-        }
 
         // 로켓 사용
         foreach (Vector3Int pos in rockets)
-        {
             itemScore += UseRocket(pos);
-        }
 
         return itemScore;
     }
@@ -264,7 +274,8 @@ public class PieceDestroyer : MonoBehaviour
         return rocketScore;
     }
 
-    public void AllPieceDestroy()
+    // 돌 블럭 전부 제거
+    public void StoneDestroy()
     {
         RectInt bounds = board.Bounds;
         bool broken = false;
@@ -277,7 +288,9 @@ public class PieceDestroyer : MonoBehaviour
                 if (Util.IsCenterCell(pos) || Util.IsActivePieceCell(pos, board.activePiece))
                     continue;
 
-                if (board.tilemap.GetTile(pos))
+                Tile tile = board.tilemap.GetTile<Tile>(pos);
+                string tileName = tile.name.ToLowerInvariant();
+                if (tileName == "stone03")
                 {
                     broken = true;
                     PlayDestroyParticle(board.destroyParticle, pos);
@@ -286,7 +299,7 @@ public class PieceDestroyer : MonoBehaviour
             }
         }
 
-        if(broken)
+        if (broken)
         {
             AudioManager.instance.PlayClearSound();
         }

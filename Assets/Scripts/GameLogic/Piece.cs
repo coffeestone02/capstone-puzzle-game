@@ -9,11 +9,11 @@ using UnityEngine.Tilemaps;
 public class Piece : MonoBehaviour
 {
     private Board board; // 현재 사용중인 보드
-    private TriominoData data;// 현재 트리오미노의 데이터
+    private TriominoData data; // 현재 트리오미노의 데이터
     public Vector3Int[] cells { get; private set; } // 셀들의 위치 정보
     public Vector3Int position { get; private set; } // 피스의 위치 정보
     public Tile[] tiles { get; private set; } // 셀들의 색상 정보
-    private int rotationIdx;
+    public int rotationIdx { get; private set; }
 
     public float stepDelay = 1.25f; // 중심으로 이동하는 속도. 자동으로 stepDelay의 시간만큼 중심으로 이동함
     public float moveDelay = 0.1f; // 플레이어의 입력 이동 속도를 정함. 값이 클수록 입력을 많이 못함
@@ -21,7 +21,7 @@ public class Piece : MonoBehaviour
 
     private float stepTime; // 중심으로 이동하는 시기
     private float moveTime; // 다음 입력을 받을 수 있는 시기
-    private float lockTime; // 고정되는 시기(lockTime이 lockDelay를 넘기는 순간 고정됨)
+    public float lockTime { get; private set; } // 고정되는 시기(lockTime이 lockDelay를 넘기는 순간 고정됨)
 
     private Vector2 touchStartPosition;
     private Vector2 touchCurrentPosition;
@@ -262,6 +262,7 @@ public class Piece : MonoBehaviour
             }
 
             Move(moveDir);
+            AudioManager.instance.PlayMoveSound();
             moveTimer = 0f;
         }
     }
@@ -314,7 +315,6 @@ public class Piece : MonoBehaviour
         // 유효하다면 위치를 이동
         if (valid)
         {
-            AudioManager.instance.PlayMoveSound();
             this.position = newPosition;
             moveTime = Time.time + moveDelay; // 다음 입력을 받을 수 있는 시기 계산
             lockTime = 0f; // lockTime 초기화
@@ -400,5 +400,49 @@ public class Piece : MonoBehaviour
         else
             return min + (input - min) % (max - min);
 
+    }
+
+    // Save/Load용 Getter
+    public float GetStepTimeRemaining() => stepTime - Time.time;
+    public float GetLockTime() => lockTime;
+
+    // 이어하기용 복원
+    public void ApplySavedState(Board board, Vector3Int pos, TriominoData data,
+                           int savedRotationIdx, Tile[] savedTiles,
+                           float stepRemain, float savedLockTime)
+    {
+        this.board = board;
+        this.position = pos;
+        this.data = data;
+
+
+        this.moveTime = Time.time + moveDelay;
+        this.stepTime = Time.time + Mathf.Clamp(stepRemain, 0f, stepDelay);
+
+        this.lockTime = 0f;
+        this.isHardLock = false;
+        this.hardLockTimer = 0f;
+
+        // cells/tiles 배열 준비
+        if (cells == null || cells.Length != data.cells.Length)
+        {
+            cells = new Vector3Int[data.cells.Length];
+            tiles = new Tile[data.cells.Length];
+        }
+
+        for (int i = 0; i < data.cells.Length; i++)
+            cells[i] = (Vector3Int)data.cells[i];
+
+        rotationIdx = 0;
+        int times = Wrap(savedRotationIdx, 0, 4);
+        for (int t = 0; t < times; t++)
+        {
+            ApplyRotationMatrix(1);
+            rotationIdx = Wrap(rotationIdx + 1, 0, 4);
+        }
+
+        tiles[0] = savedTiles[0];
+        tiles[1] = savedTiles[1];
+        tiles[2] = savedTiles[2];
     }
 }

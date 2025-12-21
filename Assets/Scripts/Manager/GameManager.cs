@@ -11,6 +11,12 @@ public class GameManager : MonoBehaviour
     public GameObject optionPanel;
     public bool isPause = false;
     public bool isOver = false;
+    private SaveController saveController;
+
+    private void Awake()
+    {
+        saveController = FindObjectOfType<SaveController>();
+    }
 
     private void Update()
     {
@@ -37,6 +43,7 @@ public class GameManager : MonoBehaviour
 
     public void Restart()
     {
+        SaveSystem.Clear();
         AudioManager.instance.PlayBgm(1);
         SceneManager.LoadScene("GamePlayScene");
     }
@@ -54,5 +61,17 @@ public class GameManager : MonoBehaviour
 #else
         Application.Quit(); // 앱 종료
 #endif
+    }
+
+    private void OnApplicationPause(bool pause) //일시정지 시 저장
+    {
+        if (pause && saveController != null)
+            saveController.SaveNow();
+    }
+
+    private void OnApplicationQuit() // 나갈 때 저장
+    {
+        if (saveController != null)
+            saveController.SaveNow();
     }
 }

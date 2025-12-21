@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class VolumeOption : MonoBehaviour
 {
-    public GameObject OptionPanel;
+    public GameObject optionPanel;
     public AudioSource bgmPlayer;
     public AudioSource sfxPlayer;
     private float volumeValue = 0f;
@@ -17,20 +17,20 @@ public class VolumeOption : MonoBehaviour
 
     private void Update()
     {
-        if (OptionPanel.activeSelf && Input.GetKeyDown(KeyCode.Escape))
+        if (optionPanel.activeSelf && Input.GetKeyDown(KeyCode.Escape))
         {
-            OptionPanel.SetActive(false);
+            optionPanel.SetActive(false);
         }
     }
 
-    public void OpneOptionPanel()
+    public void OpneoptionPanel()
     {
-        OptionPanel.SetActive(true);
+        optionPanel.SetActive(true);
     }
 
-    public void CloseOptionPanel()
+    public void CloseoptionPanel()
     {
-        OptionPanel.SetActive(false);
+        optionPanel.SetActive(false);
     }
 
     public void SetMusicVolume(float volume)
