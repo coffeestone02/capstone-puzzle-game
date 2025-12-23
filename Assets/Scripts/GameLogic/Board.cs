@@ -91,6 +91,7 @@ public class Board : MonoBehaviour
         {
             triominos[i].Initialize();
         }
+        CaptureBaselineTiles();
     }
 
     void Start()
@@ -136,6 +137,7 @@ public class Board : MonoBehaviour
         int randomIdx = UnityEngine.Random.Range(0, triominos.Length);
         TriominoData data = triominos[randomIdx];
         activePiece.Initialize(this, spawnPositions[currentSpawnIdx], data);
+        activeTriominoIndex = randomIdx;
 
         // 방향에 맞게 회전
         switch (currentSpawnIdx)

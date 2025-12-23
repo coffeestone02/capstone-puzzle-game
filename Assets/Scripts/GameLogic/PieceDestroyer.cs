@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
@@ -8,7 +9,6 @@ public class PieceDestroyer : MonoBehaviour
 {
     private Board board;
     private ObstacleConvert obstacleConvert;
-
 
     private void Start()
     {
@@ -275,10 +275,10 @@ public class PieceDestroyer : MonoBehaviour
     }
 
     // 돌 블럭 전부 제거
-    public void StoneDestroy()
+    public bool StoneDestroy()
     {
         RectInt bounds = board.Bounds;
-        bool broken = false;
+        bool isBroken = false;
 
         for (int x = bounds.xMin; x < bounds.xMax; x++)
         {
@@ -289,20 +289,20 @@ public class PieceDestroyer : MonoBehaviour
                     continue;
 
                 Tile tile = board.tilemap.GetTile<Tile>(pos);
-                string tileName = tile.name.ToLowerInvariant();
-                if (tileName == "stone03")
+                if (tile != null && tile.name.ToLowerInvariant() == "stone03")
                 {
-                    broken = true;
+                    isBroken = true;
                     PlayDestroyParticle(board.destroyParticle, pos);
                     board.tilemap.SetTile(pos, null);
                 }
             }
         }
 
-        if (broken)
+        if (isBroken)
         {
             AudioManager.instance.PlayClearSound();
         }
+        return isBroken;
     }
 
     // 파티클 재생
