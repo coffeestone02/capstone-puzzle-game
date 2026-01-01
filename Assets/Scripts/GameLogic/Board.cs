@@ -10,7 +10,6 @@ using TMPro;
 public class Board : MonoBehaviour
 {
     [Header("필요한 컴포넌트와 관련 변수")]
-    public GameManager gameManager; // UI 연결용
     public GameObject destroyParticle; // 파괴 이펙트
     public GameObject bombParticle; // 폭발 파티클
     public ObstacleSpawner obstacleSpawner;
@@ -21,28 +20,15 @@ public class Board : MonoBehaviour
     public Piece activePiece { get; private set; } // 현재 조작중인 피스
     public TriominoData[] triominos; // 게임에서 쓸 수 있는 트리오미노(인스펙터에서 설정)
 
-    public int obstacleThreshold = 12; // n번째마다 장애물 스폰
-    public int bombSpawnThreshold = 20; // 폭탄 생성 임계값
-    public int rocketThreshold = 6;   // 로켓 생성 임계값
+    public int obstacleLimit = 12; // n번째마다 장애물 스폰
+    public int bombSpawnLimit = 20; // 폭탄 생성 임계값
+    public int rocketSpawnLimit = 6;   // 로켓 생성 임계값
 
     public int obstacleCounter = 0; // 장애물 스폰 카운트
-    public int brokenBlockCount // 부숴진 블록 카운트
-    {
-        get => brokenBlockCount;
-        set => brokenBlockCount = value;
-    }
+    public int brokenBlockCount { get; set; } // 부숴진 블록 카운트
 
-    public bool nextSpawnHasBomb // 다음 스폰에 폭탄 넣을지
-    {
-        get => nextSpawnHasBomb;
-        set => nextSpawnHasBomb = value;
-    }
-
-    public bool nextSpawnHasRocket // 다음 스폰에 로켓 넣을지
-    {
-        get => nextSpawnHasRocket;
-        set => nextSpawnHasRocket = value;
-    }
+    public bool nextSpawnHasBomb { get; set; } // 다음 스폰에 폭탄 넣을지
+    public bool nextSpawnHasRocket { get; set; } // 다음 스폰에 로켓 넣을지
 
     [Header("보드의 범위 및 피스 스폰 위치 관련 변수")]
     [SerializeField] private int width;
@@ -64,17 +50,13 @@ public class Board : MonoBehaviour
     [Header("점수와 관련된 변수")]
     public int[] difficultyLines = { 30000, 60000, 100000, 150000 };
     public int[] obstacleByDifficulty = { 10, 8, 6, 5 };
-    public int score = 140000;
+    public int score = 0;
     private int combo = 0;
     public int level = 1;
 
     [Header("저장 관련 변수")]
     public bool wasLoadedBySaveController = false;
-    public int activeTriominoIndex
-    {
-        get => activeTriominoIndex;
-        set => activeTriominoIndex = value;
-    }
+    public int activeTriominoIndex { get; set; }
     private TileBase[] baselineTiles;
     private bool[] baselineProtected;
     public ObstacleConvert obstacleConvert;
@@ -89,7 +71,7 @@ public class Board : MonoBehaviour
         // 인스펙터에서 만들어진 트리오미노의 수만큼 진행
         for (int i = 0; i < triominos.Length; i++)
         {
-            triominos[i].Initialize();
+            triominos[i].Init();
         }
         CaptureBaselineTiles();
     }
@@ -103,23 +85,24 @@ public class Board : MonoBehaviour
     // 난이도 조정
     private void SetDifficulty()
     {
-        int newLevel = 0;
-        int setIdx = 0;
+        int newLevel = 1;
+        int obstacleIdx = 0;
 
         for (int idx = 0; idx < difficultyLines.Length; idx++)
         {
             if (score >= difficultyLines[idx])
             {
-                setIdx = idx;
+                obstacleIdx = idx;
                 newLevel = idx + 2;
             }
         }
 
         if (newLevel != level)
         {
-            obstacleThreshold = obstacleByDifficulty[setIdx];
+            obstacleLimit = obstacleByDifficulty[obstacleIdx];
             level = newLevel;
-            AudioManager.instance.PlayBgm(level);
+            GameManager.Instance.level = level;
+            AudioManager.Instance.PlayBgm(level);
         }
     }
 
@@ -128,7 +111,7 @@ public class Board : MonoBehaviour
     {
         // 방해물 생성
         obstacleCounter++;
-        if (obstacleCounter >= obstacleThreshold)
+        if (obstacleCounter >= obstacleLimit)
         {
             obstacleSpawner.SpawnObstacle();
             obstacleCounter = 0;
@@ -136,7 +119,7 @@ public class Board : MonoBehaviour
 
         int randomIdx = UnityEngine.Random.Range(0, triominos.Length);
         TriominoData data = triominos[randomIdx];
-        activePiece.Initialize(this, spawnPositions[currentSpawnIdx], data);
+        activePiece.Init(this, spawnPositions[currentSpawnIdx], data);
         activeTriominoIndex = randomIdx;
 
         // 방향에 맞게 회전
@@ -158,7 +141,7 @@ public class Board : MonoBehaviour
 
         if (Util.IsValidPosition(this, activePiece, activePiece.position) == false) //블록 생성 후 겹칠 시 게임 오버
         {
-            gameManager.isOver = true;
+            GameManager.Instance.isOver = true;
             return;
         }
 
@@ -227,22 +210,23 @@ public class Board : MonoBehaviour
         else
         {
             combo++;
-            AudioManager.instance.PlayClearSound();
+            AudioManager.Instance.PlayClearSound();
         }
 
         // 폭탄과 로켓 스폰(로켓 폭발로 지운 칸은 포함하지 않음)
-        if (brokenBlockCount >= bombSpawnThreshold)
+        if (brokenBlockCount >= bombSpawnLimit)
         {
             brokenBlockCount = 0;
             nextSpawnHasBomb = true;
         }
-        else if (clearedByMatchOnly >= rocketThreshold && nextSpawnHasRocket == false)
+        else if (clearedByMatchOnly >= rocketSpawnLimit && nextSpawnHasRocket == false)
         {
             nextSpawnHasRocket = true;
         }
 
         // 최종 점수 계산 (로켓 폭발 점수는 UseRocket, 폭탄 폭발 점수는 UseBomb에서 바로 계산됨)
         score += (mainPoint + bonusPoint) * (1 + combo) * (int)(1 + 0.1 * level);
+        GameManager.Instance.score = score;
         SetDifficulty();
     }
 

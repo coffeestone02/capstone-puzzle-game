@@ -15,7 +15,7 @@ public class SaveData
     // 진행 상태
     public int score;
     public int level;
-    public int obstacleThreshold;
+    public int obstacleLimit;
     public int obstacleCounter;
     public int brokenBlockCount;
     public bool nextSpawnHasBomb;

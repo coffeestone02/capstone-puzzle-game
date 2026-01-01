@@ -1,34 +1,56 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
-using System;
+using TMPro;
 
 // 게임관리 기능
 public class GameManager : MonoBehaviour
 {
-    public GameObject gameOverPanel;
-    public GameObject gamePausePanel;
-    public GameObject optionPanel;
+    public static GameManager Instance { get; private set; }
+
+    private ScoreManager scoreManager = new ScoreManager();
+    private UIManager uiManager = new UIManager();
+
+    public static UIManager UI { get { return Instance.uiManager; } }
+    private SaveController saveController;
+    public Board board { get; private set; }
+
+    // 상태와 점수 변수들
     public bool isPause = false;
     public bool isOver = false;
-    private SaveController saveController;
+    public float playtime { get; private set; }
+    public int score { get; set; }
+    public int level { get; set; } = 1;
 
-    private void Awake()
+    private void Start()
     {
-        saveController = FindObjectOfType<SaveController>();
+        Init();
+    }
+
+    private void Init()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(this);
+        }
+
+        uiManager.Init();
+        saveController = GameObject.Find("Save Controller").GetComponent<SaveController>();
+        board = GameObject.Find("Board").GetComponent<Board>();
     }
 
     private void Update()
     {
-        if (gameOverPanel != null && isOver)
-        {
-            gameOverPanel.SetActive(true);
-        }
-        else if (optionPanel.activeSelf == false && gamePausePanel != null && Input.GetKeyDown(KeyCode.Escape))
-        {
-            isPause = !isPause;
-            gamePausePanel.SetActive(isPause);
-        }
+        Timer();
+        uiManager.OnUpdate();
+    }
+
+    private void Timer()
+    {
+        if (isOver || isPause) return;
+
+        playtime += Time.deltaTime;
+        scoreManager.playTime = playtime;
     }
 
     public void MainMenu()
@@ -44,14 +66,8 @@ public class GameManager : MonoBehaviour
     public void Restart()
     {
         SaveSystem.Clear();
-        AudioManager.instance.PlayBgm(1);
+        AudioManager.Instance.PlayBgm(1);
         SceneManager.LoadScene("GamePlayScene");
-    }
-
-    public void Resume()
-    {
-        isPause = false;
-        gamePausePanel.SetActive(isPause);
     }
 
     public void Exit()

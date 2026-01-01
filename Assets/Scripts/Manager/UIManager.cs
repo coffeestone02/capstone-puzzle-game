@@ -1,47 +1,85 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 using TMPro;
+using UnityEngine.UI;
 
-public class UIManager : MonoBehaviour
+public class UIManager
 {
-    [Header("TMP_Text")]
-    public TMP_Text scoreText;
-    public TMP_Text levelText;
-    public TMP_Text playtimeText;
-    public TMP_Text brokenBlockText;
-    public TMP_Text bombThresholdText;
+    private GameObject gameOverPanel;
+    private GameObject gamePausePanel;
+    private GameObject optionPanel;
 
-    [Header("Other Scripts")]
-    [SerializeField] private Board mainBoard;
-    [SerializeField] private ScoreManager scoreManager;
-    [SerializeField] private GameManager gameManager;
+    private TMP_Text scoreText;
+    private TMP_Text levelText;
+    private TMP_Text playtimeText;
+    private TMP_Text brokenBlockText;
+    private TMP_Text bombLimitText;
 
-    private void Update()
+    public void Init()
     {
-        UpdateTimeText();
-        UpdateScoreText();
-        UpdateLevelText();
+        Transform settingParent = GameObject.Find("Setting And Over Canvas").transform; // 비활성화 오브젝트를 찾기 위함
+        gameOverPanel = settingParent.Find("Gameover Panel").GetComponent<GameObject>();
+        gamePausePanel = settingParent.Find("Pause Panel").GetComponent<GameObject>();
+        optionPanel = settingParent.Find("Option Panel").GetComponent<GameObject>();
+
+        scoreText = GameObject.Find("Score Text").GetComponent<TMP_Text>();
+        levelText = GameObject.Find("Level Text").GetComponent<TMP_Text>();
+        playtimeText = GameObject.Find("Playtime Text").GetComponent<TMP_Text>();
+        brokenBlockText = GameObject.Find("Broken Count Text").GetComponent<TMP_Text>();
+        bombLimitText = GameObject.Find("Bomb Limit Text").GetComponent<TMP_Text>();
+
+        bombLimitText.text = GameManager.Instance.board.bombSpawnLimit.ToString();
     }
 
-    private void UpdateTimeText()
+    public void OnUpdate()
     {
-        playtimeText.text = scoreManager.GetTimeText();
+        UpdateStatusText();
     }
 
-    private void UpdateScoreText()
+    // score, level, time, bomb text
+    private void UpdateStatusText()
     {
-        scoreText.text = mainBoard.score.ToString();
+        scoreText.text = GameManager.Instance.score.ToString();
+
+        levelText.text = GameManager.Instance.level.ToString();
+
+        playtimeText.text = TimeToString(GameManager.Instance.playtime);
+
+        brokenBlockText.text = GameManager.Instance.board.brokenBlockCount.ToString();
     }
 
-    private void UpdateLevelText()
+    // 플레이 시간을 00:00 텍스트 형태로 반환
+    public string TimeToString(float playTime)
     {
-        levelText.text = mainBoard.level.ToString();
-    }
+        string min;
+        string sec;
 
-    private void UpdateBombText()
-    {
-        brokenBlockText.text = mainBoard.brokenBlockCount.ToString();
-        bombThresholdText.text = mainBoard.bombSpawnThreshold.ToString();
+        // 분
+        if (playTime < 60f)
+        {
+            min = "00";
+        }
+        else if (playTime < 600f)
+        {
+            min = "0" + Math.Truncate(playTime / 60f).ToString();
+        }
+        else
+        {
+            min = Math.Truncate(playTime / 60f).ToString();
+        }
+
+        // 초
+        if (Math.Truncate(playTime % 60f) < 10f)
+        {
+            sec = "0" + Math.Truncate(playTime % 60f).ToString();
+        }
+        else
+        {
+            sec = Math.Truncate(playTime % 60f).ToString();
+        }
+
+        return min + ":" + sec;
     }
 }

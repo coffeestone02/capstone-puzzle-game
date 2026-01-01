@@ -12,8 +12,8 @@ public class PieceDestroyer : MonoBehaviour
 
     private void Start()
     {
-        board = FindObjectOfType<Board>();
-        obstacleConvert = FindObjectOfType<ObstacleConvert>();
+        board = GameObject.Find("Board").GetComponent<Board>();
+        obstacleConvert = GameObject.Find("Board").GetComponent<ObstacleConvert>();
 
         if (board == null)
             UnityEngine.Debug.LogError("PieceDestroyer : board is null");
@@ -300,7 +300,7 @@ public class PieceDestroyer : MonoBehaviour
 
         if (isBroken)
         {
-            AudioManager.instance.PlayClearSound();
+            AudioManager.Instance.PlayClearSound();
         }
         return isBroken;
     }

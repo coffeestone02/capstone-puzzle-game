@@ -2,9 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+// 싱글톤 클래스
 public class AudioManager : MonoBehaviour
 {
-    public static AudioManager instance { get; private set; }
+    public static AudioManager Instance { get; private set; }
 
     // Sound
     public AudioSource bgmPlayer;
@@ -20,45 +21,66 @@ public class AudioManager : MonoBehaviour
 
     void Start()
     {
-        if (instance == null)
+        Init();
+    }
+
+    private void Init()
+    {
+        if (Instance == null)
         {
-            instance = this;
+            Instance = this;
             DontDestroyOnLoad(this);
         }
-        else
-        {
-            Destroy(this.gameObject);
-        }
+    }
+
+    public void TurnOnBGM()
+    {
+        bgmPlayer.volume = 0.6f;
+    }
+
+    public void TurnOffBGM()
+    {
+        bgmPlayer.volume = 0f;
+    }
+
+    public void TurnOnSFX()
+    {
+        sfxPlayer.volume = 0.7f;
+    }
+
+    public void TurnOffSFX()
+    {
+        sfxPlayer.volume = 0f;
     }
 
     public void PlayRotateSound()
     {
-        instance.sfxPlayer.PlayOneShot(soundRotate);
+        Instance.sfxPlayer.PlayOneShot(soundRotate);
     }
 
     public void PlayClearSound()
     {
-        instance.sfxPlayer.PlayOneShot(soundClear);
+        Instance.sfxPlayer.PlayOneShot(soundClear);
     }
 
     public void PlayButtonSound()
     {
-        instance.sfxPlayer.PlayOneShot(soundButton);
+        Instance.sfxPlayer.PlayOneShot(soundButton);
     }
 
     public void PlayLockSound()
     {
-        instance.sfxPlayer.PlayOneShot(soundLock);
+        Instance.sfxPlayer.PlayOneShot(soundLock);
     }
 
     public void PlayBombSound()
     {
-        instance.sfxPlayer.PlayOneShot(soundBomb);
+        Instance.sfxPlayer.PlayOneShot(soundBomb);
     }
 
     public void PlayMoveSound()
     {
-        instance.sfxPlayer.PlayOneShot(soundMove);
+        Instance.sfxPlayer.PlayOneShot(soundMove);
     }
 
     public void PlayBgm(int level)
@@ -69,9 +91,9 @@ public class AudioManager : MonoBehaviour
             return;
         }
 
-        if (instance.bgmPlayer.clip != instance.bgmClips[level - 1])
+        if (Instance.bgmPlayer.clip != Instance.bgmClips[level - 1])
         {
-            instance.bgmPlayer.clip = instance.bgmClips[level - 1];
+            Instance.bgmPlayer.clip = Instance.bgmClips[level - 1];
             bgmPlayer.Play();
         }
     }

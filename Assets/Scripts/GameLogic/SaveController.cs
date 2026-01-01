@@ -18,8 +18,8 @@ public class SaveController : MonoBehaviour
 
     private void Awake()
     {
-        if (board == null) board = FindObjectOfType<Board>();
-        if (piece == null) piece = FindObjectOfType<Piece>();
+        if (board == null) board = GameObject.Find("Board").GetComponent<Board>();
+        if (piece == null) piece = GameObject.Find("Board").GetComponent<Piece>();
 
         BuildTileMap();
 
@@ -75,7 +75,7 @@ public class SaveController : MonoBehaviour
         if (board == null || piece == null) return;
 
         // 게임오버면 이어하기 막기
-        if (board.gameManager != null && board.gameManager.isOver)
+        if (GameManager.Instance != null && GameManager.Instance.isOver)
         {
             SaveSystem.Clear();
             return;
@@ -89,7 +89,7 @@ public class SaveController : MonoBehaviour
         // 진행 상태
         data.score = board.score;
         data.level = board.level;
-        data.obstacleThreshold = board.obstacleThreshold;
+        data.obstacleLimit = board.obstacleLimit;
         data.obstacleCounter = board.obstacleCounter;
         data.brokenBlockCount = board.brokenBlockCount;
         data.nextSpawnHasBomb = board.nextSpawnHasBomb;
@@ -136,7 +136,7 @@ public class SaveController : MonoBehaviour
         // 진행 상태 복원
         board.score = data.score;
         board.level = data.level;
-        board.obstacleThreshold = data.obstacleThreshold;
+        board.obstacleLimit = data.obstacleLimit;
         board.obstacleCounter = data.obstacleCounter;
         board.brokenBlockCount = data.brokenBlockCount;
         board.nextSpawnHasBomb = data.nextSpawnHasBomb;
@@ -182,8 +182,8 @@ public class SaveController : MonoBehaviour
         // Board.Start에서 SpawnPiece 막기 유지(이미 true였을 확률 높음)
         board.wasLoadedBySaveController = true;
 
-        if (AudioManager.instance != null)
-            AudioManager.instance.PlayBgm(board.level);
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayBgm(board.level);
     }
 
     // 변환 유틸

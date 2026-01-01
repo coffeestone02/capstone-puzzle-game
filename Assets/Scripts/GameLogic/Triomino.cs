@@ -19,7 +19,7 @@ public struct TriominoData
     public Vector2Int[,] wallKicks { get; private set; } // 월킥 정보
 
     // 초기화 함수
-    public void Initialize()
+    public void Init()
     {
         cells = Data.Cells[triomino];
         wallKicks = Data.WallKicks[triomino];

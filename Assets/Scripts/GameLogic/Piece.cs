@@ -60,7 +60,7 @@ public class Piece : MonoBehaviour
     }
 
     // 초기화 함수
-    public void Initialize(Board board, Vector3Int position, TriominoData data)
+    public void Init(Board board, Vector3Int position, TriominoData data)
     {
         this.board = board;
         this.position = position;
@@ -101,7 +101,7 @@ public class Piece : MonoBehaviour
 
     private void Update()
     {
-        if (board.gameManager.isOver || board.gameManager.isPause)
+        if (GameManager.Instance.isOver || GameManager.Instance.isPause)
             return;
 
         board.Clear(this);
@@ -126,7 +126,7 @@ public class Piece : MonoBehaviour
         {
             board.Set(this); // 고정하고
             board.TryMatch(this); // 피스 제거 시도
-            AudioManager.instance.PlayLockSound();
+            AudioManager.Instance.PlayLockSound();
         }
 
         board.NextSpawnIdx(); // 스폰 위치를 변경
@@ -262,7 +262,7 @@ public class Piece : MonoBehaviour
             }
 
             Move(moveDir);
-            AudioManager.instance.PlayMoveSound();
+            AudioManager.Instance.PlayMoveSound();
             moveTimer = 0f;
         }
     }
@@ -341,7 +341,7 @@ public class Piece : MonoBehaviour
         else if (isSpawn == false)
         {
             // 회전 성공 Sound
-            AudioManager.instance.PlayRotateSound();
+            AudioManager.Instance.PlayRotateSound();
         }
     }
 
