@@ -10,8 +10,7 @@ public enum ETriomino
 }
 
 // 인스펙터에서 설정가능하게 함
-[System.Serializable]
-public struct TriominoData
+public class TriominoData
 {
     public ETriomino triomino; // 어떤 타입인지
     public Tile[] normalTiles; // 어떤 타일로 그려져야 하는지
