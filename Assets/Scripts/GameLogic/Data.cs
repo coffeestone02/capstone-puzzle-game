@@ -5,11 +5,6 @@ using UnityEngine.Tilemaps;
 // 월킥 테이블과 회전 행렬. 정적 변수로 만들어서 접근하기 쉽게 만듦
 public static class Data
 {
-    // 행렬 회전에 쓰일 변수들
-    // public static readonly float cos = Mathf.Cos(Mathf.PI / 2f);
-    // public static readonly float sin = Mathf.Sin(Mathf.PI / 2f);
-    // public static readonly float[] RotationMatrix = new float[] { cos, sin, -sin, cos };
-
     // 셀들이 그려질 위치. 셀들이 그려져서 피스가 만들어짐
     public static readonly Dictionary<ETriomino, Vector2Int[]> Cells = new Dictionary<ETriomino, Vector2Int[]>()
     {
