@@ -10,11 +10,12 @@ public enum ETriomino
 }
 
 // 인스펙터에서 설정가능하게 함
+[System.Serializable]
 public class TriominoData
 {
-    public ETriomino triomino; // 어떤 타입인지
+    public ETriomino triomino; // 트리오미노 타입
     public Tile[] normalTiles; // 어떤 타일로 그려져야 하는지
-    public Vector2Int[] cells { get; private set; } // 그려져야 하는 셀들의 정보
+    public Vector2Int[] cells { get; private set; } // 그려져야 하는 셀들의 위치 정보
     public Vector2Int[,] wallKicks { get; private set; } // 월킥 정보
 
     // 초기화 함수
