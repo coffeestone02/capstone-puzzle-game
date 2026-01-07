@@ -23,7 +23,7 @@ public class Board : MonoBehaviour
     private void Awake()
     {
         tilemap = GetComponentInChildren<Tilemap>();
-        activePiece = GetComponentInChildren<Piece>();
+        activePiece = GetComponent<Piece>();
     }
 
     private void Start()
@@ -34,7 +34,7 @@ public class Board : MonoBehaviour
     // Piece를 타일맵에 그림
     public void Set(Piece piece)
     {
-        for (int i = 0; i < activePiece.cells.Length; i++)
+        for (int i = 0; i < piece.cells.Length; i++)
         {
             Vector3Int tilePos = piece.cells[i] + piece.position;
             tilemap.SetTile(tilePos, piece.tiles[i]);
@@ -44,14 +44,14 @@ public class Board : MonoBehaviour
     // Piece를 지움
     public void Clear(Piece piece)
     {
-        for (int i = 0; i < activePiece.cells.Length; i++)
+        for (int i = 0; i < piece.cells.Length; i++)
         {
             Vector3Int tilePosition = piece.cells[i] + piece.position;
             tilemap.SetTile(tilePosition, null);
         }
     }
 
-    // 유요한 위치인지 확인
+    // 유효한 위치인지 확인
     public bool IsValidPosition(Piece piece, Vector3Int position)
     {
         RectInt bounds = Bounds;

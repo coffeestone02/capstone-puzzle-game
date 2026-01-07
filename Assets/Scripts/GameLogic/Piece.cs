@@ -12,22 +12,23 @@ public class Piece : MonoBehaviour
     public TriominoData data { get; private set; }
     public Vector3Int[] cells { get; private set; } // 셀들의 위치 정보
     public Tile[] tiles { get; private set; } // 만들어진 타일(런타임 시간에 정해짐)
-    public Vector3Int position { get; private set; } // 피스 위치 
-    private EPieceDir spawnPos = EPieceDir.LEFT; // 스폰 위치
+    public Vector3Int position { get; set; } // 피스 위치 
+    public EPieceDir spawnPos { get; set; } = EPieceDir.TOP; // 스폰 위치
 
-    private void Start()
+    private void Awake()
     {
         foreach (TriominoData triomino in triominos)
             triomino.Init();
     }
 
+    // 피스 생성
     public void SpawnPiece()
     {
         int randomIdx = UnityEngine.Random.Range(0, triominos.Length);
         TriominoData data = triominos[randomIdx]; // 만들어질 피스를 랜덤으로 결정
 
         cells = new Vector3Int[data.cells.Length];
-        tiles = new Tile[cells.Length];
+        tiles = new Tile[data.cells.Length];
 
         for (int i = 0; i < cells.Length; i++) // 셀 위치 등록
             cells[i] = (Vector3Int)data.cells[i];
