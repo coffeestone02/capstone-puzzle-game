@@ -5,7 +5,9 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.Tilemaps;
 
-// 피스를 생성
+/// <summary>
+/// 피스를 생성하고 위치값을 관리함
+/// </summary>
 public class Piece : MonoBehaviour
 {
     public TriominoData[] triominos; // 게임에서 쓸 수 있는 트리오미노들(인스펙터에서 설정)
@@ -13,7 +15,8 @@ public class Piece : MonoBehaviour
     public Vector3Int[] cells { get; private set; } // 셀들의 위치 정보
     public Tile[] tiles { get; private set; } // 만들어진 타일(런타임 시간에 정해짐)
     public Vector3Int position { get; set; } // 피스 위치 
-    public EPieceDir spawnPos { get; set; } = EPieceDir.TOP; // 스폰 위치
+    public EPieceDir currentSpawnPos { get; set; } = EPieceDir.UP; // 현재 스폰 위치
+    public EPieceDir nextSpawnPos { get; set; } = EPieceDir.UP; // 다음 스폰 위치
 
     private void Awake()
     {
@@ -21,7 +24,9 @@ public class Piece : MonoBehaviour
             triomino.Init();
     }
 
-    // 피스 생성
+    /// <summary>
+    /// 피스 생성
+    /// </summary>
     public void SpawnPiece()
     {
         int randomIdx = UnityEngine.Random.Range(0, triominos.Length);
@@ -35,10 +40,32 @@ public class Piece : MonoBehaviour
 
         ColorSet(data); // 색상 등록
 
-        position = Managers.Rule.spawnPositions[spawnPos]; // 최종 위치 등록
+        currentSpawnPos = nextSpawnPos;
+        position = Managers.Rule.spawnPositions[nextSpawnPos]; // 스폰 위치 등록
 
         Board board = GetComponent<Board>();
-        board.Set(this);
+        SetSpawnPos(); // 다음 스폰 위치로 변경
+        board.Set(this); // 보드에 그리기
+    }
+
+    // 다음 스폰 위치로 변경
+    private void SetSpawnPos()
+    {
+        switch (currentSpawnPos)
+        {
+            case EPieceDir.UP:
+                nextSpawnPos = EPieceDir.RIGHT;
+                break;
+            case EPieceDir.RIGHT:
+                nextSpawnPos = EPieceDir.DOWN;
+                break;
+            case EPieceDir.DOWN:
+                nextSpawnPos = EPieceDir.LEFT;
+                break;
+            case EPieceDir.LEFT:
+                nextSpawnPos = EPieceDir.UP;
+                break;
+        }
     }
 
     // 색상 결정
@@ -69,4 +96,5 @@ public class Piece : MonoBehaviour
         tiles[randomIdx] = replaceTile;
     }
 
+    // TODO - 아이템 추가
 }

@@ -3,22 +3,31 @@ using UnityEngine;
 
 public enum EPieceDir
 {
-    TOP,
+    UP,
     RIGHT,
-    BOTTOM,
-    LEFT
+    DOWN,
+    LEFT,
+    NONE,
 }
 
+/// <summary>
+/// 스폰 위치, 이동 딜레이와 같은 게임 규칙
+/// </summary>
 public class GameRule
 {
     public readonly Dictionary<EPieceDir, Vector3Int> spawnPositions = new Dictionary<EPieceDir, Vector3Int>()
     {
-        {EPieceDir.TOP, new Vector3Int(-1, 7)},
+        {EPieceDir.UP, new Vector3Int(-1, 7)},
         {EPieceDir.RIGHT, new Vector3Int(7, -1)},
-        {EPieceDir.BOTTOM, new Vector3Int(0, -10)},
+        {EPieceDir.DOWN, new Vector3Int(0, -10)},
         {EPieceDir.LEFT, new Vector3Int(-9, -1)}
     };
-    private int bombSpawnLimit = 20; // 폭탄 생성 한계값
-    private int rocketSpawnLimit = 6;   // 로켓 생성 한계값
+
+    public float stepDelay { get; private set; } = 1.25f; // stepDelay의 시간만큼 중심으로 이동함
+    public float moveDelay { get; private set; } = 0.1f; // 플레이어의 입력 이동 속도를 정함. 값이 클수록 입력을 많이 못함
+    public float lockDelay { get; private set; } = 0.5f; // 이 시간만큼 못 움직이면 피스를 Lock함
+
+    public int bombSpawnLimit { get; private set; } = 20; // 폭탄 생성 한계값
+    public int rocketSpawnLimit { get; private set; } = 6;   // 로켓 생성 한계값
 
 }

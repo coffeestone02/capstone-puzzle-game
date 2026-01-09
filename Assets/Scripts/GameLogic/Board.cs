@@ -5,7 +5,9 @@ using UnityEngine.Tilemaps;
 using System;
 using TMPro;
 
-// 피스가 그려짐
+/// <summary>
+/// 피스를 그려주기 위한 클래스
+/// </summary>
 public class Board : MonoBehaviour
 {
     public Tilemap tilemap { get; private set; } // 그려질 타일맵
@@ -31,7 +33,9 @@ public class Board : MonoBehaviour
         activePiece.SpawnPiece();
     }
 
-    // Piece를 타일맵에 그림
+    /// <summary>
+    /// Piece를 타일맵에 그림
+    /// </summary>
     public void Set(Piece piece)
     {
         for (int i = 0; i < piece.cells.Length; i++)
@@ -41,7 +45,9 @@ public class Board : MonoBehaviour
         }
     }
 
-    // Piece를 지움
+    /// <summary>
+    /// Piece를 지움
+    /// </summary>
     public void Clear(Piece piece)
     {
         for (int i = 0; i < piece.cells.Length; i++)
@@ -51,7 +57,9 @@ public class Board : MonoBehaviour
         }
     }
 
-    // 유효한 위치인지 확인
+    /// <summary>
+    /// 유효한 위치인지 확인
+    /// </summary>
     public bool IsValidPosition(Piece piece, Vector3Int position)
     {
         RectInt bounds = Bounds;
@@ -70,5 +78,11 @@ public class Board : MonoBehaviour
         }
 
         return true;
+    }
+
+    // 중앙 체크
+    public static bool IsCenterCell(Vector3Int p)
+    {
+        return (Vector2Int)p == new Vector2Int(-1, -1);
     }
 }
