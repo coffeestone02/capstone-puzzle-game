@@ -2,18 +2,18 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
+using System.IO;
 using System;
-using TMPro;
 
 /// <summary>
 /// 피스를 그려주기 위한 클래스
 /// </summary>
 public class Board : MonoBehaviour
 {
-    public Tilemap tilemap { get; private set; } // 그려질 타일맵
-    private Piece activePiece; // 조작중인 피스
-    private Vector2Int boardSize = new Vector2Int(19, 19); // 게임보드 사이즈
-    public RectInt Bounds // 보드 범위를 확인하는데 사용함
+    public Tilemap tilemap { get; private set; }
+    private Piece activePiece;
+    private Vector2Int boardSize = new Vector2Int(19, 19);
+    public RectInt Bounds // 보드 범위
     {
         get
         {
@@ -22,20 +22,17 @@ public class Board : MonoBehaviour
         }
     }
 
-    private void Awake()
+    private void Start()
     {
         tilemap = GetComponentInChildren<Tilemap>();
         activePiece = GetComponent<Piece>();
-    }
-
-    private void Start()
-    {
         activePiece.SpawnPiece();
     }
 
     /// <summary>
     /// Piece를 타일맵에 그림
     /// </summary>
+    /// <param name="piece"></param>
     public void Set(Piece piece)
     {
         for (int i = 0; i < piece.cells.Length; i++)
@@ -46,8 +43,9 @@ public class Board : MonoBehaviour
     }
 
     /// <summary>
-    /// Piece를 지움
+    /// Piece를 타일맵에서 지움
     /// </summary>
+    /// <param name="piece"></param>
     public void Clear(Piece piece)
     {
         for (int i = 0; i < piece.cells.Length; i++)
@@ -58,8 +56,11 @@ public class Board : MonoBehaviour
     }
 
     /// <summary>
-    /// 유효한 위치인지 확인
+    /// 피스의 모든 셀을 검사해 그려지는 위치가 유효한지 확인
     /// </summary>
+    /// <param name="piece"></param>
+    /// <param name="position"></param>
+    /// <returns></returns>
     public bool IsValidPosition(Piece piece, Vector3Int position)
     {
         RectInt bounds = Bounds;
@@ -80,9 +81,13 @@ public class Board : MonoBehaviour
         return true;
     }
 
-    // 중앙 체크
-    public static bool IsCenterCell(Vector3Int p)
+    /// <summary>
+    /// 중앙셀인지 확인
+    /// </summary>
+    /// <param name="pos"></param>
+    /// <returns></returns>
+    public static bool IsCenterCell(Vector3Int pos)
     {
-        return (Vector2Int)p == new Vector2Int(-1, -1);
+        return (Vector2Int)pos == new Vector2Int(-1, -1);
     }
 }

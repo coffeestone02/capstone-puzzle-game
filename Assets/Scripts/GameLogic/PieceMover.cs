@@ -1,5 +1,7 @@
 using System.Numerics;
 using UnityEngine;
+using System.IO;
+using System;
 
 /// <summary>
 /// 피스의 움직임
@@ -14,45 +16,37 @@ public class PieceMover : MonoBehaviour
     private float lockTime;
     private EPieceDir stepDir = EPieceDir.DOWN;
 
-    private void Awake()
+    private void Start()
     {
         board = GetComponent<Board>();
         activePiece = GetComponent<Piece>();
+
+        Managers.Input.moveAction -= OnMove;
+        Managers.Input.moveAction += OnMove;
     }
 
     private void Update()
     {
-        board.Clear(activePiece);
-
         lockTime += Time.deltaTime;
 
-        HandleRotate();
+        if (Time.time > stepTime) Step();
+    }
+
+    /// <summary>
+    /// InputManager.moveAction에 바인딩하여 사용
+    /// </summary>
+    /// <param name="moveDir"></param>
+    private void OnMove(EPieceDir moveDir)
+    {
         if (Time.time > moveTime)
         {
-            // 움직임 입력
-            HandleMovement();
+            Move(activePiece, Util.GetMoveVector2Int(moveDir));
         }
-
-        if (Time.time > stepTime)
-        {
-            Step();
-        }
-
-        board.Set(activePiece);
-    }
-
-    private void HandleRotate()
-    {
-
-    }
-
-    private void HandleMovement()
-    {
-        Move(activePiece, Managers.Input.moveDir);
     }
 
     private void Lock()
     {
+        Debug.Log("LOCK");
         board.Set(activePiece);
         activePiece.SpawnPiece();
         SetStepDirection();
@@ -80,64 +74,26 @@ public class PieceMover : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// EpieceDir의 열거형을 Vector2Int 형태로 변환
-    /// </summary>
-    private Vector2Int GetMoveVector2(EPieceDir moveDir)
-    {
-        Vector2Int moveVec = Vector2Int.up;
-        switch (moveDir)
-        {
-            case EPieceDir.UP:
-                moveVec = Vector2Int.up;
-                break;
-            case EPieceDir.RIGHT:
-                moveVec = Vector2Int.right;
-                break;
-            case EPieceDir.DOWN:
-                moveVec = Vector2Int.down;
-                break;
-            case EPieceDir.LEFT:
-                moveVec = Vector2Int.left;
-                break;
-        }
-
-        return moveVec;
-    }
-
     private void Step()
     {
         stepTime = Time.time + Managers.Rule.stepDelay;
 
-        switch (stepDir)
-        {
-            case EPieceDir.UP:
-                Move(activePiece, EPieceDir.UP);
-                break;
-            case EPieceDir.RIGHT:
-                Move(activePiece, EPieceDir.RIGHT);
-                break;
-            case EPieceDir.DOWN:
-                Move(activePiece, EPieceDir.DOWN);
-                break;
-            case EPieceDir.LEFT:
-                Move(activePiece, EPieceDir.LEFT);
-                break;
-        }
+        Move(activePiece, Util.GetMoveVector2Int(stepDir));
 
         if (lockTime >= Managers.Rule.lockDelay)
             Lock();
     }
 
-    public bool Move(Piece piece, EPieceDir moveDir)
+    public bool Move(Piece piece, Vector2Int translate)
     {
-        if (moveDir == EPieceDir.NONE)
+        // 아무런 입력도 받지 않을 때 or 반대 방향 입력
+        if (translate == Vector2Int.zero || IsOppositeDir(translate))
             return false;
 
-        Vector2Int moveVec = GetMoveVector2(moveDir);
+        board.Clear(piece);
         Vector3Int newPosition = piece.position;
-        newPosition.x += moveVec.x;
-        newPosition.y += moveVec.y;
+        newPosition.x += translate.x;
+        newPosition.y += translate.y;
 
         bool valid = board.IsValidPosition(piece, newPosition);
         if (valid)
@@ -147,6 +103,22 @@ public class PieceMover : MonoBehaviour
             lockTime = 0f;
         }
 
+        board.Set(piece);
         return valid;
+    }
+
+    // 움직이려는 방향이 스텝 방향과 반대 방향이면 true
+    private bool IsOppositeDir(Vector2Int moveInput)
+    {
+        if (stepDir == EPieceDir.UP && moveInput == Vector2Int.down)
+            return true;
+        if (stepDir == EPieceDir.DOWN && moveInput == Vector2Int.up)
+            return true;
+        if (stepDir == EPieceDir.RIGHT && moveInput == Vector2Int.left)
+            return true;
+        if (stepDir == EPieceDir.LEFT && moveInput == Vector2Int.right)
+            return true;
+
+        return false;
     }
 }

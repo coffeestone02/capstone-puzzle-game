@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
-// 월킥 테이블과 회전 행렬. 정적 변수로 만들어서 접근하기 쉽게 만듦
+// 월킥 테이블
 public static class Data
 {
     // 셀들이 그려질 위치. 셀들이 그려져서 피스가 만들어짐

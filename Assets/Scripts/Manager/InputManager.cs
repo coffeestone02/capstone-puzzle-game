@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -6,32 +7,21 @@ public class InputManager
     public Vector2 touchStartPos { get; private set; }
     public Vector2 touchNowPos { get; private set; }
 
-    // 테스트용
-    public EPieceDir moveDir { get; private set; }
-    public EPieceDir rotateDir { get; private set; }
+    // TEMP
+    public Action<EPieceDir> moveAction = null;
 
     public void OnUpdate()
     {
-        TouchInput();
-        KeyboardInput();
+        // TouchInput();
+        MoveInput();
     }
 
-    private void KeyboardInput()
+    private void MoveInput()
     {
-        if (Input.GetKey(KeyCode.Q))
-            rotateDir = EPieceDir.LEFT;
-        else if (Input.GetKey(KeyCode.E))
-            rotateDir = EPieceDir.RIGHT;
-        else if (Input.GetKey(KeyCode.W))
-            moveDir = EPieceDir.UP;
-        else if (Input.GetKey(KeyCode.A))
-            moveDir = EPieceDir.LEFT;
-        else if (Input.GetKey(KeyCode.S))
-            moveDir = EPieceDir.DOWN;
-        else if (Input.GetKey(KeyCode.D))
-            moveDir = EPieceDir.RIGHT;
-        else
-            moveDir = rotateDir = EPieceDir.NONE;
+        if (moveAction != null && Input.GetKey(KeyCode.W)) moveAction.Invoke(EPieceDir.UP);
+        else if (moveAction != null && Input.GetKey(KeyCode.A)) moveAction.Invoke(EPieceDir.LEFT);
+        else if (moveAction != null && Input.GetKey(KeyCode.S)) moveAction.Invoke(EPieceDir.DOWN);
+        else if (moveAction != null && Input.GetKey(KeyCode.D)) moveAction.Invoke(EPieceDir.RIGHT);
     }
 
     private void TouchInput()
