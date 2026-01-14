@@ -7,9 +7,30 @@ public class PieceRotator : MonoBehaviour
 {
     private int rotationIndex;
 
+    private void Start()
+    {
+        Managers.Input.rotateAction -= OnRotate;
+        Managers.Input.rotateAction += OnRotate;
+    }
+
     /// <summary>
-    /// 피스를 회전
+    /// InputManager.rotateAction에 바인딩하여 사용
     /// </summary>
+    /// <param name="direction">-1은 왼쪽회전, 1은 오른쪽회전</param>
+    public void OnRotate(int direction)
+    {
+        Piece activePiece = GetComponent<Piece>();
+        Board board = GetComponent<Board>();
+
+        board.Clear(activePiece);
+        Rotate(activePiece, direction);
+        board.Set(activePiece);
+    }
+
+    /// <summary>
+    /// 조작중인 피스를 회전시킴
+    /// </summary>
+    /// <param name="piece">조작중인 피스</param>
     /// <param name="direction">1은 오른쪽, -1은 왼쪽 회전</param>
     public void Rotate(Piece piece, int direction)
     {
@@ -47,16 +68,22 @@ public class PieceRotator : MonoBehaviour
 
     private bool TestWallKicks(Piece piece, int rotationIndex, int rotationDirection)
     {
-        PieceMover pieceMover = GetComponent<PieceMover>();
+        Board board = GetComponent<Board>();
         TriominoData data = piece.data;
         int wallKickIndex = GetWallKickIndex(piece, rotationIndex, rotationDirection);
 
         for (int i = 0; i < data.wallKicks.GetLength(1); i++)
         {
             Vector2Int translation = piece.data.wallKicks[wallKickIndex, i];
+            Vector3Int newPosition = piece.position;
+            newPosition.x += translation.x;
+            newPosition.y += translation.y;
 
-            if (pieceMover.Move(piece, translation))
+            if (board.IsValidPosition(piece, newPosition))
+            {
+                piece.position = newPosition;
                 return true;
+            }
         }
 
         return false;

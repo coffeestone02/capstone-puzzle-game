@@ -16,7 +16,7 @@ public class Piece : MonoBehaviour
     public Vector3Int[] cells { get; set; } // 셀들의 위치 정보
     public Tile[] tiles { get; private set; } // 만들어진 타일
     public Vector3Int position { get; set; } // 피스의 기준 위치 
-    public EPieceDir currentSpawnPos { get; set; } = EPieceDir.UP; // 현재 스폰 위치
+    public EPieceDir currentSpawnPos { get; private set; } = EPieceDir.UP; // 현재 스폰 위치
     public EPieceDir nextSpawnPos { get; set; } = EPieceDir.UP; // 다음 스폰 위치
 
     private void Awake()

@@ -1,4 +1,3 @@
-using System.Numerics;
 using UnityEngine;
 using System.IO;
 using System;
@@ -35,7 +34,7 @@ public class PieceMover : MonoBehaviour
     /// <summary>
     /// InputManager.moveAction에 바인딩하여 사용
     /// </summary>
-    /// <param name="moveDir"></param>
+    /// <param name="moveDir">이동 방향</param>
     private void OnMove(EPieceDir moveDir)
     {
         if (Time.time > moveTime)
@@ -44,18 +43,10 @@ public class PieceMover : MonoBehaviour
         }
     }
 
-    private void Lock()
-    {
-        Debug.Log("LOCK");
-        board.Set(activePiece);
-        activePiece.SpawnPiece();
-        SetStepDirection();
-    }
-
     /// <summary>
     /// 현재 스폰 위치에 따른 스텝 방향 결정
     /// </summary>
-    private void SetStepDirection()
+    public void SetStepDirection()
     {
         switch (activePiece.currentSpawnPos)
         {
@@ -81,16 +72,17 @@ public class PieceMover : MonoBehaviour
         Move(activePiece, Util.GetMoveVector2Int(stepDir));
 
         if (lockTime >= Managers.Rule.lockDelay)
-            Lock();
+            board.Lock(activePiece);
     }
 
-    public bool Move(Piece piece, Vector2Int translate)
+    private bool Move(Piece piece, Vector2Int translate)
     {
         // 아무런 입력도 받지 않을 때 or 반대 방향 입력
         if (translate == Vector2Int.zero || IsOppositeDir(translate))
             return false;
 
         board.Clear(piece);
+
         Vector3Int newPosition = piece.position;
         newPosition.x += translate.x;
         newPosition.y += translate.y;

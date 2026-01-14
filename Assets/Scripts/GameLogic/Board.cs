@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.Tilemaps;
 using System.IO;
 using System;
+using UnityEngine.UIElements;
 
 /// <summary>
 /// 피스를 그려주기 위한 클래스
@@ -11,7 +12,6 @@ using System;
 public class Board : MonoBehaviour
 {
     public Tilemap tilemap { get; private set; }
-    private Piece activePiece;
     private Vector2Int boardSize = new Vector2Int(19, 19);
     public RectInt Bounds // 보드 범위
     {
@@ -25,14 +25,14 @@ public class Board : MonoBehaviour
     private void Start()
     {
         tilemap = GetComponentInChildren<Tilemap>();
-        activePiece = GetComponent<Piece>();
-        activePiece.SpawnPiece();
+        Piece piece = GetComponent<Piece>();
+        piece.SpawnPiece();
     }
 
     /// <summary>
     /// Piece를 타일맵에 그림
     /// </summary>
-    /// <param name="piece"></param>
+    /// <param name="piece">조작중인 피스</param>
     public void Set(Piece piece)
     {
         for (int i = 0; i < piece.cells.Length; i++)
@@ -45,7 +45,7 @@ public class Board : MonoBehaviour
     /// <summary>
     /// Piece를 타일맵에서 지움
     /// </summary>
-    /// <param name="piece"></param>
+    /// <param name="piece">조작중인 피스</param>
     public void Clear(Piece piece)
     {
         for (int i = 0; i < piece.cells.Length; i++)
@@ -56,10 +56,27 @@ public class Board : MonoBehaviour
     }
 
     /// <summary>
+    /// 조작중인 피스를 고정함
+    /// </summary>
+    /// <param name="piece">조작중인 피스</param>
+    public void Lock(Piece piece)
+    {
+        PieceMover pieceMover = GetComponent<PieceMover>();
+
+        if (IsBoundary(piece) == false)
+            Set(piece);
+        else
+            Clear(piece);
+
+        piece.SpawnPiece();
+        pieceMover.SetStepDirection();
+    }
+
+    /// <summary>
     /// 피스의 모든 셀을 검사해 그려지는 위치가 유효한지 확인
     /// </summary>
-    /// <param name="piece"></param>
-    /// <param name="position"></param>
+    /// <param name="piece">조작중인 피스</param>
+    /// <param name="position">확인하고 싶은 위치</param>
     /// <returns></returns>
     public bool IsValidPosition(Piece piece, Vector3Int position)
     {
@@ -84,10 +101,36 @@ public class Board : MonoBehaviour
     /// <summary>
     /// 중앙셀인지 확인
     /// </summary>
-    /// <param name="pos"></param>
+    /// <param name="pos">확인하려는 셀의 위치</param>
     /// <returns></returns>
-    public static bool IsCenterCell(Vector3Int pos)
+    public bool IsCenterCell(Vector3Int pos)
     {
         return (Vector2Int)pos == new Vector2Int(-1, -1);
+    }
+
+    /// <summary>
+    /// 피스가 사라지는 경계선인지 확인
+    /// </summary>
+    /// <param name="piece">조작중인 피스</param>
+    /// <returns></returns>
+    public bool IsBoundary(Piece piece)
+    {
+        RectInt bounds = Bounds;
+
+        for (int i = 0; i < piece.cells.Length; i++)
+        {
+            Vector3Int pos = piece.cells[i] + piece.position;
+
+            if (piece.currentSpawnPos == EPieceDir.UP && pos.y <= bounds.yMin + 1)
+                return true;
+            if (piece.currentSpawnPos == EPieceDir.RIGHT && pos.x <= bounds.xMin + 1)
+                return true;
+            if (piece.currentSpawnPos == EPieceDir.DOWN && pos.y >= bounds.yMax - 2)
+                return true;
+            if (piece.currentSpawnPos == EPieceDir.LEFT && pos.x >= bounds.xMax - 2)
+                return true;
+        }
+
+        return false;
     }
 }

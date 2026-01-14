@@ -7,27 +7,12 @@ public class Util
     /// </summary>
     public static Vector2Int GetMoveVector2Int(EPieceDir moveDir)
     {
-        Vector2Int moveVec = Vector2Int.up;
-        switch (moveDir)
-        {
-            case EPieceDir.UP:
-                moveVec = Vector2Int.up;
-                break;
-            case EPieceDir.RIGHT:
-                moveVec = Vector2Int.right;
-                break;
-            case EPieceDir.DOWN:
-                moveVec = Vector2Int.down;
-                break;
-            case EPieceDir.LEFT:
-                moveVec = Vector2Int.left;
-                break;
-            case EPieceDir.NONE:
-                moveVec = Vector2Int.zero;
-                break;
-        }
+        if (moveDir == EPieceDir.UP) return Vector2Int.up;
+        if (moveDir == EPieceDir.DOWN) return Vector2Int.down;
+        if (moveDir == EPieceDir.LEFT) return Vector2Int.left;
+        if (moveDir == EPieceDir.RIGHT) return Vector2Int.right;
 
-        return moveVec;
+        return Vector2Int.zero;
     }
 
     /// <summary>
@@ -36,9 +21,10 @@ public class Util
     public static EPieceDir GetEPieceDir(Vector2Int moveVec)
     {
         if (moveVec == Vector2Int.up) return EPieceDir.UP;
-        else if (moveVec == Vector2Int.down) return EPieceDir.DOWN;
-        else if (moveVec == Vector2Int.left) return EPieceDir.LEFT;
-        else if (moveVec == Vector2Int.right) return EPieceDir.RIGHT;
-        else return EPieceDir.NONE;
+        if (moveVec == Vector2Int.down) return EPieceDir.DOWN;
+        if (moveVec == Vector2Int.left) return EPieceDir.LEFT;
+        if (moveVec == Vector2Int.right) return EPieceDir.RIGHT;
+
+        return EPieceDir.NONE;
     }
 }
