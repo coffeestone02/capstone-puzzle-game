@@ -64,9 +64,15 @@ public class Board : MonoBehaviour
         PieceMover pieceMover = GetComponent<PieceMover>();
 
         if (IsBoundary(piece) == false)
+        {
             Set(piece);
+            PieceMatcher pieceMatcher = GetComponent<PieceMatcher>();
+            pieceMatcher.TryMatch(piece);
+        }
         else
+        {
             Clear(piece);
+        }
 
         piece.SpawnPiece();
         pieceMover.SetStepDirection();
@@ -96,16 +102,6 @@ public class Board : MonoBehaviour
         }
 
         return true;
-    }
-
-    /// <summary>
-    /// 중앙셀인지 확인
-    /// </summary>
-    /// <param name="pos">확인하려는 셀의 위치</param>
-    /// <returns></returns>
-    public bool IsCenterCell(Vector3Int pos)
-    {
-        return (Vector2Int)pos == new Vector2Int(-1, -1);
     }
 
     /// <summary>

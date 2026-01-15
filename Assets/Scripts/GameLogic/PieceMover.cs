@@ -39,7 +39,9 @@ public class PieceMover : MonoBehaviour
     {
         if (Time.time > moveTime)
         {
-            Move(activePiece, Util.GetMoveVector2Int(moveDir));
+            if (moveDir == stepDir)
+                stepTime = Time.time + Managers.Rule.stepDelay;
+            Move(Util.GetMoveVector2Int(moveDir));
         }
     }
 
@@ -69,33 +71,33 @@ public class PieceMover : MonoBehaviour
     {
         stepTime = Time.time + Managers.Rule.stepDelay;
 
-        Move(activePiece, Util.GetMoveVector2Int(stepDir));
+        Move(Util.GetMoveVector2Int(stepDir));
 
         if (lockTime >= Managers.Rule.lockDelay)
             board.Lock(activePiece);
     }
 
-    private bool Move(Piece piece, Vector2Int translate)
+    private bool Move(Vector2Int translate)
     {
         // 아무런 입력도 받지 않을 때 or 반대 방향 입력
         if (translate == Vector2Int.zero || IsOppositeDir(translate))
             return false;
 
-        board.Clear(piece);
+        board.Clear(activePiece);
 
-        Vector3Int newPosition = piece.position;
+        Vector3Int newPosition = activePiece.position;
         newPosition.x += translate.x;
         newPosition.y += translate.y;
 
-        bool valid = board.IsValidPosition(piece, newPosition);
+        bool valid = board.IsValidPosition(activePiece, newPosition);
         if (valid)
         {
-            piece.position = newPosition;
+            activePiece.position = newPosition;
             moveTime = Time.time + Managers.Rule.moveDelay;
             lockTime = 0f;
         }
 
-        board.Set(piece);
+        board.Set(activePiece);
         return valid;
     }
 

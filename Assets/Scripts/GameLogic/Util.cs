@@ -2,6 +2,15 @@ using UnityEngine;
 
 public class Util
 {
+    // 방향 벡터(탐색용)
+    public static Vector3Int[] directions = new Vector3Int[]
+    {
+        new Vector3Int(1, 0, 0),
+        new Vector3Int(-1, 0, 0),
+        new Vector3Int(0, 1, 0),
+        new Vector3Int(0, -1, 0)
+    };
+
     /// <summary>
     /// EpieceDir를 Vector2Int 형태로 변환
     /// </summary>
