@@ -30,23 +30,55 @@ public class Piece : MonoBehaviour
     /// </summary>
     public void SpawnPiece()
     {
+        // 1. 만들어질 피스를 랜덤으로 결정
         int randomIdx = UnityEngine.Random.Range(0, triominos.Length);
-        data = triominos[randomIdx]; // 만들어질 피스를 랜덤으로 결정
-
+        data = triominos[randomIdx];
         cells = new Vector3Int[data.cells.Length];
         tiles = new Tile[data.cells.Length];
 
-        for (int i = 0; i < cells.Length; i++) // 셀 위치 등록
+        // 2. 셀 위치 등록
+        for (int i = 0; i < cells.Length; i++)
             cells[i] = (Vector3Int)data.cells[i];
 
-        ColorSet(data); // 색상 등록
+        // 3. 색상 등록
+        ColorSet(data);
 
+        // 4. 스폰 위치 등록
         currentSpawnPos = nextSpawnPos;
-        position = Managers.Rule.spawnPositions[nextSpawnPos]; // 스폰 위치 등록
+        position = Managers.Rule.spawnPositions[nextSpawnPos];
+        SetSpawnPos();
 
+        // 5. 방향과 위치를 초기 설정에 맞게 세팅해줌
+        PieceRotator pr = GetComponent<PieceRotator>();
+        PieceMover pm = GetComponent<PieceMover>();
+        switch (currentSpawnPos)
+        {
+            case EPieceDir.UP:
+                break;
+            case EPieceDir.RIGHT:
+                pr.OnRotate(1);
+                break;
+            case EPieceDir.DOWN:
+                pm.OnMove(EPieceDir.LEFT);
+                pr.OnRotate(1);
+                pr.OnRotate(1);
+                break;
+            case EPieceDir.LEFT:
+                pr.OnRotate(1);
+                pr.OnRotate(1);
+                pr.OnRotate(1);
+                break;
+        }
+
+        // 6. 아이템 추가
+        if (Managers.Rule.nextSpawnHasBomb)
+            AddBombTile();
+        else if (Managers.Rule.nextSpawnHasRocket)
+            AddRocketTile();
+
+        // 7. 보드에 그리기
         Board board = GetComponent<Board>();
-        SetSpawnPos(); // 다음 스폰 위치로 변경
-        board.Set(this); // 보드에 그리기
+        board.Set(this);
     }
 
     // 다음 스폰 위치로 변경
@@ -97,5 +129,46 @@ public class Piece : MonoBehaviour
         tiles[randomIdx] = replaceTile;
     }
 
-    // TODO - 아이템 추가
+    private void AddBombTile()
+    {
+        int cellIdx = UnityEngine.Random.Range(0, cells.Length);
+        Tile bombTile = GetBombTile(tiles[cellIdx]);
+        tiles[cellIdx] = bombTile;
+        Managers.Rule.nextSpawnHasBomb = false; // 개선 필요
+    }
+
+    private void AddRocketTile()
+    {
+        int cellIdx = UnityEngine.Random.Range(0, cells.Length);
+        Tile rocketTile = GetRocketTile(tiles[cellIdx]);
+        tiles[cellIdx] = rocketTile;
+        Managers.Rule.nextSpawnHasRocket = false; // 개선 필요
+    }
+
+    private Tile GetBombTile(Tile tile)
+    {
+        Tile bombTile = null;
+        string tileName = tile.name.ToLowerInvariant();
+
+        if (tileName.Contains("blue"))
+            bombTile = Resources.Load<Tile>("VisualAssets/Tiles/BlueBombTile");
+        else if (tileName.Contains("red"))
+            bombTile = Resources.Load<Tile>("VisualAssets/Tiles/RedBombTile");
+
+        return bombTile;
+    }
+
+    // 타일 색에 맞는 로켓 타일 반환
+    public Tile GetRocketTile(Tile tile)
+    {
+        Tile rocketTile = null;
+        string tileName = tile.name.ToLowerInvariant();
+
+        if (tileName.Contains("blue"))
+            rocketTile = Resources.Load<Tile>("VisualAssets/Tiles/BlueRocketTile");
+        else if (tileName.Contains("red"))
+            rocketTile = Resources.Load<Tile>("VisualAssets/Tiles/RedRocketTile");
+
+        return rocketTile;
+    }
 }

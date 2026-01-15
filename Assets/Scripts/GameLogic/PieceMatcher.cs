@@ -11,11 +11,13 @@ public class PieceMatcher : MonoBehaviour
 {
     private Board board;
     private RectInt bounds;
+    private GameObject destroyParticle;
 
     private void Start()
     {
         board = GetComponent<Board>();
         bounds = board.Bounds;
+        destroyParticle = Resources.Load<GameObject>("VisualAssets/Particles/DestroyParticle");
     }
 
     /// <summary>
@@ -25,10 +27,15 @@ public class PieceMatcher : MonoBehaviour
     public void TryMatch(Piece piece)
     {
         HashSet<Vector3Int> matched = FindMainMatch(piece);
-        HashSet<Vector3Int> bonusMatch = FindBonusMatch(matched);
+        HashSet<Vector3Int> bonusMatched = FindBonusMatch(matched);
 
+        // 매치된 블럭 갯수 업데이트
+        int matchedCount = matched.Count + bonusMatched.Count;
+        Managers.Rule.BlockCounter += matchedCount;
+
+        // 삭제
         DeleteMatchedPiece(matched);
-        DeleteMatchedPiece(bonusMatch);
+        DeleteMatchedPiece(bonusMatched);
     }
 
     private int DeleteMatchedPiece(HashSet<Vector3Int> matched)
@@ -38,7 +45,6 @@ public class PieceMatcher : MonoBehaviour
 
         int itemScore = 0;
         Tilemap tilemap = board.tilemap;
-        GameObject destroyParticle = Resources.Load<GameObject>("VisualAssets/Particles/DestroyParticle");
 
         foreach (Vector3Int pos in matched)
         {

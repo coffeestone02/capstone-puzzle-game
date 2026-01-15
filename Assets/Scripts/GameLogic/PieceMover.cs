@@ -35,7 +35,7 @@ public class PieceMover : MonoBehaviour
     /// InputManager.moveAction에 바인딩하여 사용
     /// </summary>
     /// <param name="moveDir">이동 방향</param>
-    private void OnMove(EPieceDir moveDir)
+    public void OnMove(EPieceDir moveDir)
     {
         if (Time.time > moveTime)
         {

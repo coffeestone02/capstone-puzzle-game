@@ -32,7 +32,7 @@ public class PieceRotator : MonoBehaviour
     /// </summary>
     /// <param name="piece">조작중인 피스</param>
     /// <param name="direction">1은 오른쪽, -1은 왼쪽 회전</param>
-    public void Rotate(Piece piece, int direction)
+    private void Rotate(Piece piece, int direction)
     {
         int originalRotation = rotationIndex;
 

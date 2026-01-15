@@ -13,7 +13,7 @@ public enum EPieceDir
 /// <summary>
 /// 스폰 위치, 이동 딜레이와 같은 게임 규칙
 /// </summary>
-public class GameRule
+public class GameManager
 {
     public readonly Dictionary<EPieceDir, Vector3Int> spawnPositions = new Dictionary<EPieceDir, Vector3Int>()
     {
@@ -30,4 +30,31 @@ public class GameRule
     public int bombSpawnLimit { get; private set; } = 20; // 폭탄 생성 한계값
     public int rocketSpawnLimit { get; private set; } = 6;   // 로켓 생성 한계값
 
+    public bool nextSpawnHasBomb { get; set; } = false;
+    public bool nextSpawnHasRocket { get; set; } = false;
+
+    public int score = 0;
+    public int combo = 0;
+    private int blockCounter;
+    public int BlockCounter
+    {
+        get
+        {
+            return blockCounter;
+        }
+        set
+        {
+            int cnt = value - blockCounter;
+            blockCounter = value;
+            if (blockCounter >= bombSpawnLimit)
+            {
+                nextSpawnHasBomb = true;
+                blockCounter = 0;
+            }
+            else if (cnt >= rocketSpawnLimit && nextSpawnHasRocket == false)
+            {
+                nextSpawnHasRocket = true;
+            }
+        }
+    }
 }

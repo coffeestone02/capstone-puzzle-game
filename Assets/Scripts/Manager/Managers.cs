@@ -7,10 +7,10 @@ public class Managers : MonoBehaviour
 {
     public static Managers Instance { get; private set; }
 
-    private GameRule rule = new GameRule();
+    private GameManager rule = new GameManager();
     private InputManager input = new InputManager();
 
-    public static GameRule Rule { get { return Instance.rule; } }
+    public static GameManager Rule { get { return Instance.rule; } }
     public static InputManager Input { get { return Instance.input; } }
 
     private void Start()
