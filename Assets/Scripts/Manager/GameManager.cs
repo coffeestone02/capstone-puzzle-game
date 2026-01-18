@@ -23,6 +23,7 @@ public class GameManager
         {EPieceDir.LEFT, new Vector3Int(-9, -1)}
     };
 
+    // 게임 설정값들
     public float stepDelay { get; private set; } = 1.25f; // stepDelay의 시간만큼 중심으로 이동함
     public float moveDelay { get; private set; } = 0.1f; // 플레이어의 입력 이동 속도를 정함. 값이 클수록 입력을 많이 못함
     public float lockDelay { get; private set; } = 0.5f; // 이 시간만큼 못 움직이면 피스를 Lock함
@@ -33,23 +34,22 @@ public class GameManager
     public bool nextSpawnHasBomb { get; set; } = false;
     public bool nextSpawnHasRocket { get; set; } = false;
 
-    public int score = 0;
-    public int combo = 0;
-    private int blockCounter;
+    public int bombRange { get; private set; } = 5;
+    private int _blockCounter;
     public int BlockCounter
     {
         get
         {
-            return blockCounter;
+            return _blockCounter;
         }
         set
         {
-            int cnt = value - blockCounter;
-            blockCounter = value;
-            if (blockCounter >= bombSpawnLimit)
+            int cnt = value - _blockCounter;
+            _blockCounter = value;
+            if (_blockCounter >= bombSpawnLimit)
             {
                 nextSpawnHasBomb = true;
-                blockCounter = 0;
+                _blockCounter = 0;
             }
             else if (cnt >= rocketSpawnLimit && nextSpawnHasRocket == false)
             {

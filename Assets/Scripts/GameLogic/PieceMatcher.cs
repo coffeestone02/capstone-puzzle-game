@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Resources;
 using UnityEngine;
-using UnityEngine.SocialPlatforms.Impl;
 using UnityEngine.Tilemaps;
 
 /// <summary>
@@ -12,12 +11,14 @@ public class PieceMatcher : MonoBehaviour
     private Board board;
     private RectInt bounds;
     private GameObject destroyParticle;
+    private GameObject bombParticle;
 
     private void Start()
     {
         board = GetComponent<Board>();
         bounds = board.Bounds;
         destroyParticle = Resources.Load<GameObject>("VisualAssets/Particles/DestroyParticle");
+        bombParticle = Resources.Load<GameObject>("VisualAssets/Particles/BombParticle");
     }
 
     /// <summary>
@@ -33,9 +34,16 @@ public class PieceMatcher : MonoBehaviour
         int matchedCount = matched.Count + bonusMatched.Count;
         Managers.Rule.BlockCounter += matchedCount;
 
-        // 삭제
-        DeleteMatchedPiece(matched);
-        DeleteMatchedPiece(bonusMatched);
+        // 삭제 및 점수계산
+        int mainPoint = matched.Count * 100;
+        int bonusPoint = bonusMatched.Count * 60;
+        int itemPoint = DeleteMatchedPiece(matched) + DeleteMatchedPiece(bonusMatched);
+
+        // 삭제 소리 재생
+        if (matchedCount > 0)
+            Managers.Audio.PlaySFX("DestroySFX");
+        if (itemPoint > 0)
+            Managers.Audio.PlaySFX("ExplodeSFX");
     }
 
     private int DeleteMatchedPiece(HashSet<Vector3Int> matched)
@@ -43,21 +51,34 @@ public class PieceMatcher : MonoBehaviour
         if (matched == null || matched.Count == 0)
             return 0;
 
-        int itemScore = 0;
         Tilemap tilemap = board.tilemap;
+        List<Vector3Int> bombs = new List<Vector3Int>(); // 폭탄 위치
+        List<Vector3Int> rockets = new List<Vector3Int>(); // 로켓 위치
 
         foreach (Vector3Int pos in matched)
         {
-            if (IsCenterCell(pos))
-                continue;
-
             Tile tile = tilemap.GetTile<Tile>(pos);
-            if (tile == null)
+            if (tile == null || IsCenterCell(pos))
                 continue;
 
+            // 아이템 위치 수집
+            string tileName = tile.name.ToLowerInvariant();
+            if (tileName.Contains("bomb"))
+                bombs.Add(pos);
+            else if (tileName.Contains("rocket"))
+                rockets.Add(pos);
+
+            // 타일 삭제
             tilemap.SetTile(pos, null);
-            PlayDestroyParticle(destroyParticle, pos);
+            PlayParticle(destroyParticle, pos);
         }
+
+        // 아이템 사용
+        int itemScore = 0;
+        foreach (Vector3Int pos in bombs)
+            itemScore += UseBomb(pos, Managers.Rule.bombRange);
+        foreach (Vector3Int pos in rockets)
+            itemScore += UseRocket(pos);
 
         return itemScore;
     }
@@ -194,7 +215,74 @@ public class PieceMatcher : MonoBehaviour
         return (Vector2Int)pos == new Vector2Int(-1, -1);
     }
 
-    private void PlayDestroyParticle(GameObject effect, Vector3Int position)
+    /// <summary>
+    /// startPos 기준으로 range 범위 내의 블록을 모두 제거함
+    /// </summary>
+    /// <param name="startPos">기준점</param>
+    /// <param name="range">폭발 범위</param>
+    /// <returns></returns>
+    private int UseBomb(Vector3Int startPos, int range)
+    {
+        PlayParticle(bombParticle, startPos);
+        int bombScore = 0;
+        int offset = range / 2;
+        Tilemap tilemap = board.tilemap;
+
+        for (int x = startPos.x - offset; x <= startPos.x + offset; x++)
+        {
+            for (int y = startPos.y - offset; y <= startPos.y + offset; y++)
+            {
+                if (x < bounds.xMin || x >= bounds.xMax || y < bounds.yMin || y >= bounds.yMax)
+                    continue;
+
+                Vector3Int pos = new Vector3Int(x, y, 0);
+                if (IsCenterCell(pos) || tilemap.GetTile(pos) == null)
+                    continue;
+
+                tilemap.SetTile(pos, null);
+                bombScore += 60;
+            }
+        }
+
+        return bombScore;
+    }
+
+    /// <summary>
+    /// startPos 기준으로 가로 세로에 있는 모든 블록을 제거
+    /// </summary>
+    /// <param name="startPos">시작점</param>
+    /// <returns></returns>
+    private int UseRocket(Vector3Int startPos) // <----------- 제대로 삭제 안되는 문제 발생
+    {
+        int rocketScore = 0;
+        Tilemap tilemap = board.tilemap;
+
+        for (int x = bounds.xMin; x < bounds.xMax; x++)
+        {
+            Vector3Int pos = new Vector3Int(x, startPos.y, 0);
+            if (IsCenterCell(pos) || tilemap.GetTile(pos) == null)
+                continue;
+
+            PlayParticle(destroyParticle, pos);
+            tilemap.SetTile(pos, null);
+            rocketScore += 60;
+        }
+
+        for (int y = bounds.xMin; y < bounds.xMax; y++)
+        {
+            Vector3Int pos = new Vector3Int(startPos.x, y, 0);
+            if (IsCenterCell(pos) || tilemap.GetTile(pos) == null)
+                continue;
+
+            PlayParticle(destroyParticle, pos);
+            tilemap.SetTile(pos, null);
+            rocketScore += 60;
+        }
+
+        return rocketScore;
+    }
+
+    private void PlayParticle(GameObject effect, Vector3Int position)
     {
         GameObject particle = Instantiate(effect, board.tilemap.GetCellCenterWorld(Vector3Int.FloorToInt(position)), Quaternion.identity);
         Destroy(particle, 1f);

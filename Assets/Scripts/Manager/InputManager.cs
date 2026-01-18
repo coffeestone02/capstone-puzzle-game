@@ -90,6 +90,7 @@ public class InputManager
 
     private void TouchStart(Vector2 touchPos)
     {
+        Managers.Audio.PlaySFX("MoveSFX");
         touchCurrentPos = touchStartPos = touchPos;
         isHolding = false;
     }
@@ -97,7 +98,11 @@ public class InputManager
     // 디버깅용
     private void RotateInput()
     {
-        if (rotateAction != null && Input.GetKeyDown(KeyCode.E)) rotateAction.Invoke(1);
+        if (rotateAction != null && Input.GetKeyDown(KeyCode.E))
+        {
+            Managers.Audio.PlaySFX("RotateSFX");
+            rotateAction.Invoke(1);
+        }
     }
 
     private void MoveInput()

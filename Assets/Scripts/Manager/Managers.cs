@@ -7,11 +7,15 @@ public class Managers : MonoBehaviour
 {
     public static Managers Instance { get; private set; }
 
-    private GameManager rule = new GameManager();
-    private InputManager input = new InputManager();
+    private GameManager _rule = new GameManager();
+    private InputManager _input = new InputManager();
+    private AudioManager _audio = new AudioManager();
+    private ScoreManager _score = new ScoreManager();
 
-    public static GameManager Rule { get { return Instance.rule; } }
-    public static InputManager Input { get { return Instance.input; } }
+    public static GameManager Rule { get { return Instance._rule; } }
+    public static InputManager Input { get { return Instance._input; } }
+    public static AudioManager Audio { get { return Instance._audio; } }
+    public static ScoreManager Score { get { return Instance._score; } }
 
     private void Start()
     {
@@ -20,7 +24,7 @@ public class Managers : MonoBehaviour
 
     private void Update()
     {
-        input.OnUpdate();
+        _input.OnUpdate();
     }
 
     private void Init()
@@ -31,5 +35,6 @@ public class Managers : MonoBehaviour
             Destroy(gameObject);
 
         DontDestroyOnLoad(gameObject);
+        Instance._audio.Init();
     }
 }

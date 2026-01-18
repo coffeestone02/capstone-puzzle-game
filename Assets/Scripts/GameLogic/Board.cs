@@ -66,6 +66,7 @@ public class Board : MonoBehaviour
         if (IsBoundary(piece) == false)
         {
             Set(piece);
+            Managers.Audio.PlaySFX("LockSFX");
             PieceMatcher pieceMatcher = GetComponent<PieceMatcher>();
             pieceMatcher.TryMatch(piece);
         }
