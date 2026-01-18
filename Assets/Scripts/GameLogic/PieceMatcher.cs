@@ -52,8 +52,8 @@ public class PieceMatcher : MonoBehaviour
             return 0;
 
         Tilemap tilemap = board.tilemap;
-        List<Vector3Int> bombs = new List<Vector3Int>(); // 폭탄 위치
-        List<Vector3Int> rockets = new List<Vector3Int>(); // 로켓 위치
+        Queue<Vector3Int> bombs = new Queue<Vector3Int>(); // 폭탄 위치
+        Queue<Vector3Int> rockets = new Queue<Vector3Int>(); // 로켓 위치
 
         foreach (Vector3Int pos in matched)
         {
@@ -64,9 +64,9 @@ public class PieceMatcher : MonoBehaviour
             // 아이템 위치 수집
             string tileName = tile.name.ToLowerInvariant();
             if (tileName.Contains("bomb"))
-                bombs.Add(pos);
+                bombs.Enqueue(pos);
             else if (tileName.Contains("rocket"))
-                rockets.Add(pos);
+                rockets.Enqueue(pos);
 
             // 타일 삭제
             tilemap.SetTile(pos, null);
@@ -75,10 +75,17 @@ public class PieceMatcher : MonoBehaviour
 
         // 아이템 사용
         int itemScore = 0;
-        foreach (Vector3Int pos in bombs)
-            itemScore += UseBomb(pos, Managers.Rule.bombRange);
-        foreach (Vector3Int pos in rockets)
-            itemScore += UseRocket(pos);
+        while (bombs.Count > 0)
+        {
+            Vector3Int pos = bombs.Dequeue();
+            itemScore += UseBomb(pos, Managers.Rule.bombRange, bombs, rockets);
+        }
+
+        while (rockets.Count > 0)
+        {
+            Vector3Int pos = rockets.Dequeue();
+            itemScore += UseRocket(pos, bombs, rockets);
+        }
 
         return itemScore;
     }
@@ -221,7 +228,7 @@ public class PieceMatcher : MonoBehaviour
     /// <param name="startPos">기준점</param>
     /// <param name="range">폭발 범위</param>
     /// <returns></returns>
-    private int UseBomb(Vector3Int startPos, int range)
+    private int UseBomb(Vector3Int startPos, int range, Queue<Vector3Int> bombQueue, Queue<Vector3Int> rocketQueue)
     {
         PlayParticle(bombParticle, startPos);
         int bombScore = 0;
@@ -236,8 +243,15 @@ public class PieceMatcher : MonoBehaviour
                     continue;
 
                 Vector3Int pos = new Vector3Int(x, y, 0);
-                if (IsCenterCell(pos) || tilemap.GetTile(pos) == null)
+                Tile tile = tilemap.GetTile<Tile>(pos);
+                if (IsCenterCell(pos) || tile == null)
                     continue;
+
+                string tileName = tile.name.ToLowerInvariant();
+                if (tileName.Contains("bomb"))
+                    bombQueue.Enqueue(pos);
+                else if (tileName.Contains("rocket"))
+                    rocketQueue.Enqueue(pos);
 
                 tilemap.SetTile(pos, null);
                 bombScore += 60;
@@ -252,27 +266,45 @@ public class PieceMatcher : MonoBehaviour
     /// </summary>
     /// <param name="startPos">시작점</param>
     /// <returns></returns>
-    private int UseRocket(Vector3Int startPos) // <----------- 제대로 삭제 안되는 문제 발생
+    private int UseRocket(Vector3Int startPos, Queue<Vector3Int> bombQueue, Queue<Vector3Int> rocketQueue)
     {
         int rocketScore = 0;
         Tilemap tilemap = board.tilemap;
 
+        // 가로 방향
         for (int x = bounds.xMin; x < bounds.xMax; x++)
         {
             Vector3Int pos = new Vector3Int(x, startPos.y, 0);
-            if (IsCenterCell(pos) || tilemap.GetTile(pos) == null)
+            Tile tile = tilemap.GetTile<Tile>(pos);
+            if (IsCenterCell(pos) || tile == null)
                 continue;
+
+            // 또 다른 아이템 위치를 큐에 추가
+            string tileName = tile.name.ToLowerInvariant();
+            if (tileName.Contains("bomb"))
+                bombQueue.Enqueue(pos);
+            else if (tileName.Contains("rocket"))
+                rocketQueue.Enqueue(pos);
 
             PlayParticle(destroyParticle, pos);
             tilemap.SetTile(pos, null);
             rocketScore += 60;
         }
 
+        // 세로 방향
         for (int y = bounds.xMin; y < bounds.xMax; y++)
         {
             Vector3Int pos = new Vector3Int(startPos.x, y, 0);
-            if (IsCenterCell(pos) || tilemap.GetTile(pos) == null)
+            Tile tile = tilemap.GetTile<Tile>(pos);
+            if (IsCenterCell(pos) || tile == null)
                 continue;
+
+            // 또 다른 아이템 위치를 큐에 추가
+            string tileName = tile.name.ToLowerInvariant();
+            if (tileName.Contains("bomb"))
+                bombQueue.Enqueue(pos);
+            else if (tileName.Contains("rocket"))
+                rocketQueue.Enqueue(pos);
 
             PlayParticle(destroyParticle, pos);
             tilemap.SetTile(pos, null);
