@@ -35,14 +35,13 @@ public class PieceMatcher : MonoBehaviour
         Managers.Rule.BlockCounter += matchedCount;
 
         // 삭제 및 점수계산
-        int mainPoint = matched.Count * 100;
-        int bonusPoint = bonusMatched.Count * 60;
-        int itemPoint = DeleteMatchedPiece(matched) + DeleteMatchedPiece(bonusMatched);
+        int itemMatchedCount = DeleteMatchedPiece(matched) + DeleteMatchedPiece(bonusMatched);
+        Managers.Score.SetScore(matched.Count, bonusMatched.Count, itemMatchedCount);
 
         // 삭제 소리 재생
         if (matchedCount > 0)
             Managers.Audio.PlaySFX("DestroySFX");
-        if (itemPoint > 0)
+        if (itemMatchedCount > 0)
             Managers.Audio.PlaySFX("ExplodeSFX");
     }
 
@@ -58,15 +57,11 @@ public class PieceMatcher : MonoBehaviour
         foreach (Vector3Int pos in matched)
         {
             Tile tile = tilemap.GetTile<Tile>(pos);
-            if (tile == null || IsCenterCell(pos))
+            if (tile == null || board.IsCenterCell(pos))
                 continue;
 
             // 아이템 위치 수집
-            string tileName = tile.name.ToLowerInvariant();
-            if (tileName.Contains("bomb"))
-                bombs.Enqueue(pos);
-            else if (tileName.Contains("rocket"))
-                rockets.Enqueue(pos);
+            EnqueueItem(tile, pos, bombs, rockets);
 
             // 타일 삭제
             tilemap.SetTile(pos, null);
@@ -74,20 +69,20 @@ public class PieceMatcher : MonoBehaviour
         }
 
         // 아이템 사용
-        int itemScore = 0;
+        int itemMatchedCount = 0;
         while (bombs.Count > 0)
         {
             Vector3Int pos = bombs.Dequeue();
-            itemScore += UseBomb(pos, Managers.Rule.bombRange, bombs, rockets);
+            itemMatchedCount += UseBomb(pos, Managers.Rule.bombRange, bombs, rockets); // <------ 개수 검산 필요
         }
 
         while (rockets.Count > 0)
         {
             Vector3Int pos = rockets.Dequeue();
-            itemScore += UseRocket(pos, bombs, rockets);
+            itemMatchedCount += UseRocket(pos, bombs, rockets); // <------ 개수 검산 필요
         }
 
-        return itemScore;
+        return itemMatchedCount;
     }
 
     private HashSet<Vector3Int> FindMainMatch(Piece piece)
@@ -217,21 +212,11 @@ public class PieceMatcher : MonoBehaviour
         return false;
     }
 
-    private bool IsCenterCell(Vector3Int pos)
-    {
-        return (Vector2Int)pos == new Vector2Int(-1, -1);
-    }
-
-    /// <summary>
-    /// startPos 기준으로 range 범위 내의 블록을 모두 제거함
-    /// </summary>
-    /// <param name="startPos">기준점</param>
-    /// <param name="range">폭발 범위</param>
-    /// <returns></returns>
+    // 폭탄으로 제거한 개수 반환
     private int UseBomb(Vector3Int startPos, int range, Queue<Vector3Int> bombQueue, Queue<Vector3Int> rocketQueue)
     {
         PlayParticle(bombParticle, startPos);
-        int bombScore = 0;
+        int bombCount = 0;
         int offset = range / 2;
         Tilemap tilemap = board.tilemap;
 
@@ -244,31 +229,23 @@ public class PieceMatcher : MonoBehaviour
 
                 Vector3Int pos = new Vector3Int(x, y, 0);
                 Tile tile = tilemap.GetTile<Tile>(pos);
-                if (IsCenterCell(pos) || tile == null)
+                if (board.IsCenterCell(pos) || tile == null)
                     continue;
 
-                string tileName = tile.name.ToLowerInvariant();
-                if (tileName.Contains("bomb"))
-                    bombQueue.Enqueue(pos);
-                else if (tileName.Contains("rocket"))
-                    rocketQueue.Enqueue(pos);
+                EnqueueItem(tile, pos, bombQueue, rocketQueue);
 
                 tilemap.SetTile(pos, null);
-                bombScore += 60;
+                bombCount++;
             }
         }
 
-        return bombScore;
+        return bombCount;
     }
 
-    /// <summary>
-    /// startPos 기준으로 가로 세로에 있는 모든 블록을 제거
-    /// </summary>
-    /// <param name="startPos">시작점</param>
-    /// <returns></returns>
+    // 로켓으로 제거한 개수 반환
     private int UseRocket(Vector3Int startPos, Queue<Vector3Int> bombQueue, Queue<Vector3Int> rocketQueue)
     {
-        int rocketScore = 0;
+        int rocketCount = 0;
         Tilemap tilemap = board.tilemap;
 
         // 가로 방향
@@ -276,19 +253,14 @@ public class PieceMatcher : MonoBehaviour
         {
             Vector3Int pos = new Vector3Int(x, startPos.y, 0);
             Tile tile = tilemap.GetTile<Tile>(pos);
-            if (IsCenterCell(pos) || tile == null)
+            if (board.IsCenterCell(pos) || tile == null)
                 continue;
 
             // 또 다른 아이템 위치를 큐에 추가
-            string tileName = tile.name.ToLowerInvariant();
-            if (tileName.Contains("bomb"))
-                bombQueue.Enqueue(pos);
-            else if (tileName.Contains("rocket"))
-                rocketQueue.Enqueue(pos);
-
+            EnqueueItem(tile, pos, bombQueue, rocketQueue);
             PlayParticle(destroyParticle, pos);
             tilemap.SetTile(pos, null);
-            rocketScore += 60;
+            rocketCount++;
         }
 
         // 세로 방향
@@ -296,27 +268,32 @@ public class PieceMatcher : MonoBehaviour
         {
             Vector3Int pos = new Vector3Int(startPos.x, y, 0);
             Tile tile = tilemap.GetTile<Tile>(pos);
-            if (IsCenterCell(pos) || tile == null)
+            if (board.IsCenterCell(pos) || tile == null)
                 continue;
 
             // 또 다른 아이템 위치를 큐에 추가
-            string tileName = tile.name.ToLowerInvariant();
-            if (tileName.Contains("bomb"))
-                bombQueue.Enqueue(pos);
-            else if (tileName.Contains("rocket"))
-                rocketQueue.Enqueue(pos);
+            EnqueueItem(tile, pos, bombQueue, rocketQueue);
 
             PlayParticle(destroyParticle, pos);
             tilemap.SetTile(pos, null);
-            rocketScore += 60;
+            rocketCount++;
         }
 
-        return rocketScore;
+        return rocketCount;
     }
 
     private void PlayParticle(GameObject effect, Vector3Int position)
     {
         GameObject particle = Instantiate(effect, board.tilemap.GetCellCenterWorld(Vector3Int.FloorToInt(position)), Quaternion.identity);
         Destroy(particle, 1f);
+    }
+
+    private void EnqueueItem(Tile tile, Vector3Int pos, Queue<Vector3Int> bombQueue, Queue<Vector3Int> rocketQueue)
+    {
+        string tileName = tile.name.ToLowerInvariant();
+        if (tileName.Contains("bomb"))
+            bombQueue.Enqueue(pos);
+        else if (tileName.Contains("rocket"))
+            rocketQueue.Enqueue(pos);
     }
 }

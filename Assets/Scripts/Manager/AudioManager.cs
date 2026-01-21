@@ -4,10 +4,10 @@ using UnityEngine;
 
 public class AudioManager
 {
-    private AudioSource bgmPlayer;
+    public AudioSource bgmPlayer { get; private set; }
     private Dictionary<string, AudioClip> bgmClips = new Dictionary<string, AudioClip>();
 
-    private AudioSource sfxPlayer;
+    public AudioSource sfxPlayer { get; private set; }
     private Dictionary<string, AudioClip> sfxClips = new Dictionary<string, AudioClip>();
 
     public void Init()
@@ -27,11 +27,16 @@ public class AudioManager
             sfxPlayer = sfxGO.AddComponent<AudioSource>();
             sfxGO.transform.parent = root.transform;
 
+            bgmPlayer.volume = 0.45f;
+
             LoadBGM();
             LoadSFX();
         }
     }
 
+    /// <summary>
+    /// Resources/Sounds/BGM 경로의 오디오 클립을 모두 로드
+    /// </summary>
     private void LoadBGM()
     {
         AudioClip[] clips = Resources.LoadAll<AudioClip>("Sounds/BGM");
@@ -41,6 +46,9 @@ public class AudioManager
         }
     }
 
+    /// <summary>
+    /// Resources/Sounds/SFX 경로의 오디오 클립을 모두 로드
+    /// </summary>
     private void LoadSFX()
     {
         AudioClip[] clips = Resources.LoadAll<AudioClip>("Sounds/SFX");
@@ -53,16 +61,44 @@ public class AudioManager
     /// <summary>
     /// 배경음악 재생
     /// </summary>
-    /// <param name="name"></param>
+    /// <param name="name">클립 이름</param>
     /// <param name="isLoop"></param>
     public void PlayBGM(string name, bool isLoop = true)
     {
-
+        bgmPlayer.loop = isLoop;
+        bgmPlayer.clip = bgmClips[name];
+        bgmPlayer.Play();
     }
 
-    public void PlayBGM(int level)
+    /// <summary>
+    /// 배경음악 재생
+    /// </summary>
+    /// <param name="level"></param>
+    /// <param name="isLoop"></param>
+    public void PlayBGM(int level, bool isLoop = true)
     {
+        bgmPlayer.loop = isLoop;
 
+        switch (level)
+        {
+            case 1:
+                bgmPlayer.clip = bgmClips["LV1"];
+                break;
+            case 2:
+                bgmPlayer.clip = bgmClips["LV2"];
+                break;
+            case 3:
+                bgmPlayer.clip = bgmClips["LV3"];
+                break;
+            case 4:
+                bgmPlayer.clip = bgmClips["LV4"];
+                break;
+            case 5:
+                bgmPlayer.clip = bgmClips["LV5"];
+                break;
+        }
+
+        bgmPlayer.Play();
     }
 
     /// <summary>

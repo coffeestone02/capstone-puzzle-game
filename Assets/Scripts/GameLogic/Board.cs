@@ -75,6 +75,8 @@ public class Board : MonoBehaviour
             Clear(piece);
         }
 
+        Obstacle obstacle = GetComponent<Obstacle>();
+        obstacle.SpawnObstacle();
         piece.SpawnPiece();
         pieceMover.SetStepDirection();
     }
@@ -103,6 +105,16 @@ public class Board : MonoBehaviour
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// 중심 블록인지 확인
+    /// </summary>
+    /// <param name="pos">셀 위치</param>
+    /// <returns></returns>
+    public bool IsCenterCell(Vector3Int pos)
+    {
+        return (Vector2Int)pos == new Vector2Int(-1, -1);
     }
 
     /// <summary>

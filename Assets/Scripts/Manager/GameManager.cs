@@ -11,7 +11,7 @@ public enum EPieceDir
 }
 
 /// <summary>
-/// 스폰 위치, 이동 딜레이와 같은 게임 규칙
+/// 스폰 위치, 이동 딜레이와 같은 게임 설정
 /// </summary>
 public class GameManager
 {
@@ -30,6 +30,8 @@ public class GameManager
 
     public int bombSpawnLimit { get; private set; } = 20; // 폭탄 생성 한계값
     public int rocketSpawnLimit { get; private set; } = 6;   // 로켓 생성 한계값
+    public int obstacleSpawnLimit { get; set; } = 12;
+    // 12 10 8 6 5
 
     public bool nextSpawnHasBomb { get; set; } = false;
     public bool nextSpawnHasRocket { get; set; } = false;
@@ -57,4 +59,6 @@ public class GameManager
             }
         }
     }
+
+    public int obstacleCount { get; set; } = 0;
 }

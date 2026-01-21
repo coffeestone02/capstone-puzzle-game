@@ -11,11 +11,13 @@ public class Managers : MonoBehaviour
     private InputManager _input = new InputManager();
     private AudioManager _audio = new AudioManager();
     private ScoreManager _score = new ScoreManager();
+    private UIManager _ui = new UIManager();
 
     public static GameManager Rule { get { return Instance._rule; } }
     public static InputManager Input { get { return Instance._input; } }
     public static AudioManager Audio { get { return Instance._audio; } }
     public static ScoreManager Score { get { return Instance._score; } }
+    public static UIManager UI { get { return Instance._ui; } }
 
     private void Start()
     {
@@ -25,6 +27,8 @@ public class Managers : MonoBehaviour
     private void Update()
     {
         _input.OnUpdate();
+        _score.OnUpdate();
+        _ui.OnUpdate();
     }
 
     private void Init()
@@ -36,5 +40,6 @@ public class Managers : MonoBehaviour
 
         DontDestroyOnLoad(gameObject);
         Instance._audio.Init();
+        Instance._score.Init();
     }
 }
