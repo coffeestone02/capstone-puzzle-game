@@ -27,7 +27,7 @@ public class AudioManager
             sfxPlayer = sfxGO.AddComponent<AudioSource>();
             sfxGO.transform.parent = root.transform;
 
-            bgmPlayer.volume = 0.45f;
+            bgmPlayer.volume = 0.0f;
 
             LoadBGM();
             LoadSFX();

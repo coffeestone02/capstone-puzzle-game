@@ -90,7 +90,7 @@ public class InputManager
 
     private void TouchStart(Vector2 touchPos)
     {
-        Managers.Audio.PlaySFX("MoveSFX");
+        Managers.Audio.PlaySFX("MoveSFX"); // 반대 방향으로 이동해서 소리나는 문제 발생
         touchCurrentPos = touchStartPos = touchPos;
         isHolding = false;
     }
