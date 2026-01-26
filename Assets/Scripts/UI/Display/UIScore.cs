@@ -15,6 +15,6 @@ public class UIScore : MonoBehaviour
 
     private void SetScoreText()
     {
-        scoreText.text = "Score: " + Managers.Score.score.ToString();
+        scoreText.text = Managers.Score.score.ToString();
     }
 }

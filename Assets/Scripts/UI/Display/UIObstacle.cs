@@ -17,6 +17,7 @@ public class UIObstacle : MonoBehaviour
 
     private void SetObstacleText()
     {
-        obstacleText.text = obstacle.nextSpawnDir.ToString() + "\n" + Managers.Rule.obstacleCount.ToString();
+        int obstacleCount = Managers.Rule.obstacleSpawnLimit - Managers.Rule.obstacleCount;
+        obstacleText.text = obstacle.nextSpawnDir.ToString() + "\n" + obstacleCount.ToString();
     }
 }
