@@ -8,6 +8,7 @@ public class UIManager
     public Action updatePlaytimeText = null;
     public Action updateBombText = null;
     public Action updateObstacleText = null;
+    public Action updateBombGauge = null;
 
     public void OnUpdate()
     {
@@ -16,6 +17,7 @@ public class UIManager
         SetPlaytimeText();
         SetBombText();
         SetObstacleText();
+        SetBombGauge();
     }
 
     private void SetScoreText()
@@ -46,5 +48,11 @@ public class UIManager
     {
         if (updateObstacleText != null)
             updateObstacleText.Invoke();
+    }
+
+    private void SetBombGauge()
+    {
+        if (updateBombGauge != null)
+            updateBombGauge.Invoke();
     }
 }

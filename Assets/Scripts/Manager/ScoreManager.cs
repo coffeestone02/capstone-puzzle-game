@@ -7,13 +7,16 @@ using UnityEngine;
 public class ScoreManager
 {
     public float playtime { get; private set; }
-    public int score { get; private set; } = 0;
-    public int combo { get; private set; } = 0;
+    public int score { get; private set; }
+    public int combo { get; private set; }
     private LevelKeeper levelKeeper = new LevelKeeper();
 
     public void Init()
     {
         levelKeeper.Init();
+        playtime = 0;
+        score = 0;
+        combo = 0;
     }
 
     public void OnUpdate()

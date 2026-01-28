@@ -2,18 +2,16 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-public class GamplayButton : MonoBehaviour
+public class GamplayButton : UIButton
 {
-    Button gameplayBtn;
-
-    private void Start()
+    protected override void Start()
     {
-        gameplayBtn = GetComponent<Button>();
-        gameplayBtn.onClick.AddListener(IntoGamePlay);
+        base.Start();
     }
 
-    public void IntoGamePlay()
+    protected override void ButtonAction()
     {
         SceneManager.LoadScene("GamePlayScene");
+        Managers.Audio.PlaySFX("ButtonSFX");
     }
 }

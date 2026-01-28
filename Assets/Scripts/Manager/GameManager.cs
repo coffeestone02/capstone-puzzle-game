@@ -23,20 +23,22 @@ public class GameManager
         {EPieceDir.LEFT, new Vector3Int(-9, -1)}
     };
 
+    public bool isPause { get; set; }
+    public bool isOver { get; set; }
+
     // 게임 설정값들
-    public float stepDelay { get; private set; } = 1.25f; // stepDelay의 시간만큼 중심으로 이동함
-    public float moveDelay { get; private set; } = 0.1f; // 플레이어의 입력 이동 속도를 정함. 값이 클수록 입력을 많이 못함
-    public float lockDelay { get; private set; } = 0.5f; // 이 시간만큼 못 움직이면 피스를 Lock함
+    public float stepDelay { get; private set; } // stepDelay의 시간만큼 중심으로 이동함
+    public float moveDelay { get; private set; } // 플레이어의 입력 이동 속도를 정함. 값이 클수록 입력을 많이 못함
+    public float lockDelay { get; private set; } // 이 시간만큼 못 움직이면 피스를 Lock함
 
-    public int bombSpawnLimit { get; private set; } = 20; // 폭탄 생성 한계값
-    public int rocketSpawnLimit { get; private set; } = 6;   // 로켓 생성 한계값
-    public int obstacleSpawnLimit { get; set; } = 12;
-    // 12 10 8 6 5
+    public int bombSpawnLimit { get; private set; } // 폭탄 생성 한계값
+    public int rocketSpawnLimit { get; private set; } // 로켓 생성 한계값
+    public int obstacleSpawnLimit { get; set; } // 12 10 8 6 5
 
-    public bool nextSpawnHasBomb { get; set; } = false;
-    public bool nextSpawnHasRocket { get; set; } = false;
+    public bool nextSpawnHasBomb { get; set; }
+    public bool nextSpawnHasRocket { get; set; }
 
-    public int bombRange { get; private set; } = 5;
+    public int bombRange { get; private set; }
     private int _blockCounter;
     public int BlockCounter
     {
@@ -61,4 +63,21 @@ public class GameManager
     }
 
     public int obstacleCount { get; set; } = 0;
+
+    public void Init()
+    {
+        isPause = isOver = false;
+
+        stepDelay = 1.25f;
+        moveDelay = 0.1f;
+        lockDelay = 0.5f;
+
+        bombSpawnLimit = 20;
+        rocketSpawnLimit = 6;
+        obstacleCount = 12;
+
+        nextSpawnHasBomb = nextSpawnHasRocket = false;
+        bombRange = 5;
+        _blockCounter = 12;
+    }
 }

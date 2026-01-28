@@ -13,7 +13,7 @@ public class Obstacle : MonoBehaviour
     {
         board = GetComponent<Board>();
         bounds = board.Bounds;
-        tilemap = board.tilemap;
+        tilemap = GetComponentInChildren<Tilemap>();
         obstacleTile = Resources.Load<Tile>("VisualAssets/Tiles/ObstacleTile");
         SetNextSpawnPos();
     }
@@ -45,7 +45,6 @@ public class Obstacle : MonoBehaviour
     public void SpawnObstacle()
     {
         Managers.Rule.obstacleCount++;
-        Debug.Log(Managers.Rule.obstacleCount);
         if (Managers.Rule.obstacleCount >= Managers.Rule.obstacleSpawnLimit)
         {
             Managers.Rule.obstacleCount = 0;
@@ -181,5 +180,4 @@ public class Obstacle : MonoBehaviour
         if (board.IsCenterCell(obstaclePos) == false && bounds.Contains((Vector2Int)obstaclePos))
             tilemap.SetTile(obstaclePos, obstacleTile);
     }
-
 }

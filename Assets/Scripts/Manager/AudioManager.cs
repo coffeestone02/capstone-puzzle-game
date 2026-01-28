@@ -27,7 +27,7 @@ public class AudioManager
             sfxPlayer = sfxGO.AddComponent<AudioSource>();
             sfxGO.transform.parent = root.transform;
 
-            bgmPlayer.volume = 0.0f;
+            bgmPlayer.volume = 0.45f;
 
             LoadBGM();
             LoadSFX();
@@ -114,5 +114,25 @@ public class AudioManager
         }
 
         sfxPlayer.PlayOneShot(sfxClips[name]);
+    }
+
+    public void TurnOffBGM()
+    {
+        bgmPlayer.volume = 0f;
+    }
+
+    public void TurnOffSFX()
+    {
+        sfxPlayer.volume = 0f;
+    }
+
+    public void TurnOnBGM()
+    {
+        bgmPlayer.volume = 0.45f;
+    }
+
+    public void TurnOnSFX()
+    {
+        sfxPlayer.volume = 1f;
     }
 }

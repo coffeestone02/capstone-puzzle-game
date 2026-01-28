@@ -18,7 +18,7 @@ public class InputManager
     {
         TouchInput();
 
-        // TEMP
+        // DEBUG
         RotateInput();
         MoveInput();
     }

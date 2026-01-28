@@ -16,7 +16,7 @@ public class UIPlaytime : MonoBehaviour
 
     private void SetPlaytimeText()
     {
-        playtimeText.text = "Playtime: " + TimeToString();
+        playtimeText.text = TimeToString();
     }
 
     // 플레이 시간을 00:00 텍스트 형태로 반환

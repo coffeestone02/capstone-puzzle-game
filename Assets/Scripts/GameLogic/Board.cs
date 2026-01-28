@@ -22,9 +22,13 @@ public class Board : MonoBehaviour
         }
     }
 
-    private void Start()
+    private void Awake()
     {
         tilemap = GetComponentInChildren<Tilemap>();
+    }
+
+    private void Start()
+    {
         Piece piece = GetComponent<Piece>();
         piece.SpawnPiece();
     }
@@ -137,6 +141,24 @@ public class Board : MonoBehaviour
             if (piece.currentSpawnPos == EPieceDir.DOWN && pos.y >= bounds.yMax - 2)
                 return true;
             if (piece.currentSpawnPos == EPieceDir.LEFT && pos.x >= bounds.xMax - 2)
+                return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// 피스가 현재 조작중인 피스인지
+    /// </summary>
+    /// <param name="pos">셀 위치</param>
+    /// <param name="piece">확인하려는 피스</param>
+    /// <returns></returns>
+    public bool IsActivePiece(Vector3Int pos, Piece piece)
+    {
+        for (int i = 0; i < piece.cells.Length; i++)
+        {
+            Vector3Int tilePos = piece.cells[i] + piece.position;
+            if (pos == tilePos) // pos가 현재 조작중인 피스 셀의 위치인 경우
                 return true;
         }
 

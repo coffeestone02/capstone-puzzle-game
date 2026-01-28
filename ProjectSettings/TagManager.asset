@@ -41,13 +41,13 @@ TagManager:
   - name: Background
     uniqueID: 4110816129
     locked: 0
-  - name: Grid Panel
+  - name: Visible Grid
     uniqueID: 1951791659
     locked: 0
-  - name: Game Grid
+  - name: Ghost Grid
     uniqueID: 853987779
     locked: 0
-  - name: Board Grid
+  - name: Game Grid
     uniqueID: 1102732351
     locked: 0
   - name: Default

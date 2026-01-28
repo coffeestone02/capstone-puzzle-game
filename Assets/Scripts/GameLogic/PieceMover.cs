@@ -26,6 +26,9 @@ public class PieceMover : MonoBehaviour
 
     private void Update()
     {
+        if (Managers.Rule.isPause || Managers.Rule.isOver)
+            return;
+
         lockTime += Time.deltaTime;
 
         if (Time.time > stepTime) Step();
@@ -41,6 +44,7 @@ public class PieceMover : MonoBehaviour
         {
             if (moveDir == stepDir)
                 stepTime = Time.time + Managers.Rule.stepDelay;
+            Debug.Log(moveDir);
             Move(Util.GetMoveVector2Int(moveDir));
         }
     }

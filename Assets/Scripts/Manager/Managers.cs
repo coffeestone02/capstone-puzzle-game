@@ -26,6 +26,8 @@ public class Managers : MonoBehaviour
 
     private void Update()
     {
+        if (_rule.isOver || _rule.isPause) return;
+
         _input.OnUpdate();
         _score.OnUpdate();
         _ui.OnUpdate();
@@ -39,6 +41,14 @@ public class Managers : MonoBehaviour
             Destroy(gameObject);
 
         DontDestroyOnLoad(gameObject);
+        Instance._rule.Init();
+        Instance._audio.Init();
+        Instance._score.Init();
+    }
+
+    public static void Reset()
+    {
+        Instance._rule.Init();
         Instance._audio.Init();
         Instance._score.Init();
     }
