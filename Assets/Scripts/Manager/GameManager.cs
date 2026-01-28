@@ -78,6 +78,6 @@ public class GameManager
 
         nextSpawnHasBomb = nextSpawnHasRocket = false;
         bombRange = 5;
-        _blockCounter = 12;
+        _blockCounter = 0;
     }
 }
