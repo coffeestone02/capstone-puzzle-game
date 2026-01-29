@@ -19,7 +19,7 @@ public class GameManager
     {
         {EPieceDir.UP, new Vector3Int(-1, 7)},
         {EPieceDir.RIGHT, new Vector3Int(7, -1)},
-        {EPieceDir.DOWN, new Vector3Int(0, -10)},
+        {EPieceDir.DOWN, new Vector3Int(0, -9)},
         {EPieceDir.LEFT, new Vector3Int(-9, -1)}
     };
 

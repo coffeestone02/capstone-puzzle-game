@@ -56,17 +56,17 @@ public class Piece : MonoBehaviour
             case EPieceDir.UP:
                 break;
             case EPieceDir.RIGHT:
-                pr.OnRotate(1);
+                pr.ApplyRotation(1);
                 break;
             case EPieceDir.DOWN:
-                pm.OnMove(EPieceDir.LEFT);
-                pr.OnRotate(1);
-                pr.OnRotate(1);
+                pm.CanMove(Util.GetMoveVector2Int(EPieceDir.LEFT));
+                pr.ApplyRotation(1);
+                pr.ApplyRotation(1);
                 break;
             case EPieceDir.LEFT:
-                pr.OnRotate(1);
-                pr.OnRotate(1);
-                pr.OnRotate(1);
+                pr.ApplyRotation(1);
+                pr.ApplyRotation(1);
+                pr.ApplyRotation(1);
                 break;
         }
 
@@ -76,9 +76,16 @@ public class Piece : MonoBehaviour
         else if (Managers.Rule.nextSpawnHasRocket)
             AddRocketTile();
 
-        // 7. 보드에 그리기
         Board board = GetComponent<Board>();
-        board.Set(this);
+        if (board.IsValidPosition(this, position) == false) // 7. 그려진 위치가 스폰 위치면 게임 오버
+        {
+            Managers.Rule.isOver = true;
+            Debug.Log("게임종료");
+        }
+        else // 8. 보드에 그리기
+        {
+            board.Set(this);
+        }
     }
 
     // 다음 스폰 위치로 변경

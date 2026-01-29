@@ -43,7 +43,6 @@ public class ScoreManager
         int itemPoint = itemMatchedCount * 60;
         score += itemPoint;
         levelKeeper.SetLevel(score);
-        Debug.Log($"score: {score}, combo: {combo}, level: {levelKeeper.level}");
     }
 
     public int GetLevel()

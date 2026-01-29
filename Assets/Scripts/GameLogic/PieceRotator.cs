@@ -5,7 +5,13 @@ using UnityEngine;
 /// </summary>
 public class PieceRotator : MonoBehaviour
 {
+    private Piece activePiece;
     private int rotationIndex;
+
+    private void Awake()
+    {
+        activePiece = GetComponent<Piece>();
+    }
 
     private void Start()
     {
@@ -17,13 +23,12 @@ public class PieceRotator : MonoBehaviour
     /// InputManager.rotateAction에 바인딩하여 사용
     /// </summary>
     /// <param name="direction">-1은 왼쪽회전, 1은 오른쪽회전</param>
-    public void OnRotate(int direction)
+    private void OnRotate(int direction)
     {
-        Piece activePiece = GetComponent<Piece>();
         Board board = GetComponent<Board>();
 
         board.Clear(activePiece);
-        Rotate(activePiece, direction);
+        Rotate(direction);
         board.Set(activePiece);
     }
 
@@ -32,56 +37,56 @@ public class PieceRotator : MonoBehaviour
     /// </summary>
     /// <param name="piece">조작중인 피스</param>
     /// <param name="direction">1은 오른쪽, -1은 왼쪽 회전</param>
-    private void Rotate(Piece piece, int direction)
+    private void Rotate(int direction)
     {
         int originalRotation = rotationIndex;
-
         rotationIndex = Wrap(rotationIndex + direction, 0, 4);
-        ApplyRotation(piece, direction);
 
-        if (TestWallKicks(piece, rotationIndex, direction) == false)
+        ApplyRotation(direction);
+
+        if (TestWallKicks(rotationIndex, direction) == false)
         {
             rotationIndex = originalRotation;
-            ApplyRotation(piece, -direction);
+            ApplyRotation(-direction);
         }
     }
 
-    private void ApplyRotation(Piece piece, int direction)
+    public void ApplyRotation(int direction)
     {
-        for (int i = 0; i < piece.cells.Length; i++)
+        for (int i = 0; i < activePiece.cells.Length; i++)
         {
             int x, y;
             if (direction > 0)
             {
-                x = piece.cells[i].y;
-                y = -piece.cells[i].x;
+                x = activePiece.cells[i].y;
+                y = -activePiece.cells[i].x;
             }
             else
             {
-                x = -piece.cells[i].y;
-                y = piece.cells[i].x;
+                x = -activePiece.cells[i].y;
+                y = activePiece.cells[i].x;
             }
 
-            piece.cells[i] = new Vector3Int(x, y, 0);
+            activePiece.cells[i] = new Vector3Int(x, y, 0);
         }
     }
 
-    private bool TestWallKicks(Piece piece, int rotationIndex, int rotationDirection)
+    private bool TestWallKicks(int rotationIndex, int rotationDirection)
     {
         Board board = GetComponent<Board>();
-        TriominoData data = piece.data;
-        int wallKickIndex = GetWallKickIndex(piece, rotationIndex, rotationDirection);
+        TriominoData data = activePiece.data;
+        int wallKickIndex = GetWallKickIndex(rotationIndex, rotationDirection);
 
         for (int i = 0; i < data.wallKicks.GetLength(1); i++)
         {
-            Vector2Int translation = piece.data.wallKicks[wallKickIndex, i];
-            Vector3Int newPosition = piece.position;
+            Vector2Int translation = activePiece.data.wallKicks[wallKickIndex, i];
+            Vector3Int newPosition = activePiece.position;
             newPosition.x += translation.x;
             newPosition.y += translation.y;
 
-            if (board.IsValidPosition(piece, newPosition))
+            if (board.IsValidPosition(activePiece, newPosition))
             {
-                piece.position = newPosition;
+                activePiece.position = newPosition;
                 return true;
             }
         }
@@ -89,9 +94,9 @@ public class PieceRotator : MonoBehaviour
         return false;
     }
 
-    private int GetWallKickIndex(Piece piece, int rotationIndex, int rotationDirection)
+    private int GetWallKickIndex(int rotationIndex, int rotationDirection)
     {
-        TriominoData data = piece.data;
+        TriominoData data = activePiece.data;
         int wallKickIndex = rotationIndex * 2;
 
         if (rotationDirection < 0)
