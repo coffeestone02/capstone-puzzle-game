@@ -20,6 +20,31 @@ public class UIManager
         SetBombGauge();
     }
 
+    public void ShowPopup(string name)
+    {
+        GameObject parent = GameObject.Find("UICanvas");
+        GameObject popup = parent.transform.Find(name).gameObject;
+        if (popup == null)
+        {
+            Debug.Log($"{name} 팝업을 찾을 수 없음");
+            return;
+        }
+
+        popup.SetActive(true);
+    }
+
+    public void ClosePopup(string name)
+    {
+        GameObject popup = GameObject.Find(name);
+        if (popup == null)
+        {
+            Debug.Log($"{name} 팝업을 찾을 수 없음");
+            return;
+        }
+
+        popup.SetActive(false);
+    }
+
     private void SetScoreText()
     {
         if (updateScoreText != null)

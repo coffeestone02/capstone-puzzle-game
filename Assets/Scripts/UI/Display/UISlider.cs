@@ -6,12 +6,19 @@ public class UISlider : MonoBehaviour
 {
     private Slider slider;
 
+    private void OnEnable()
+    {
+        Managers.UI.updateBombGauge += SetGauge;
+    }
+
+    private void OnDisable()
+    {
+        Managers.UI.updateBombGauge -= SetGauge;
+    }
+
     private void Start()
     {
         slider = GetComponent<Slider>();
-
-        Managers.UI.updateBombGauge -= SetGauge;
-        Managers.UI.updateBombGauge += SetGauge;
     }
 
     private void SetGauge()

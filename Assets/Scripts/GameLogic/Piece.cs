@@ -80,9 +80,9 @@ public class Piece : MonoBehaviour
         if (board.IsValidPosition(this, position) == false) // 7. 그려진 위치가 스폰 위치면 게임 오버
         {
             Managers.Rule.isOver = true;
-            Debug.Log("게임종료");
+            Managers.UI.ShowPopup("GameoverPopup");
         }
-        else // 8. 보드에 그리기
+        else // 8. 아니면 보드에 그리기
         {
             board.Set(this);
         }

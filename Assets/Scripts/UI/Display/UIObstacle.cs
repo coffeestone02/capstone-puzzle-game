@@ -6,13 +6,20 @@ public class UIObstacle : MonoBehaviour
     private TMP_Text obstacleText;
     private Obstacle obstacle;
 
+    private void OnEnable()
+    {
+        Managers.UI.updateObstacleText += SetObstacleText;
+    }
+
+    private void OnDisable()
+    {
+        Managers.UI.updateObstacleText -= SetObstacleText;
+    }
+
     private void Start()
     {
         obstacleText = GetComponent<TMP_Text>();
         obstacle = FindFirstObjectByType<Obstacle>();
-
-        Managers.UI.updateObstacleText -= SetObstacleText;
-        Managers.UI.updateObstacleText += SetObstacleText;
     }
 
     private void SetObstacleText()

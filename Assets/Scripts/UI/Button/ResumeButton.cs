@@ -10,9 +10,8 @@ public class ResumeButton : UIButton
 
     protected override void ButtonAction()
     {
-        GameObject go = GameObject.Find("PausePopup");
         Managers.Rule.isPause = false;
-        go.SetActive(false);
+        Managers.UI.ClosePopup("PausePopup");
         Managers.Audio.PlaySFX("ButtonSFX");
     }
 }

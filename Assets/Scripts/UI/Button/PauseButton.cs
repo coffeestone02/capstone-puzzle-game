@@ -10,10 +10,8 @@ public class PauseButton : UIButton
 
     protected override void ButtonAction()
     {
-        GameObject parent = GameObject.Find("UICanvas");
-        GameObject go = parent.transform.Find("PausePopup").gameObject;
+        Managers.UI.ShowPopup("PausePopup");
         Managers.Rule.isPause = true;
-        go.SetActive(true);
         Managers.Audio.PlaySFX("ButtonSFX");
     }
 }

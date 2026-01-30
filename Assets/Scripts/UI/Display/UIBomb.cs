@@ -5,12 +5,19 @@ public class UIBomb : MonoBehaviour
 {
     private TMP_Text bombText;
 
+    private void OnEnable()
+    {
+        Managers.UI.updateBombText += SetBombText;
+    }
+
+    private void OnDisable()
+    {
+        Managers.UI.updateBombText -= SetBombText;
+    }
+
     private void Start()
     {
         bombText = GetComponent<TMP_Text>();
-
-        Managers.UI.updateBombText -= SetBombText;
-        Managers.UI.updateBombText += SetBombText;
     }
 
     private void SetBombText()

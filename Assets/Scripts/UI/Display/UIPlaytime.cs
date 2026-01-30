@@ -6,12 +6,19 @@ public class UIPlaytime : MonoBehaviour
 {
     private TMP_Text playtimeText;
 
+    private void OnEnable()
+    {
+        Managers.UI.updatePlaytimeText += SetPlaytimeText;
+    }
+
+    private void OnDisable()
+    {
+        Managers.UI.updatePlaytimeText -= SetPlaytimeText;
+    }
+
     private void Start()
     {
         playtimeText = GetComponent<TMP_Text>();
-
-        Managers.UI.updatePlaytimeText -= SetPlaytimeText;
-        Managers.UI.updatePlaytimeText += SetPlaytimeText;
     }
 
     private void SetPlaytimeText()
