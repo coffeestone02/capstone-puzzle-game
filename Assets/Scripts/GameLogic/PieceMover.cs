@@ -19,9 +19,16 @@ public class PieceMover : MonoBehaviour
     {
         board = GetComponent<Board>();
         activePiece = GetComponent<Piece>();
+    }
 
-        Managers.Input.moveAction -= OnMove;
+    private void OnEnable()
+    {
         Managers.Input.moveAction += OnMove;
+    }
+
+    private void OnDisable()
+    {
+        Managers.Input.moveAction -= OnMove;
     }
 
     private void Update()

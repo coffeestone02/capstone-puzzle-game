@@ -13,10 +13,14 @@ public class PieceRotator : MonoBehaviour
         activePiece = GetComponent<Piece>();
     }
 
-    private void Start()
+    private void OnEnable()
+    {
+        Managers.Input.rotateAction += OnRotate;
+    }
+
+    private void OnDisable()
     {
         Managers.Input.rotateAction -= OnRotate;
-        Managers.Input.rotateAction += OnRotate;
     }
 
     /// <summary>

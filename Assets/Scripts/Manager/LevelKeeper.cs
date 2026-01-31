@@ -21,7 +21,7 @@ public class LevelKeeper
     {
         AudioClip clip = Managers.Audio.bgmPlayer.clip;
 
-        if (score < 30000)
+        if (score < 3000)
         {
             // 장애물 세팅
             Managers.Rule.obstacleSpawnLimit = 12;
@@ -32,7 +32,7 @@ public class LevelKeeper
                 Managers.Audio.PlayBGM(level);
             }
         }
-        else if (score < 60000)
+        else if (score < 6000)
         {
             Managers.Rule.obstacleSpawnLimit = 10;
             level = 2;

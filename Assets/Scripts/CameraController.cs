@@ -11,12 +11,6 @@ public class CameraController : MonoBehaviour
         SetCameraDistance();
     }
 
-    void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.P))
-            SetCameraDistance();
-    }
-
     private void SetCameraDistance()
     {
         Tilemap tilemap = GameObject.Find("VisibleGrid").GetComponentInChildren<Tilemap>();

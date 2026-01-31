@@ -11,6 +11,7 @@ public class QuitButton : UIButton
     protected override void ButtonAction()
     {
         SceneManager.LoadScene("TitleScene");
+        Managers.Reset();
         Managers.Audio.PlaySFX("ButtonSFX");
     }
 }

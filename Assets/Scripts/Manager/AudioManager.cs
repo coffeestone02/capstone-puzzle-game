@@ -32,6 +32,10 @@ public class AudioManager
             LoadBGM();
             LoadSFX();
         }
+        else
+        {
+            bgmPlayer.clip = sfxPlayer.clip = null;
+        }
     }
 
     /// <summary>

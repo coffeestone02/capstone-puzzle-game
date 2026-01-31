@@ -74,7 +74,7 @@ public class GameManager
 
         bombSpawnLimit = 20;
         rocketSpawnLimit = 6;
-        obstacleCount = 12;
+        obstacleCount = 0;
 
         nextSpawnHasBomb = nextSpawnHasRocket = false;
         bombRange = 5;
