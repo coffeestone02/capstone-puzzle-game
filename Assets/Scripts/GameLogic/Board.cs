@@ -12,6 +12,7 @@ using UnityEngine.UIElements;
 public class Board : MonoBehaviour
 {
     public Tilemap tilemap { get; private set; }
+    public bool skipSpawnOnStart = false;
     private Vector2Int boardSize = new Vector2Int(19, 19);
     public RectInt Bounds // 보드 범위
     {
@@ -29,6 +30,8 @@ public class Board : MonoBehaviour
 
     private void Start()
     {
+        if (skipSpawnOnStart) return;
+
         Piece piece = GetComponent<Piece>();
         piece.SpawnPiece();
     }

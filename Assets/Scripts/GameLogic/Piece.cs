@@ -80,11 +80,48 @@ public class Piece : MonoBehaviour
         if (board.IsValidPosition(this, position) == false) // 7. 그려진 위치가 스폰 위치면 게임 오버
         {
             Managers.Rule.isOver = true;
+            SaveSystem.Clear();
             Managers.UI.ShowPopup("GameoverPopup");
         }
         else // 8. 아니면 보드에 그리기
         {
             board.Set(this);
+        }
+    }
+
+    /// 저장된 피스 상태를 그대로 복원
+    public void ApplySavedState(
+        int triominoIndex,
+        Vector3Int savedPos,
+        EPieceDir savedCurrentSpawnPos,
+        EPieceDir savedNextSpawnPos,
+        Vector3Int[] savedCells,
+        Tile[] savedTiles
+    )
+    {
+        // triominoIndex가 범위 밖이면 0으로 fallback
+        if (triominos == null || triominos.Length == 0)
+            return;
+
+        if (triominoIndex < 0 || triominoIndex >= triominos.Length)
+            triominoIndex = 0;
+
+        data = triominos[triominoIndex];
+
+        currentSpawnPos = savedCurrentSpawnPos;
+        nextSpawnPos = savedNextSpawnPos;
+        position = savedPos;
+
+        int n = (savedCells != null) ? savedCells.Length : 0;
+        if (n <= 0) n = (data != null && data.cells != null) ? data.cells.Length : 3;
+
+        cells = new Vector3Int[n];
+        tiles = new Tile[n];
+
+        for (int i = 0; i < n; i++)
+        {
+            cells[i] = (savedCells != null && i < savedCells.Length) ? savedCells[i] : Vector3Int.zero;
+            tiles[i] = (savedTiles != null && i < savedTiles.Length) ? savedTiles[i] : null;
         }
     }
 

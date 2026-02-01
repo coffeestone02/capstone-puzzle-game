@@ -11,6 +11,16 @@ public class ScoreManager
     public int combo { get; private set; }
     private LevelKeeper levelKeeper = new LevelKeeper();
 
+    public void ApplyLoadedState(float loadedPlaytime, int loadedScore, int loadedCombo)
+    {
+        playtime = loadedPlaytime;
+        score = loadedScore;
+        combo = loadedCombo;
+
+        //로드시 재계산
+        levelKeeper.SetLevel(score);
+    }
+
     public void Init()
     {
         levelKeeper.Init();

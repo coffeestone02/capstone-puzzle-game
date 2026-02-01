@@ -72,8 +72,8 @@ public class GameManager
         moveDelay = 0.1f;
         lockDelay = 0.5f;
 
-        bombSpawnLimit = 20;
-        rocketSpawnLimit = 6;
+        bombSpawnLimit = 25;
+        rocketSpawnLimit = 7;
         obstacleCount = 0;
 
         nextSpawnHasBomb = nextSpawnHasRocket = false;

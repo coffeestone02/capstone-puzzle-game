@@ -15,6 +15,12 @@ public class PieceMover : MonoBehaviour
     private float lockTime;
     private EPieceDir stepDir = EPieceDir.DOWN;
 
+    private void Awake()
+    {
+        board = GetComponent<Board>();
+        activePiece = GetComponent<Piece>();
+    }
+
     private void Start()
     {
         board = GetComponent<Board>();

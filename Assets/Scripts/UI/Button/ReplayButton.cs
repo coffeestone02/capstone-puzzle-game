@@ -11,6 +11,7 @@ public class ReplayButton : UIButton
     protected override void ButtonAction()
     {
         Managers.Audio.PlaySFX("ButtonSFX");
+        SaveSystem.Clear();
         Managers.Reset();
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }

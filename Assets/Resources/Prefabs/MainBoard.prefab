@@ -220,6 +220,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bc75281d50b0a914f932e63b96587d44, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  skipSpawnOnStart: 0
 --- !u!114 &4709468624675302285
 MonoBehaviour:
   m_ObjectHideFlags: 0
