@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Tilemaps;
 using UnityEngine.UI;
 
-public class ObstacleDestroyButton : UIButton
+public class AllDestroyButton : UIButton
 {
     private TMP_Text cntText;
     private Image hideImage;
@@ -23,7 +23,7 @@ public class ObstacleDestroyButton : UIButton
     {
         if (Managers.Rule.isOver || Managers.Rule.isPause) return;
 
-        if (cnt > 0 && hideImage.fillAmount <= 0f && DestroyObstacle())
+        if (cnt > 0 && hideImage.fillAmount <= 0f && AllDestroy())
         {
             hideImage.fillAmount = 1f;
             cnt--;
@@ -56,7 +56,7 @@ public class ObstacleDestroyButton : UIButton
         }
     }
 
-    private bool DestroyObstacle()
+    private bool AllDestroy()
     {
         bool isBroken = false;
         Board board = GameObject.Find("MainBoard").GetComponent<Board>();
@@ -71,7 +71,7 @@ public class ObstacleDestroyButton : UIButton
                 Vector3Int pos = new Vector3Int(x, y, 0);
 
                 Tile tile = tilemap.GetTile<Tile>(pos);
-                if (tile != null && tile.name == "ObstacleTile")
+                if (tile != null && board.IsCenterCell(pos) == false)
                 {
                     isBroken = true;
                     // 파티클 재생
@@ -87,4 +87,5 @@ public class ObstacleDestroyButton : UIButton
 
         return isBroken;
     }
+
 }
