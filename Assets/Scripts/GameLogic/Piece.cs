@@ -81,6 +81,7 @@ public class Piece : MonoBehaviour
         {
             Managers.Rule.isOver = true;
             SaveSystem.Clear();
+            Managers.Audio.PlaySFX("GameoverSFX");
             Managers.UI.ShowPopup("GameoverPopup");
         }
         else // 8. 아니면 보드에 그리기

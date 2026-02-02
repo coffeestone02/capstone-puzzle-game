@@ -10,6 +10,8 @@ public class ObstacleDestroyButton : UIButton
     private Image hideImage;
     private float coolTime = 10f;
     private int cnt = 2;
+    private GameObject bombParticle;
+
 
     protected override void Start()
     {
@@ -17,6 +19,7 @@ public class ObstacleDestroyButton : UIButton
         cntText = GetComponentInChildren<TMP_Text>();
         hideImage = transform.Find("HideImage").GetComponent<Image>();
         hideImage.fillAmount = 0f;
+        bombParticle = Resources.Load<GameObject>("VisualAssets/Particles/BombParticle");
     }
 
     protected override void ButtonAction()
@@ -28,6 +31,7 @@ public class ObstacleDestroyButton : UIButton
             hideImage.fillAmount = 1f;
             cnt--;
             cntText.text = cnt.ToString();
+            Managers.Audio.PlaySFX("ExplodeSFX");
             StartCoroutine(ButtonTimerCoroutine());
         }
     }
@@ -61,7 +65,6 @@ public class ObstacleDestroyButton : UIButton
         bool isBroken = false;
         Board board = GameObject.Find("MainBoard").GetComponent<Board>();
         Tilemap tilemap = board.tilemap;
-        Piece piece = board.GetComponent<Piece>();
         RectInt bounds = board.Bounds;
 
         for (int x = bounds.xMin; x < bounds.xMax; x++)
@@ -74,7 +77,7 @@ public class ObstacleDestroyButton : UIButton
                 if (tile != null && tile.name == "ObstacleTile")
                 {
                     isBroken = true;
-                    // 파티클 재생
+                    PlayParticle(bombParticle, board, pos); // 파티클 재생
                     tilemap.SetTile(pos, null);
                 }
             }
@@ -82,9 +85,15 @@ public class ObstacleDestroyButton : UIButton
 
         if (isBroken)
         {
-            // 소리 재생
+            Managers.Audio.PlaySFX("ExplodeSFX"); // 소리 재생
         }
 
         return isBroken;
+    }
+
+    private void PlayParticle(GameObject effect, Board board, Vector3Int position)
+    {
+        GameObject particle = Instantiate(effect, board.tilemap.GetCellCenterWorld(Vector3Int.FloorToInt(position)), Quaternion.identity);
+        Destroy(particle, 1f);
     }
 }
