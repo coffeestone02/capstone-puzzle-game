@@ -1447,6 +1447,10 @@ PrefabInstance:
       propertyPath: m_AnchorMax.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2131972637509827146, guid: 2111607f37cb0e641953cbacda10233a, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: 2be55834e2ff7b144a243413f2979787, type: 3}
     - target: {fileID: 2169423967265146607, guid: 2111607f37cb0e641953cbacda10233a, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -1707,6 +1711,10 @@ PrefabInstance:
       propertyPath: m_Sprite
       value: 
       objectReference: {fileID: 1213474902269920476, guid: 4bb95609effab10479c1fced9d6b5424, type: 3}
+    - target: {fileID: 8157274582822906252, guid: 2111607f37cb0e641953cbacda10233a, type: 3}
+      propertyPath: m_Name
+      value: BombButton
+      objectReference: {fileID: 0}
     - target: {fileID: 8371092383882068973, guid: 2111607f37cb0e641953cbacda10233a, type: 3}
       propertyPath: m_Name
       value: UICanvas
