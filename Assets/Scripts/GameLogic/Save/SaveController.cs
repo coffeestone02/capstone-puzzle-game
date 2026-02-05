@@ -14,8 +14,8 @@ public class SaveController : MonoBehaviour
 
     private void Awake()
     {
-        if (board == null) board = FindObjectOfType<Board>();
-        if (piece == null) piece = FindObjectOfType<Piece>();
+        if (board == null) board = FindFirstObjectByType<Board>();
+        if (piece == null) piece = FindFirstObjectByType<Piece>();
 
         BuildTileMap();
 
@@ -165,6 +165,7 @@ public class SaveController : MonoBehaviour
         // º¸µå º¹¿ø
         board.tilemap.ClearAllTiles();
         ImportBoard(board.tilemap, d);
+        board.tilemap.SetTile(new Vector3Int(-1, -1, 0), Resources.Load<Tile>("VisualAssets/Tiles/CenterBlock")); // Áß¾Ó¼¿
 
         // Managers.Rule º¹¿ø
         Managers.Rule.BlockCounter = d.blockCounter;
@@ -240,7 +241,6 @@ public class SaveController : MonoBehaviour
                 tm.SetTile(new Vector3Int(xMin + x, yMin + y, 0), tb);
             }
         }
-
     }
 
     private void OnApplicationPause(bool pause)

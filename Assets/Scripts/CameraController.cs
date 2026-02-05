@@ -5,7 +5,7 @@ public class CameraController : MonoBehaviour
 {
     private Camera cam;
 
-    void Start()
+    private void Start()
     {
         cam = GetComponent<Camera>();
         SetCameraDistance();
