@@ -216,4 +216,18 @@ public class Piece : MonoBehaviour
 
         return rocketTile;
     }
+
+    /// <summary>
+    /// 현재 피스를 특수한 폭탄 피스로 변환
+    /// </summary>
+    public void ChangeBombTile()
+    {
+        Board board = GetComponent<Board>();
+        Tile bombTile = Resources.Load<Tile>("VisualAssets/Tiles/BombTile");
+
+        board.Clear(this);
+        tiles[0] = tiles[1] = tiles[2] = bombTile;
+        position = Managers.Rule.spawnPositions[currentSpawnPos];
+        board.Set(this);
+    }
 }

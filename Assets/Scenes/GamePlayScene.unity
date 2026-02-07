@@ -3419,7 +3419,7 @@ MonoBehaviour:
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 1
-  m_FillAmount: 1
+  m_FillAmount: 0
   m_FillClockwise: 1
   m_FillOrigin: 1
   m_UseSpriteMesh: 0
@@ -4423,6 +4423,7 @@ GameObject:
   - component: {fileID: 7394676317654714605}
   - component: {fileID: 390139834248450830}
   - component: {fileID: 1261092003810994156}
+  - component: {fileID: 7394676317654714606}
   m_Layer: 5
   m_Name: BombButton
   m_TagString: Untagged
@@ -7775,6 +7776,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3264795890655575506}
   m_CullTransparentMesh: 1
+--- !u!114 &7394676317654714606
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3264795890655575506}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8cf8e9aaff51b7f49ba8cbc1b1cc96c7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &7471342963713616940
 MonoBehaviour:
   m_ObjectHideFlags: 0
