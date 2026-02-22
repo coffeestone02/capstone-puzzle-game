@@ -1,3 +1,5 @@
 ﻿<Solution>
+  <Project Path="Google.Play.Games.csproj" />
   <Project Path="Assembly-CSharp.csproj" />
+  <Project Path="Google.Play.Games.Editor.csproj" />
 </Solution>
