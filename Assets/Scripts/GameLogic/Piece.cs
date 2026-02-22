@@ -84,8 +84,8 @@ public class Piece : MonoBehaviour
         if (board.IsValidPosition(this, position) == false) // 7. 그려진 위치가 스폰 위치면 게임 오버
         {
             Managers.Rule.isOver = true;
-            if (GoogleManager.Instance != null)
-                GoogleManager.Instance.ReportScore(Managers.Score.score);
+            if (Managers.Google != null)
+                Managers.Google.ReportScore(Managers.Score.score);
             SaveSystem.Clear();
             Managers.Audio.PlaySFX("GameoverSFX");
             Managers.UI.ShowPopup("GameoverPopup");

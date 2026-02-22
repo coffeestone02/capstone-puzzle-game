@@ -13,12 +13,14 @@ public class Managers : MonoBehaviour
     private AudioManager _audio = new AudioManager();
     private ScoreManager _score = new ScoreManager();
     private UIManager _ui = new UIManager();
+    private GoogleManager _google = new GoogleManager();
 
     public static GameManager Rule { get { return Instance._rule; } }
     public static InputManager Input { get { return Instance._input; } }
     public static AudioManager Audio { get { return Instance._audio; } }
     public static ScoreManager Score { get { return Instance._score; } }
     public static UIManager UI { get { return Instance._ui; } }
+    public static GoogleManager Google { get { return Instance._google; } }
 
 
     public static float nextLog;
@@ -54,6 +56,7 @@ public class Managers : MonoBehaviour
         Instance._rule.Init();
         Instance._audio.Init();
         Instance._score.Init();
+        Instance._google.Init();
     }
 
     public static void Reset()

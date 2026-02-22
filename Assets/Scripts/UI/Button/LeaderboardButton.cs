@@ -18,7 +18,7 @@ public class LeaderboardButton : UIButton
 
     private void ShowLeaderBoardUI()
     {
-        if (!GoogleManager.Instance.IsSignedIn())
+        if (!Managers.Google.IsSignedIn())
         {
             PlayGamesPlatform.Instance.ManuallyAuthenticate((status) =>
             {

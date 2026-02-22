@@ -23,6 +23,6 @@ public class CameraController : MonoBehaviour
         int width = tilemap.cellBounds.size.x;
         float aspect = (float)Screen.width / Screen.height;
 
-        cam.orthographicSize = width / (2f * aspect);
+        cam.orthographicSize = width / (2.5f * aspect);
     }
 }

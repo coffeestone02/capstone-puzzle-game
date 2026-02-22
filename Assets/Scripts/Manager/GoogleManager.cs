@@ -1,29 +1,17 @@
 using UnityEngine;
-using UnityEngine.SocialPlatforms;   
+using UnityEngine.SocialPlatforms;
 using GooglePlayGames;
 using GooglePlayGames.BasicApi;
 
-public class GoogleManager : MonoBehaviour
+public class GoogleManager
 {
     public static GoogleManager Instance { get; private set; }
 
     private const string LEADERBOARD_ID = "CgkIorrshYUbEAIQAg";
 
-    private bool authTried = false; 
+    private bool authTried = false;
 
-    void Awake()
-    {
-        if (Instance != null)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
-        Instance = this;
-        DontDestroyOnLoad(gameObject);
-    }
-
-    void Start()
+    public void Init()
     {
         PlayGamesPlatform.Activate();
         PlayGamesPlatform.DebugLogEnabled = true;
@@ -33,7 +21,7 @@ public class GoogleManager : MonoBehaviour
     public void SignIn()
     {
         if (IsSignedIn()) return;
-        if (authTried) return; 
+        if (authTried) return;
         authTried = true;
 
         PlayGamesPlatform.Instance.Authenticate(ProcessAuthentication);
