@@ -54,19 +54,23 @@ public class Piece : MonoBehaviour
         switch (currentSpawnPos)
         {
             case EPieceDir.UP:
+                pr.SetRotationIndex(0);
                 break;
             case EPieceDir.RIGHT:
                 pr.ApplyRotation(1);
+                pr.SetRotationIndex(1);
                 break;
             case EPieceDir.DOWN:
                 pm.CanMove(Util.GetMoveVector2Int(EPieceDir.LEFT));
                 pr.ApplyRotation(1);
                 pr.ApplyRotation(1);
+                pr.SetRotationIndex(2);
                 break;
             case EPieceDir.LEFT:
                 pr.ApplyRotation(1);
                 pr.ApplyRotation(1);
                 pr.ApplyRotation(1);
+                pr.SetRotationIndex(3);
                 break;
         }
 
@@ -80,7 +84,10 @@ public class Piece : MonoBehaviour
         if (board.IsValidPosition(this, position) == false) // 7. 그려진 위치가 스폰 위치면 게임 오버
         {
             Managers.Rule.isOver = true;
+            if (GoogleManager.Instance != null)
+                GoogleManager.Instance.ReportScore(Managers.Score.score);
             SaveSystem.Clear();
+            Managers.Audio.PlaySFX("GameoverSFX");
             Managers.UI.ShowPopup("GameoverPopup");
         }
         else // 8. 아니면 보드에 그리기
@@ -214,5 +221,18 @@ public class Piece : MonoBehaviour
             rocketTile = Resources.Load<Tile>("VisualAssets/Tiles/RedRocketTile");
 
         return rocketTile;
+    }
+
+    /// <summary>
+    /// 현재 피스를 특수한 폭탄 피스로 변환
+    /// </summary>
+    public void ChangeBombTile()
+    {
+        Board board = GetComponent<Board>();
+        Tile bombTile = Resources.Load<Tile>("VisualAssets/Tiles/BombTile");
+        board.Clear(this);
+        tiles[0] = tiles[1] = tiles[2] = bombTile;
+        position = Managers.Rule.spawnPositions[currentSpawnPos];
+        board.Set(this);
     }
 }

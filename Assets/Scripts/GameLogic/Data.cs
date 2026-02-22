@@ -14,20 +14,20 @@ public static class Data
 
     // I형 월킥 데이터
     private static readonly Vector2Int[,] WallKicksI = new Vector2Int[,] {
-        { new Vector2Int(0, 0), new Vector2Int( 0, 1), new Vector2Int( 1, 1), new Vector2Int(-1,-1), new Vector2Int( 1,-1) },
-        { new Vector2Int(0, 0), new Vector2Int( 1, 0), new Vector2Int(-1,-1), new Vector2Int( 1,-1), new Vector2Int( 1, 1) },
+        { new Vector2Int(0, 0), new Vector2Int( 0, 1), new Vector2Int( 0, -1), new Vector2Int(1,0), new Vector2Int( -1,0) },
+        { new Vector2Int(0, 0), new Vector2Int( -1, 0), new Vector2Int(1,0), new Vector2Int( 0,-1), new Vector2Int( 0, 1) },
     };
 
     // L형 월킥 데이터
     private static readonly Vector2Int[,] WallKicksL = new Vector2Int[,] {
-        { new Vector2Int(0, 0), new Vector2Int( 0, 1), new Vector2Int(-1, 1), new Vector2Int(-1, 0), new Vector2Int( 1,-1) },
-        { new Vector2Int(0, 0), new Vector2Int( 0,-1), new Vector2Int(-1, 1), new Vector2Int(-1,-1), new Vector2Int( 1, 1) },
-        { new Vector2Int(0, 0), new Vector2Int( 1, 0), new Vector2Int(-1, 1), new Vector2Int( 1, 1), new Vector2Int(-1,-1) },
-        { new Vector2Int(0, 0), new Vector2Int(-1, 0), new Vector2Int(-1, 1), new Vector2Int( 0, 1), new Vector2Int( 0,-1) },
-        { new Vector2Int(0, 0), new Vector2Int( 0,-1), new Vector2Int( 1, 0), new Vector2Int( 1,-1), new Vector2Int(-1,-1) },
-        { new Vector2Int(0, 0), new Vector2Int( 0, 1), new Vector2Int( 1, 0), new Vector2Int( 1, 1), new Vector2Int(-1,-1) },
-        { new Vector2Int(0, 0), new Vector2Int(-1, 0), new Vector2Int( 0,-1), new Vector2Int(-1,-1), new Vector2Int( 1, 1) },
-        { new Vector2Int(0, 0), new Vector2Int( 1, 0), new Vector2Int(-1,-1), new Vector2Int(-1, 1), new Vector2Int( 0, 1) },
+        { new Vector2Int(0, 0), new Vector2Int(0, 1), new Vector2Int(0, -1), new Vector2Int(1, 0), new Vector2Int( -1,0) },
+        { new Vector2Int(0, 0), new Vector2Int(0,-1), new Vector2Int(0, 1), new Vector2Int(-1,0), new Vector2Int( 1, 0) },
+        { new Vector2Int(0, 0), new Vector2Int(1, 0), new Vector2Int(-1, 1), new Vector2Int(0, 1), new Vector2Int(0,-1) },
+        { new Vector2Int(0, 0), new Vector2Int(-1, 0), new Vector2Int(1, 0), new Vector2Int( 0, -1), new Vector2Int( 0,1) },
+        { new Vector2Int(0, 0), new Vector2Int(0,-1), new Vector2Int(0, 1), new Vector2Int( 1,0), new Vector2Int(-1,0) },
+        { new Vector2Int(0, 0), new Vector2Int(0, 1), new Vector2Int(0, -1), new Vector2Int( -1, 0), new Vector2Int(1,0) },
+        { new Vector2Int(0, 0), new Vector2Int(-1, 0), new Vector2Int(1, 0), new Vector2Int(0, -1), new Vector2Int(0, 1) },
+        { new Vector2Int(0, 0), new Vector2Int(1, 0), new Vector2Int(-1, 0), new Vector2Int(0, 1), new Vector2Int(0, -1) },
     };
 
     // 월킥 데이터를 쉽게 가져오기 위한 딕셔너리

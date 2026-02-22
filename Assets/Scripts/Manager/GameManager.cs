@@ -33,7 +33,7 @@ public class GameManager
 
     public int bombSpawnLimit { get; private set; } // 폭탄 생성 한계값
     public int rocketSpawnLimit { get; private set; } // 로켓 생성 한계값
-    public int obstacleSpawnLimit { get; set; } // 12 10 8 6 5
+    public int obstacleSpawnLimit { get; set; } // 12 8 6 4 3
 
     public bool nextSpawnHasBomb { get; set; }
     public bool nextSpawnHasRocket { get; set; }

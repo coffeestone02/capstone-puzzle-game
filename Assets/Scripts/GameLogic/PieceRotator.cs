@@ -8,6 +8,13 @@ public class PieceRotator : MonoBehaviour
     private Piece activePiece;
     private int rotationIndex;
 
+    public int GetRotationIndex() => rotationIndex;
+
+    public void SetRotationIndex(int index)
+    {
+        rotationIndex = Wrap(index, 0, 4);
+    }
+
     private void Awake()
     {
         activePiece = GetComponent<Piece>();
@@ -43,15 +50,19 @@ public class PieceRotator : MonoBehaviour
     /// <param name="direction">1은 오른쪽, -1은 왼쪽 회전</param>
     private void Rotate(int direction)
     {
-        int originalRotation = rotationIndex;
-        rotationIndex = Wrap(rotationIndex + direction, 0, 4);
+        int from = rotationIndex;                         // 회전 전
+        int to = Wrap(rotationIndex + direction, 0, 4);  // 회전 후(확정되면 적용)
 
         ApplyRotation(direction);
 
-        if (TestWallKicks(rotationIndex, direction) == false)
+        if (TestWallKicks(from, direction) == false)
         {
-            rotationIndex = originalRotation;
             ApplyRotation(-direction);
+            rotationIndex = from;
+        }
+        else
+        {
+            rotationIndex = to;
         }
     }
 

@@ -22,6 +22,11 @@ public class UILevel : MonoBehaviour
 
     private void SetlevelText()
     {
-        levelText.text = "Level: " + Managers.Score.GetLevel().ToString();
+        int level = Managers.Score.GetLevel();
+
+        if (level >= 5)
+            levelText.text = "Lv. Max";
+        else
+            levelText.text = "Lv. " + level.ToString();
     }
 }

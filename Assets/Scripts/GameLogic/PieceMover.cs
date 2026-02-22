@@ -29,11 +29,15 @@ public class PieceMover : MonoBehaviour
 
     private void OnEnable()
     {
+        if (Managers.Instance == null)
+            return;
         Managers.Input.moveAction += OnMove;
     }
 
     private void OnDisable()
     {
+        if (Managers.Instance == null) 
+            return;
         Managers.Input.moveAction -= OnMove;
     }
 
@@ -67,9 +71,9 @@ public class PieceMover : MonoBehaviour
     {
         stepTime = Time.time + Managers.Rule.stepDelay;
 
-        Move(Util.GetMoveVector2Int(stepDir));
+        bool moved = Move(Util.GetMoveVector2Int(stepDir));
 
-        if (lockTime >= Managers.Rule.lockDelay)
+        if (!moved && lockTime >= Managers.Rule.lockDelay)
             board.Lock(activePiece);
     }
 

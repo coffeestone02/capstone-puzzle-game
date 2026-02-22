@@ -10,6 +10,9 @@ public class ResumeButton : UIButton
 
     protected override void ButtonAction()
     {
+        Managers.Input.BlockInput(0.05f);
+
+        Time.timeScale = 1f;
         Managers.Rule.isPause = false;
         Managers.UI.ClosePopup("PausePopup");
         Managers.Audio.PlaySFX("ButtonSFX");

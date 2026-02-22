@@ -1,53 +1,31 @@
 using System.Collections;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using UnityEngine.UI;
 
-public class ObstacleDestroyButton : UIButton
+public class ObstacleDestroyButton : UIItemButton
 {
-    private Image hideImage;
-    private float coolTime = 10f;
-    private int cnt = 2;
+    private GameObject particle;
 
     protected override void Start()
     {
-        hideImage = transform.Find("HideImage").GetComponent<Image>();
-        hideImage.fillAmount = 0f;
+        base.Start();
+        particle = Resources.Load<GameObject>("VisualAssets/Particles/BombParticle");
     }
 
     protected override void ButtonAction()
     {
         if (Managers.Rule.isOver || Managers.Rule.isPause) return;
 
-        if (cnt > 0 && DestroyObstacle())
+        Managers.Input.BlockInput(0.05f);
+
+        if (cnt > 0 && hideImage.fillAmount <= 0f && DestroyObstacle())
         {
             hideImage.fillAmount = 1f;
-            cnt--;
+            SetCnt(cnt - 1);
+            Managers.Audio.PlaySFX("ExplodeSFX");
             StartCoroutine(ButtonTimerCoroutine());
-        }
-    }
-
-    private IEnumerator ButtonTimerCoroutine()
-    {
-        float elasedTime = 0f;
-
-        if (cnt > 0)
-        {
-            while (elasedTime < coolTime)
-            {
-                if (Managers.Rule.isPause == false) // 정지 상태면 쿨타임 작동 안함
-                {
-                    elasedTime += Time.deltaTime;
-                    hideImage.fillAmount = 1f - (elasedTime / coolTime);
-                }
-                yield return null;
-            }
-
-            hideImage.fillAmount = 0f;
-        }
-        else
-        {
-            hideImage.fillAmount = 1f;
         }
     }
 
@@ -56,7 +34,6 @@ public class ObstacleDestroyButton : UIButton
         bool isBroken = false;
         Board board = GameObject.Find("MainBoard").GetComponent<Board>();
         Tilemap tilemap = board.tilemap;
-        Piece piece = board.GetComponent<Piece>();
         RectInt bounds = board.Bounds;
 
         for (int x = bounds.xMin; x < bounds.xMax; x++)
@@ -69,7 +46,7 @@ public class ObstacleDestroyButton : UIButton
                 if (tile != null && tile.name == "ObstacleTile")
                 {
                     isBroken = true;
-                    // 파티클 재생
+                    PlayParticle(particle, board, pos); // 파티클 재생
                     tilemap.SetTile(pos, null);
                 }
             }
@@ -77,7 +54,7 @@ public class ObstacleDestroyButton : UIButton
 
         if (isBroken)
         {
-            // 소리 재생
+            Managers.Audio.PlaySFX("ExplodeSFX"); // 소리 재생
         }
 
         return isBroken;

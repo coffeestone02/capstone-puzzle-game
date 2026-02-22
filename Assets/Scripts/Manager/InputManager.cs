@@ -7,27 +7,46 @@ public class InputManager
     // TEMP
     public Action<EPieceDir> moveAction = null;
     public Action<int> rotateAction = null;
+    public Action pauseAction = null;
 
     private Vector2 touchStartPos;
     private Vector2 touchCurrentPos;
     private EPieceDir keepMoveDir;
-    private float swipeRange = 50f;
+    private float swipeRange = 80f;
     private bool isHolding = false;
+
+    private float holdMoveInterval = 0.11f;
+    private float nextHoldMoveTime = 0f;
+    private float ignoreInputUntil = 0f;
 
     public void OnUpdate()
     {
+        if (Time.unscaledTime < ignoreInputUntil) return;
+        
         TouchInput();
+        PauseAction();
 
         // DEBUG
         RotateInput();
         MoveInput();
     }
 
+    private void PauseAction()
+    {
+        if (Managers.Rule.isOver == false && UnityEngine.Input.GetKeyDown(KeyCode.Escape)) // 뒤로가기 누르면 일시정지
+        {
+            pauseAction?.Invoke();
+        }
+    }
+
+
     private void KeepMove()
     {
-        if (isHolding == false || moveAction == null) return;
+        if (isHolding == false) return;
+        if (Time.unscaledTime < nextHoldMoveTime) return;
 
-        moveAction.Invoke(keepMoveDir);
+        nextHoldMoveTime = Time.unscaledTime + holdMoveInterval;
+        moveAction?.Invoke(keepMoveDir);
     }
 
     private void TouchInput()
@@ -98,18 +117,25 @@ public class InputManager
     // 디버깅용
     private void RotateInput()
     {
-        if (rotateAction != null && Input.GetKeyDown(KeyCode.E))
+        if (Input.GetKeyDown(KeyCode.E))
         {
             Managers.Audio.PlaySFX("RotateSFX");
-            rotateAction.Invoke(1);
+            rotateAction?.Invoke(1);
         }
     }
 
     private void MoveInput()
     {
-        if (moveAction != null && Input.GetKey(KeyCode.W)) moveAction.Invoke(EPieceDir.UP);
-        else if (moveAction != null && Input.GetKey(KeyCode.A)) moveAction.Invoke(EPieceDir.LEFT);
-        else if (moveAction != null && Input.GetKey(KeyCode.S)) moveAction.Invoke(EPieceDir.DOWN);
-        else if (moveAction != null && Input.GetKey(KeyCode.D)) moveAction.Invoke(EPieceDir.RIGHT);
+        if (Input.GetKey(KeyCode.W)) moveAction?.Invoke(EPieceDir.UP);
+        else if (Input.GetKey(KeyCode.A)) moveAction?.Invoke(EPieceDir.LEFT);
+        else if (Input.GetKey(KeyCode.S)) moveAction?.Invoke(EPieceDir.DOWN);
+        else if (Input.GetKey(KeyCode.D)) moveAction?.Invoke(EPieceDir.RIGHT);
+    }
+
+    public void BlockInput(float seconds)
+    {
+        ignoreInputUntil = Mathf.Max(ignoreInputUntil, Time.unscaledTime + seconds);
+        isHolding = false; // 혹시 홀드 이동 남아있으면 끊기
+        nextHoldMoveTime = Time.unscaledTime + holdMoveInterval;
     }
 }

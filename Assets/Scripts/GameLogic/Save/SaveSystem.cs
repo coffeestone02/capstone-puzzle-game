@@ -8,7 +8,6 @@ public static class SaveSystem
 
     public static void Save(SaveData data)
     {
-        data.hasRun = true;
         File.WriteAllText(SavePath, JsonUtility.ToJson(data));
     }
 

@@ -8,15 +8,19 @@ public class UIPlaytime : MonoBehaviour
 
     private void OnEnable()
     {
+        if (Managers.Instance == null)
+            return;
         Managers.UI.updatePlaytimeText += SetPlaytimeText;
     }
 
     private void OnDisable()
     {
+        if (Managers.Instance == null)
+            return;
         Managers.UI.updatePlaytimeText -= SetPlaytimeText;
     }
 
-    private void Start()
+    private void Awake()
     {
         playtimeText = GetComponent<TMP_Text>();
     }

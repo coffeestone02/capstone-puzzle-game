@@ -21,7 +21,7 @@ public class LevelKeeper
     {
         AudioClip clip = Managers.Audio.bgmPlayer.clip;
 
-        if (score < 20000)
+        if (score < 15000)
         {
             // 장애물 세팅
             Managers.Rule.obstacleSpawnLimit = 12;
@@ -32,9 +32,9 @@ public class LevelKeeper
                 Managers.Audio.PlayBGM(level);
             }
         }
-        else if (score < 50000)
+        else if (score < 30000)
         {
-            Managers.Rule.obstacleSpawnLimit = 10;
+            Managers.Rule.obstacleSpawnLimit = 8;
             level = 2;
             if (clip == null || clip.name != "LV2")
             {
@@ -42,9 +42,9 @@ public class LevelKeeper
                 Managers.Audio.PlayBGM(level);
             }
         }
-        else if (score < 85000)
+        else if (score < 60000)
         {
-            Managers.Rule.obstacleSpawnLimit = 8;
+            Managers.Rule.obstacleSpawnLimit = 6;
             level = 3;
             if (clip == null || clip.name != "LV3")
             {
@@ -54,7 +54,7 @@ public class LevelKeeper
         }
         else if (score < 120000)
         {
-            Managers.Rule.obstacleSpawnLimit = 6;
+            Managers.Rule.obstacleSpawnLimit = 4;
             level = 4;
             if (clip == null || clip.name != "LV4")
             {
@@ -64,7 +64,7 @@ public class LevelKeeper
         }
         else
         {
-            Managers.Rule.obstacleSpawnLimit = 5;
+            Managers.Rule.obstacleSpawnLimit = 3;
             level = 5;
             if (clip == null || clip.name != "LV5")
             {

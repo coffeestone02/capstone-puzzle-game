@@ -23,6 +23,11 @@ public class SaveData
     public int score;
     public int combo;
 
+    // Settings (기본은 ON 상태)
+    public bool sfxOff;
+    public bool bgmOff;
+    public bool ghostOff;
+
     // Piece 저장
     public bool hasPiece;
 
@@ -38,4 +43,9 @@ public class SaveData
 
     // tiles
     public int[] pieceTileIds;
+
+    // 아이템 버튼 횟수
+    public int itemBombCnt;
+    public int itemAllDestroyCnt;
+    public int itemObstacleDestroyCnt;
 }

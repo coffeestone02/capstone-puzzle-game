@@ -39,4 +39,22 @@ public class ToggleSwitch : MonoBehaviour, IPointerClickHandler
             onToggleOn?.Invoke();
         }
     }
+
+    public bool IsOn()
+    {
+        if (_slider == null)
+            _slider = GetComponentInChildren<Slider>();
+
+        return _slider != null && _slider.value > 0.9f;
+    }
+
+    public void SetVisual(bool on)
+    {
+        if (_slider == null)
+            _slider = GetComponentInChildren<Slider>();
+
+        if (_slider == null) return;
+
+        _slider.value = on ? 1.0f : 0f;
+    }
 }

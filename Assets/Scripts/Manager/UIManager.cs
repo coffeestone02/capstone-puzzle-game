@@ -6,15 +6,17 @@ public class UIManager
     public Action updateScoreText = null;
     public Action updateLevelText = null;
     public Action updatePlaytimeText = null;
+    public Action updateComboText = null;
     public Action updateBombText = null;
     public Action updateObstacleText = null;
     public Action updateBombGauge = null;
-
+        
     public void OnUpdate()
     {
         SetScoreText();
         SetLevelText();
         SetPlaytimeText();
+        SetComboText();
         SetBombText();
         SetObstacleText();
         SetBombGauge();
@@ -47,37 +49,36 @@ public class UIManager
 
     private void SetScoreText()
     {
-        if (updateScoreText != null)
-            updateScoreText.Invoke();
+        updateScoreText?.Invoke();
     }
 
     private void SetLevelText()
     {
-        if (updateLevelText != null)
-            updateLevelText.Invoke();
+        updateLevelText?.Invoke();
     }
 
     private void SetPlaytimeText()
     {
-        if (updatePlaytimeText != null)
-            updatePlaytimeText.Invoke();
+        updatePlaytimeText?.Invoke();
+    }
+
+    private void SetComboText()
+    {
+        updateComboText?.Invoke();
     }
 
     private void SetBombText()
     {
-        if (updateBombText != null)
-            updateBombText.Invoke();
+        updateBombText?.Invoke();
     }
 
     private void SetObstacleText()
     {
-        if (updateObstacleText != null)
-            updateObstacleText.Invoke();
+        updateObstacleText?.Invoke();
     }
 
     private void SetBombGauge()
     {
-        if (updateBombGauge != null)
-            updateBombGauge.Invoke();
+        updateBombGauge?.Invoke();
     }
 }

@@ -9,13 +9,26 @@ public class SaveController : MonoBehaviour
 
     [SerializeField] private TileBase[] saveTiles;
 
+    [SerializeField] private ToggleSwitch sfxSwitch;
+    [SerializeField] private ToggleSwitch bgmSwitch;
+    [SerializeField] private ToggleSwitch ghostSwitch;
+    [SerializeField] private GameObject ghostGrid;
+
+    [SerializeField] private BombButton bombButton;
+    [SerializeField] private AllDestroyButton allDestroyButton;
+    [SerializeField] private ObstacleDestroyButton obstacleDestroyButton;
+
     private Dictionary<TileBase, int> tileToId;
     private bool shouldLoadOnStart;
 
     private void Awake()
     {
-        if (board == null) board = FindObjectOfType<Board>();
-        if (piece == null) piece = FindObjectOfType<Piece>();
+        if (board == null) board = FindFirstObjectByType<Board>();
+        if (piece == null) piece = FindFirstObjectByType<Piece>();
+
+        if (bombButton == null) bombButton = FindFirstObjectByType<BombButton>();
+        if (allDestroyButton == null) allDestroyButton = FindFirstObjectByType<AllDestroyButton>();
+        if (obstacleDestroyButton == null) obstacleDestroyButton = FindFirstObjectByType<ObstacleDestroyButton>();
 
         BuildTileMap();
 
@@ -64,6 +77,8 @@ public class SaveController : MonoBehaviour
     // 저장
     public void SaveNow()
     {
+        if (Managers.Rule.isOver) return;
+
         if (board == null || board.tilemap == null) return;
 
         // 현재 피스를 보드에 찍어둠
@@ -72,6 +87,8 @@ public class SaveController : MonoBehaviour
 
         RectInt b = board.Bounds;
         var d = new SaveData();
+
+        d.hasRun = true; // 이어하기 가능
 
         d.xMin = b.xMin;
         d.yMin = b.yMin;
@@ -91,6 +108,21 @@ public class SaveController : MonoBehaviour
         d.playtime = Managers.Score.playtime;
         d.score = Managers.Score.score;
         d.combo = Managers.Score.combo;
+
+        // Setting 저장
+        d.sfxOff = sfxSwitch.IsOn();
+        d.bgmOff = bgmSwitch.IsOn();
+        d.ghostOff = ghostSwitch.IsOn();
+
+        // 아이템 버튼 횟수 저장
+        if (bombButton != null)
+            d.itemBombCnt = bombButton.GetCnt();
+
+        if (allDestroyButton != null)
+            d.itemAllDestroyCnt = allDestroyButton.GetCnt();
+
+        if (obstacleDestroyButton != null)
+            d.itemObstacleDestroyCnt = obstacleDestroyButton.GetCnt();
 
         // Piece 저장
         if (piece != null && piece.tiles != null && piece.cells != null)
@@ -165,6 +197,7 @@ public class SaveController : MonoBehaviour
         // 보드 복원
         board.tilemap.ClearAllTiles();
         ImportBoard(board.tilemap, d);
+        board.tilemap.SetTile(new Vector3Int(-1, -1, 0), Resources.Load<Tile>("VisualAssets/Tiles/CenterBlock")); // 중앙셀
 
         // Managers.Rule 복원
         Managers.Rule.BlockCounter = d.blockCounter;
@@ -175,6 +208,60 @@ public class SaveController : MonoBehaviour
 
         // 점수 복원
         Managers.Score.ApplyLoadedState(d.playtime, d.score, d.combo);
+
+        // 아이템 버튼 복원
+        if (bombButton != null)
+        {
+            bombButton.SetCnt(d.itemBombCnt);
+        }
+
+        if (allDestroyButton != null)
+        {
+            allDestroyButton.SetCnt(d.itemAllDestroyCnt);
+        }
+
+        if (obstacleDestroyButton != null)
+        {
+            obstacleDestroyButton.SetCnt(d.itemObstacleDestroyCnt);
+        }
+
+        // 설정 복원
+
+        // SFX 
+        if (d.sfxOff)
+        {
+            sfxSwitch.SetVisual(true);      // 슬라이더 ON (Off 상태 표시)
+            Managers.Audio.TurnOffSFX();
+        }
+        else
+        {
+            sfxSwitch.SetVisual(false);     // 기본 ON 상태 표시
+            Managers.Audio.TurnOnSFX();
+        }
+
+        // BGM
+        if (d.bgmOff)
+        {
+            bgmSwitch.SetVisual(true);
+            Managers.Audio.TurnOffBGM();
+        }
+        else
+        {
+            bgmSwitch.SetVisual(false);
+            Managers.Audio.TurnOnBGM();
+        }
+
+        // Ghost
+        if (d.ghostOff)
+        {
+            ghostSwitch.SetVisual(true);
+            ghostGrid.SetActive(false);
+        }
+        else
+        {
+            ghostSwitch.SetVisual(false);
+            ghostGrid.SetActive(true);
+        }
 
         // Piece 복원
         if (piece != null && d.hasPiece)
@@ -240,16 +327,20 @@ public class SaveController : MonoBehaviour
                 tm.SetTile(new Vector3Int(xMin + x, yMin + y, 0), tb);
             }
         }
-
     }
 
     private void OnApplicationPause(bool pause)
     {
-        if (pause) SaveNow();
+        if (!pause) 
+            return;
+        if (Managers.Rule.isOver) 
+            return;
+        SaveNow();
     }
 
     private void OnApplicationQuit()
     {
+        if (Managers.Rule.isOver) return;
         SaveNow();
     }
 

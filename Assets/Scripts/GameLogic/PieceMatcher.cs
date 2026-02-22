@@ -12,6 +12,10 @@ public class PieceMatcher : MonoBehaviour
     private RectInt bounds;
     private GameObject destroyParticle;
     private GameObject bombParticle;
+    private ObstacleConvert obstacleConvert;
+    private Queue<Vector3Int> bombQueue;
+    private Queue<Vector3Int> rocketQueue;
+
 
     private void Start()
     {
@@ -19,6 +23,10 @@ public class PieceMatcher : MonoBehaviour
         bounds = board.Bounds;
         destroyParticle = Resources.Load<GameObject>("VisualAssets/Particles/DestroyParticle");
         bombParticle = Resources.Load<GameObject>("VisualAssets/Particles/BombParticle");
+        obstacleConvert = GetComponent<ObstacleConvert>();
+
+        bombQueue = new Queue<Vector3Int>();
+        rocketQueue = new Queue<Vector3Int>();
     }
 
     /// <summary>
@@ -27,6 +35,24 @@ public class PieceMatcher : MonoBehaviour
     /// <param name="piece">기준이 될 피스</param>
     public void TryMatch(Piece piece)
     {
+        if (piece == null)
+            return;
+
+        if (piece.tiles == null || piece.tiles.Length == 0 || piece.tiles[0] == null)
+            return;
+
+        if (piece.tiles[0].name == "BombTile")
+        {
+            HashSet<Vector3Int> clearedAllBomb = new HashSet<Vector3Int>();
+            UseBombItem(piece, clearedAllBomb);
+
+            if (obstacleConvert != null && clearedAllBomb.Count > 0)
+                obstacleConvert.ConvertAround(clearedAllBomb);
+
+            Managers.Audio.PlaySFX("ExplodeSFX");
+            return;
+        }
+
         HashSet<Vector3Int> matched = FindMainMatch(piece);
         HashSet<Vector3Int> bonusMatched = FindBonusMatch(matched);
 
@@ -34,9 +60,18 @@ public class PieceMatcher : MonoBehaviour
         int matchedCount = matched.Count + bonusMatched.Count;
         Managers.Rule.BlockCounter += matchedCount;
 
+        // 이번 턴에 "실제로 삭제된 모든 좌표" 누적
+        HashSet<Vector3Int> clearedAll = new HashSet<Vector3Int>();
+
         // 삭제 및 점수계산
-        int itemMatchedCount = DeleteMatchedPiece(matched) + DeleteMatchedPiece(bonusMatched);
+        int itemMatchedCount = DeleteMatchedPiece(matched, clearedAll) + DeleteMatchedPiece(bonusMatched, clearedAll);
         Managers.Score.SetScore(matched.Count, bonusMatched.Count, itemMatchedCount);
+
+        // 모든 삭제 후 주변 장애물 제거 1회
+        if (obstacleConvert != null && clearedAll.Count > 0)
+        {
+            obstacleConvert.ConvertAround(clearedAll);
+        }
 
         // 삭제 소리 재생
         if (matchedCount > 0)
@@ -45,14 +80,14 @@ public class PieceMatcher : MonoBehaviour
             Managers.Audio.PlaySFX("ExplodeSFX");
     }
 
-    private int DeleteMatchedPiece(HashSet<Vector3Int> matched)
+    private int DeleteMatchedPiece(HashSet<Vector3Int> matched, HashSet<Vector3Int> clearedAll)
     {
         if (matched == null || matched.Count == 0)
             return 0;
 
         Tilemap tilemap = board.tilemap;
-        Queue<Vector3Int> bombs = new Queue<Vector3Int>(); // 폭탄 위치
-        Queue<Vector3Int> rockets = new Queue<Vector3Int>(); // 로켓 위치
+        bombQueue.Clear();
+        rocketQueue.Clear();
 
         foreach (Vector3Int pos in matched)
         {
@@ -61,25 +96,30 @@ public class PieceMatcher : MonoBehaviour
                 continue;
 
             // 아이템 위치 수집
-            EnqueueItem(tile, pos, bombs, rockets);
+            EnqueueItem(tile, pos);
 
             // 타일 삭제
             tilemap.SetTile(pos, null);
+
+            // 삭제된 좌표 기록
+            clearedAll.Add(pos);
+
             PlayParticle(destroyParticle, pos);
         }
 
         // 아이템 사용
         int itemMatchedCount = 0;
-        while (bombs.Count > 0)
+
+        while (bombQueue.Count > 0)
         {
-            Vector3Int pos = bombs.Dequeue();
-            itemMatchedCount += UseBomb(pos, Managers.Rule.bombRange, bombs, rockets); // <------ 개수 검산 필요
+            Vector3Int pos = bombQueue.Dequeue();
+            itemMatchedCount += UseBomb(pos, Managers.Rule.bombRange, bombQueue, rocketQueue, clearedAll);
         }
 
-        while (rockets.Count > 0)
+        while (rocketQueue.Count > 0)
         {
-            Vector3Int pos = rockets.Dequeue();
-            itemMatchedCount += UseRocket(pos, bombs, rockets); // <------ 개수 검산 필요
+            Vector3Int pos = rocketQueue.Dequeue();
+            itemMatchedCount += UseRocket(pos, bombQueue, rocketQueue, clearedAll);
         }
 
         return itemMatchedCount;
@@ -167,6 +207,8 @@ public class PieceMatcher : MonoBehaviour
 
         Vector3Int start = piece.cells[cellIdx] + piece.position;
         Tile matchTile = board.tilemap.GetTile<Tile>(start);
+        if (matchTile == null)
+            return connections.ToArray();
 
         queue.Enqueue(start);
         visited.Add(start);
@@ -213,7 +255,7 @@ public class PieceMatcher : MonoBehaviour
     }
 
     // 폭탄으로 제거한 개수 반환
-    private int UseBomb(Vector3Int startPos, int range, Queue<Vector3Int> bombQueue, Queue<Vector3Int> rocketQueue)
+    private int UseBomb(Vector3Int startPos, int range, Queue<Vector3Int> bombQueue, Queue<Vector3Int> rocketQueue, HashSet<Vector3Int> clearedAll)
     {
         PlayParticle(bombParticle, startPos);
         int bombCount = 0;
@@ -232,9 +274,10 @@ public class PieceMatcher : MonoBehaviour
                 if (board.IsCenterCell(pos) || tile == null)
                     continue;
 
-                EnqueueItem(tile, pos, bombQueue, rocketQueue);
+                EnqueueItem(tile, pos);
 
                 tilemap.SetTile(pos, null);
+                clearedAll.Add(pos);
                 bombCount++;
             }
         }
@@ -243,7 +286,7 @@ public class PieceMatcher : MonoBehaviour
     }
 
     // 로켓으로 제거한 개수 반환
-    private int UseRocket(Vector3Int startPos, Queue<Vector3Int> bombQueue, Queue<Vector3Int> rocketQueue)
+    private int UseRocket(Vector3Int startPos, Queue<Vector3Int> bombQueue, Queue<Vector3Int> rocketQueue, HashSet<Vector3Int> clearedAll)
     {
         int rocketCount = 0;
         Tilemap tilemap = board.tilemap;
@@ -257,9 +300,10 @@ public class PieceMatcher : MonoBehaviour
                 continue;
 
             // 또 다른 아이템 위치를 큐에 추가
-            EnqueueItem(tile, pos, bombQueue, rocketQueue);
+            EnqueueItem(tile, pos);
             PlayParticle(destroyParticle, pos);
             tilemap.SetTile(pos, null);
+            clearedAll.Add(pos);
             rocketCount++;
         }
 
@@ -272,10 +316,11 @@ public class PieceMatcher : MonoBehaviour
                 continue;
 
             // 또 다른 아이템 위치를 큐에 추가
-            EnqueueItem(tile, pos, bombQueue, rocketQueue);
+            EnqueueItem(tile, pos);
 
             PlayParticle(destroyParticle, pos);
             tilemap.SetTile(pos, null);
+            clearedAll.Add(pos);
             rocketCount++;
         }
 
@@ -288,12 +333,21 @@ public class PieceMatcher : MonoBehaviour
         Destroy(particle, 1f);
     }
 
-    private void EnqueueItem(Tile tile, Vector3Int pos, Queue<Vector3Int> bombQueue, Queue<Vector3Int> rocketQueue)
+    private void EnqueueItem(Tile tile, Vector3Int pos)
     {
         string tileName = tile.name.ToLowerInvariant();
         if (tileName.Contains("bomb"))
             bombQueue.Enqueue(pos);
         else if (tileName.Contains("rocket"))
             rocketQueue.Enqueue(pos);
+    }
+
+    private int UseBombItem(Piece piece, HashSet<Vector3Int> clearedAll)
+    {
+        HashSet<Vector3Int> matched = new HashSet<Vector3Int>();
+        for (int i = 0; i < piece.cells.Length; i++)
+            matched.Add(piece.cells[i] + piece.position);
+
+        return DeleteMatchedPiece(matched, clearedAll);
     }
 }

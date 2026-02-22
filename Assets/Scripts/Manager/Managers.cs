@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using UnityEngine;
 
 /// <summary>
@@ -19,13 +20,21 @@ public class Managers : MonoBehaviour
     public static ScoreManager Score { get { return Instance._score; } }
     public static UIManager UI { get { return Instance._ui; } }
 
-    private void Start()
+
+    public static float nextLog;
+
+    private void Awake()
     {
         Init();
     }
 
     private void Update()
     {
+        if (Time.unscaledTime > nextLog)
+        {
+            nextLog = Time.unscaledTime + 1f;
+            UnityEngine.Debug.Log($"pause={_rule.isPause}, over={_rule.isOver}, timeScale={Time.timeScale}");
+        }
         if (_rule.isOver || _rule.isPause) return;
 
         _input.OnUpdate();
@@ -35,6 +44,7 @@ public class Managers : MonoBehaviour
 
     private void Init()
     {
+        Time.timeScale = 1f;
         if (Instance == null)
             Instance = this;
         else if (Instance != this)
@@ -48,6 +58,7 @@ public class Managers : MonoBehaviour
 
     public static void Reset()
     {
+        Time.timeScale = 1f;
         Instance._rule.Init();
         Instance._audio.Init();
         Instance._score.Init();
