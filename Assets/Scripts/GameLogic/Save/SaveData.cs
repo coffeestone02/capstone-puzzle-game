@@ -17,6 +17,7 @@ public class SaveData
     public bool nextSpawnHasRocket;
     public int obstacleCount;
     public int obstacleSpawnLimit;
+    public int obstacleNextSpawnDir;
 
     // ScoreManager
     public float playtime;
@@ -48,4 +49,5 @@ public class SaveData
     public int itemBombCnt;
     public int itemAllDestroyCnt;
     public int itemObstacleDestroyCnt;
+
 }

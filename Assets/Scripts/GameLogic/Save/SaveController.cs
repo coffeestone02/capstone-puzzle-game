@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
@@ -104,6 +105,10 @@ public class SaveController : MonoBehaviour
         d.obstacleCount = Managers.Rule.obstacleCount;
         d.obstacleSpawnLimit = Managers.Rule.obstacleSpawnLimit;
 
+        Obstacle obstacle = FindFirstObjectByType<Obstacle>();
+        if (obstacle != null)
+            d.obstacleNextSpawnDir = (int)obstacle.nextSpawnDir;
+
         // Managers.Score 
         d.playtime = Managers.Score.playtime;
         d.score = Managers.Score.score;
@@ -206,6 +211,10 @@ public class SaveController : MonoBehaviour
         Managers.Rule.obstacleCount = d.obstacleCount;
         Managers.Rule.obstacleSpawnLimit = d.obstacleSpawnLimit;
 
+        Obstacle obstacle = FindFirstObjectByType<Obstacle>();
+        if (obstacle != null)
+            obstacle.SetNextSpawnDir((EPieceDir)d.obstacleNextSpawnDir);
+
         // 점수 복원
         Managers.Score.ApplyLoadedState(d.playtime, d.score, d.combo);
 
@@ -305,6 +314,7 @@ public class SaveController : MonoBehaviour
                 piece.SpawnPiece();
             }
         }
+        StartCoroutine(RestoreObstacleStateAfterLoad(d));
     }
 
     private void ImportBoard(Tilemap tm, SaveData d)
@@ -331,9 +341,9 @@ public class SaveController : MonoBehaviour
 
     private void OnApplicationPause(bool pause)
     {
-        if (!pause) 
+        if (!pause)
             return;
-        if (Managers.Rule.isOver) 
+        if (Managers.Rule.isOver)
             return;
         SaveNow();
     }
@@ -344,4 +354,16 @@ public class SaveController : MonoBehaviour
         SaveNow();
     }
 
+    private IEnumerator RestoreObstacleStateAfterLoad(SaveData d)
+    {
+        yield return null;
+
+        Obstacle obstacle = FindFirstObjectByType<Obstacle>();
+        if (obstacle != null)
+        {
+            obstacle.SetNextSpawnDir((EPieceDir)d.obstacleNextSpawnDir);
+        }
+
+        Managers.UI.updateObstacleText?.Invoke();
+    }
 }

@@ -13,15 +13,15 @@ public class Managers : MonoBehaviour
     private AudioManager _audio = new AudioManager();
     private ScoreManager _score = new ScoreManager();
     private UIManager _ui = new UIManager();
-    private GoogleManager _google = new GoogleManager();
-
+    private ReviveManager _revive = new ReviveManager();
+    
+    public static GoogleManager Google => GoogleManager.Instance;
     public static GameManager Rule { get { return Instance._rule; } }
     public static InputManager Input { get { return Instance._input; } }
     public static AudioManager Audio { get { return Instance._audio; } }
     public static ScoreManager Score { get { return Instance._score; } }
     public static UIManager UI { get { return Instance._ui; } }
-    public static GoogleManager Google { get { return Instance._google; } }
-
+    public static ReviveManager Revive { get { return Instance._revive; } }
 
     public static float nextLog;
 
@@ -35,8 +35,10 @@ public class Managers : MonoBehaviour
         if (Time.unscaledTime > nextLog)
         {
             nextLog = Time.unscaledTime + 1f;
-            UnityEngine.Debug.Log($"pause={_rule.isPause}, over={_rule.isOver}, timeScale={Time.timeScale}");
         }
+
+        _revive.OnUpdate();
+
         if (_rule.isOver || _rule.isPause) return;
 
         _input.OnUpdate();
@@ -50,13 +52,17 @@ public class Managers : MonoBehaviour
         if (Instance == null)
             Instance = this;
         else if (Instance != this)
+        {
             Destroy(gameObject);
+            return;
+        }
+            
 
         DontDestroyOnLoad(gameObject);
         Instance._rule.Init();
         Instance._audio.Init();
         Instance._score.Init();
-        Instance._google.Init();
+        Instance._revive.Init();
     }
 
     public static void Reset()
@@ -65,5 +71,6 @@ public class Managers : MonoBehaviour
         Instance._rule.Init();
         Instance._audio.Init();
         Instance._score.Init();
+        Instance._revive.Init();
     }
 }

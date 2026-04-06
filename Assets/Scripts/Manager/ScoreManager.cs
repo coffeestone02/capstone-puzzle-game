@@ -10,7 +10,7 @@ public class ScoreManager
     public int score { get; private set; }
     public int combo { get; private set; }
     private LevelKeeper levelKeeper = new LevelKeeper();
-    private const int SCORE_COMBO_CAP = 15;
+    private const int SCORE_COMBO_CAP = 10;
 
     public void ApplyLoadedState(float loadedPlaytime, int loadedScore, int loadedCombo)
     {
@@ -47,8 +47,8 @@ public class ScoreManager
         if (mainMatchedCount > 0) combo++;
         else combo = 0;
 
-        int mainPoint = mainMatchedCount * 100;
-        int bonusPoint = bonusMatchedCount * 60;
+        int mainPoint = mainMatchedCount * 130;
+        int bonusPoint = bonusMatchedCount * 80;
 
         //콤보 점수 15 제한
         int scoreCombo = Mathf.Min(combo, SCORE_COMBO_CAP);
@@ -68,5 +68,10 @@ public class ScoreManager
     public void AddDropScore()
     {
         score += 17;
+    }
+
+    public void ResetCombo()
+    {
+        combo = 0;
     }
 }

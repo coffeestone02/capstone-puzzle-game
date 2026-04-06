@@ -3,18 +3,42 @@ using UnityEngine.SocialPlatforms;
 using GooglePlayGames;
 using GooglePlayGames.BasicApi;
 
-public class GoogleManager
+public class GoogleManager : MonoBehaviour
 {
     public static GoogleManager Instance { get; private set; }
 
     private const string LEADERBOARD_ID = "CgkIorrshYUbEAIQAg";
 
+    private bool initialized = false;
     private bool authTried = false;
+
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+            return;
+        }
+    }
+
+    private void Start()
+    {
+        Init();
+    }
 
     public void Init()
     {
-        PlayGamesPlatform.Activate();
+        if (initialized) return;
+        initialized = true;
+
         PlayGamesPlatform.DebugLogEnabled = true;
+        PlayGamesPlatform.Activate();
+
         SignIn();
     }
 
@@ -22,23 +46,25 @@ public class GoogleManager
     {
         if (IsSignedIn()) return;
         if (authTried) return;
+
         authTried = true;
+        UnityEngine.Debug.Log("GPGS auto sign-in try");
 
-        PlayGamesPlatform.Instance.Authenticate(ProcessAuthentication);
-    }
-
-    internal void ProcessAuthentication(SignInStatus status)
-    {
-        UnityEngine.Debug.Log("GPGS Auth status: " + status);
-
-        if (status == SignInStatus.Success)
+        PlayGamesPlatform.Instance.Authenticate(status =>
         {
-            UnityEngine.Debug.Log("success");
-        }
-        else
-        {
-            UnityEngine.Debug.Log("fail");
-        }
+            UnityEngine.Debug.Log("GPGS Auth status: " + status);
+            UnityEngine.Debug.Log("GPGS authenticated: " + IsSignedIn());
+
+            if (status == SignInStatus.Success)
+            {
+                UnityEngine.Debug.Log("GPGS login success");
+            }
+            else
+            {
+                UnityEngine.Debug.Log("GPGS login fail");
+                authTried = false;
+            }
+        });
     }
 
     public bool IsSignedIn()
@@ -46,27 +72,35 @@ public class GoogleManager
         return Social.localUser != null && Social.localUser.authenticated;
     }
 
-    // 리더보드 열기
     public void ShowLeaderboard()
     {
-        if (!IsSignedIn())
+        UnityEngine.Debug.Log("ShowLeaderboard called");
+        UnityEngine.Debug.Log("Before leaderboard auth: " + IsSignedIn());
+
+        if (IsSignedIn())
         {
-            UnityEngine.Debug.Log("로그인 안 됨 → 수동 로그인 시도 후 리더보드");
-            PlayGamesPlatform.Instance.ManuallyAuthenticate((status) =>
-            {
-                UnityEngine.Debug.Log("Manual Auth status: " + status);
-                if (status == SignInStatus.Success)
-                {
-                    PlayGamesPlatform.Instance.ShowLeaderboardUI(LEADERBOARD_ID);
-                }
-            });
+            PlayGamesPlatform.Instance.ShowLeaderboardUI(LEADERBOARD_ID);
             return;
         }
 
-        PlayGamesPlatform.Instance.ShowLeaderboardUI(LEADERBOARD_ID);
+        UnityEngine.Debug.Log("로그인 안 됨 → 수동 로그인 시도");
+
+        PlayGamesPlatform.Instance.ManuallyAuthenticate(status =>
+        {
+            UnityEngine.Debug.Log("Manual Auth status: " + status);
+            UnityEngine.Debug.Log("After manual auth: " + IsSignedIn());
+
+            if (status == SignInStatus.Success && IsSignedIn())
+            {
+                PlayGamesPlatform.Instance.ShowLeaderboardUI(LEADERBOARD_ID);
+            }
+            else
+            {
+                UnityEngine.Debug.Log("수동 로그인 실패 → 리더보드 미오픈");
+            }
+        });
     }
 
-    // 점수 제출
     public void ReportScore(int score)
     {
         if (!IsSignedIn())

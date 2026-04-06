@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections;
 
 public class PrivacyPolicy : MonoBehaviour
 {
@@ -10,20 +11,37 @@ public class PrivacyPolicy : MonoBehaviour
 
     private void Awake()
     {
-        if (PlayerPrefs.GetInt(KEY, 0) == 1)
-        {
-            privacyPolicy.SetActive(false);
-            return;
-        }
-
         continueButton.onClick.RemoveAllListeners();
-        continueButton.onClick.AddListener(() =>
-        {
-            PlayerPrefs.SetInt(KEY, 1);
-            PlayerPrefs.Save();
-            privacyPolicy.SetActive(false);
-        });
+        continueButton.onClick.AddListener(OnClickContinue);
+    }
 
-        privacyPolicy.SetActive(true);
+    private IEnumerator Start()
+    {
+        yield return null;
+
+        int accepted = PlayerPrefs.GetInt(KEY, 0);
+        Debug.Log("PRIVACY_ACCEPTED = " + accepted);
+
+        bool shouldShow = accepted != 1;
+        privacyPolicy.SetActive(shouldShow);
+
+        Debug.Log("privacyPolicy activeSelf = " + privacyPolicy.activeSelf);
+        Debug.Log("privacyPolicy activeInHierarchy = " + privacyPolicy.activeInHierarchy);
+    }
+
+    private void OnClickContinue()
+    {
+        PlayerPrefs.SetInt(KEY, 1);
+        PlayerPrefs.Save();
+        privacyPolicy.SetActive(false);
+        Debug.Log("Privacy accepted");
+    }
+
+    [ContextMenu("Reset Privacy Accepted")]
+    private void ResetPrivacyAccepted()
+    {
+        PlayerPrefs.DeleteKey(KEY);
+        PlayerPrefs.Save();
+        Debug.Log("PRIVACY_ACCEPTED reset");
     }
 }

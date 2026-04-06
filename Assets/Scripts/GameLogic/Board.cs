@@ -13,7 +13,7 @@ public class Board : MonoBehaviour
 {
     public Tilemap tilemap { get; private set; }
     public bool skipSpawnOnStart = false;
-    private Vector2Int boardSize = new Vector2Int(19, 19);
+    private Vector2Int boardSize = new Vector2Int(15, 15);
     public RectInt Bounds // 보드 범위
     {
         get
@@ -68,6 +68,11 @@ public class Board : MonoBehaviour
     /// <param name="piece">조작중인 피스</param>
     public void Lock(Piece piece)
     {
+        //게임오버 대기 중 Lock 막기
+        if (Managers.Rule.isOver || Managers.Rule.isGameOverPending)
+            return;
+
+
         PieceMover pieceMover = GetComponent<PieceMover>();
 
         if (IsBoundary(piece) == false)
@@ -82,6 +87,7 @@ public class Board : MonoBehaviour
         {
             Managers.Audio.PlaySFX("BoundarySFX");
             Clear(piece);
+            Managers.Score.ResetCombo();
         }
 
         Obstacle obstacle = GetComponent<Obstacle>();
@@ -169,4 +175,15 @@ public class Board : MonoBehaviour
 
         return false;
     }
+
+
+    // 앱 종료 시, 부활 선택 중이던 판을 최종 종료 처리
+    private void OnApplicationQuit()
+    {
+        if (Managers.Rule != null && Managers.Rule.isGameOverPending)
+        {
+            Managers.Rule.FinalizeGameOver();
+        }
+    }
 }
+

@@ -3,10 +3,13 @@ using UnityEngine.Tilemaps;
 
 public class Ghost : MonoBehaviour
 {
+    private const string GHOST_KEY = "GHOST_OFF";
+
     private Board board;
     private Piece trackingPiece;
     private Tilemap tilemap;
     private RectInt bounds;
+
 
     private Vector3Int[] cells;
     private Vector3Int position;
@@ -25,6 +28,13 @@ public class Ghost : MonoBehaviour
 
     private void LateUpdate()
     {
+        //이전 설정이 off면 유령블록이 나오지 않는다
+        if (PlayerPrefs.GetInt(GHOST_KEY, 0) == 1)
+        {
+            ClearAllGhostTiles();
+            return;
+        }
+
         Clear();
         Copy();
         Drop();
@@ -78,6 +88,12 @@ public class Ghost : MonoBehaviour
             Vector3Int tilePosition = cells[i] + position;
             tilemap.SetTile(tilePosition, trackingPiece.tiles[i]);
         }
+    }
+
+    private void ClearAllGhostTiles()
+    {
+        if (tilemap != null)
+            tilemap.ClearAllTiles();
     }
 
     private void UpDrop()

@@ -83,12 +83,13 @@ public class Piece : MonoBehaviour
         Board board = GetComponent<Board>();
         if (board.IsValidPosition(this, position) == false) // 7. 그려진 위치가 스폰 위치면 게임 오버
         {
-            Managers.Rule.isOver = true;
-            if (Managers.Google != null)
-                Managers.Google.ReportScore(Managers.Score.score);
-            SaveSystem.Clear();
+            Managers.Rule.EnterGameOverPending();
+            Managers.Score.ResetCombo();
             Managers.Audio.PlaySFX("GameoverSFX");
-            Managers.UI.ShowPopup("GameoverPopup");
+            if (Managers.Score.score >= 4000)
+                Managers.Revive.Open();
+            else
+                Managers.Rule.FinalizeGameOver();
         }
         else // 8. 아니면 보드에 그리기
         {
@@ -185,7 +186,7 @@ public class Piece : MonoBehaviour
         int cellIdx = UnityEngine.Random.Range(0, cells.Length);
         Tile bombTile = GetBombTile(tiles[cellIdx]);
         tiles[cellIdx] = bombTile;
-        Managers.Rule.nextSpawnHasBomb = false; // 개선 필요
+        Managers.Rule.nextSpawnHasBomb = false;
     }
 
     private void AddRocketTile()
@@ -193,7 +194,7 @@ public class Piece : MonoBehaviour
         int cellIdx = UnityEngine.Random.Range(0, cells.Length);
         Tile rocketTile = GetRocketTile(tiles[cellIdx]);
         tiles[cellIdx] = rocketTile;
-        Managers.Rule.nextSpawnHasRocket = false; // 개선 필요
+        Managers.Rule.nextSpawnHasRocket = false;
     }
 
     private Tile GetBombTile(Tile tile)

@@ -9,6 +9,11 @@ public class Obstacle : MonoBehaviour
     private Tile obstacleTile;
     public EPieceDir nextSpawnDir { get; private set; }
 
+    public void SetNextSpawnDir(EPieceDir dir)
+    {
+        nextSpawnDir = dir;
+    }
+
     private void Start()
     {
         board = GetComponent<Board>();
@@ -45,6 +50,9 @@ public class Obstacle : MonoBehaviour
     public void SpawnObstacle()
     {
         Managers.Rule.obstacleCount++;
+
+        Managers.UI.updateObstacleText?.Invoke();
+
         if (Managers.Rule.obstacleCount >= Managers.Rule.obstacleSpawnLimit)
         {
             Managers.Rule.obstacleCount = 0;
@@ -64,6 +72,8 @@ public class Obstacle : MonoBehaviour
                     break;
             }
             SetNextSpawnPos();
+
+            Managers.UI.updateObstacleText?.Invoke();
         }
     }
 

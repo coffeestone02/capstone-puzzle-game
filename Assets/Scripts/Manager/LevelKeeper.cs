@@ -32,7 +32,7 @@ public class LevelKeeper
                 Managers.Audio.PlayBGM(level);
             }
         }
-        else if (score < 30000)
+        else if (score < 35000)
         {
             Managers.Rule.obstacleSpawnLimit = 8;
             level = 2;
@@ -52,7 +52,7 @@ public class LevelKeeper
                 Managers.Audio.PlayBGM(level);
             }
         }
-        else if (score < 120000)
+        else if (score < 90000)
         {
             Managers.Rule.obstacleSpawnLimit = 4;
             level = 4;

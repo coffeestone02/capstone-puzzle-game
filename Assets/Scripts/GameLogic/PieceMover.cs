@@ -58,13 +58,13 @@ public class PieceMover : MonoBehaviour
     /// <param name="moveDir">이동 방향</param>
     private void OnMove(EPieceDir moveDir)
     {
-        if (Time.time > moveTime)
-        {
-            if (moveDir == stepDir)
-                stepTime = Time.time + Managers.Rule.stepDelay;
+        if (Time.time <= moveTime)
+            return;
 
-            Move(Util.GetMoveVector2Int(moveDir));
-        }
+        bool moved = Move(Util.GetMoveVector2Int(moveDir));
+
+        if (moved && moveDir == stepDir)
+            stepTime = Time.time + Managers.Rule.stepDelay;
     }
 
     private void Step()

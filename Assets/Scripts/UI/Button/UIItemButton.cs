@@ -37,14 +37,7 @@ public abstract class UIItemButton : MonoBehaviour
         if (cntText == null)
             return;
 
-        if (cnt == 1)
-        {
-            cntText.text = "AD";
-        }
-        else
-        {
-            cntText.text = cnt.ToString();
-        }
+        cntText.text = cnt.ToString();
 
         if (hideImage != null)
         {

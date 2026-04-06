@@ -4,6 +4,9 @@ using UnityEngine;
 
 public class AudioManager
 {
+    private const string BGM_KEY = "BGM_OFF";
+    private bool isBGMOff;
+
     public AudioSource bgmPlayer { get; private set; }
     private Dictionary<string, AudioClip> bgmClips = new Dictionary<string, AudioClip>();
 
@@ -31,12 +34,12 @@ public class AudioManager
 
             LoadBGM();
             LoadSFX();
-        }
-        else
-        {
-            bgmPlayer.clip = sfxPlayer.clip = null;
+
+            isBGMOff = PlayerPrefs.GetInt(BGM_KEY, 0) == 1;
+            bgmPlayer.volume = isBGMOff ? 0f : 0.45f;
         }
     }
+
 
     /// <summary>
     /// Resources/Sounds/BGM 경로의 오디오 클립을 모두 로드
@@ -69,6 +72,8 @@ public class AudioManager
     /// <param name="isLoop"></param>
     public void PlayBGM(string name, bool isLoop = true)
     {
+        if (isBGMOff) return;
+
         bgmPlayer.loop = isLoop;
         bgmPlayer.clip = bgmClips[name];
         bgmPlayer.Play();
@@ -81,6 +86,8 @@ public class AudioManager
     /// <param name="isLoop"></param>
     public void PlayBGM(int level, bool isLoop = true)
     {
+        if (isBGMOff) return;
+
         bgmPlayer.loop = isLoop;
 
         switch (level)
@@ -122,6 +129,7 @@ public class AudioManager
 
     public void TurnOffBGM()
     {
+        isBGMOff = true;
         bgmPlayer.volume = 0f;
     }
 
@@ -132,6 +140,7 @@ public class AudioManager
 
     public void TurnOnBGM()
     {
+        isBGMOff = false;
         bgmPlayer.volume = 0.45f;
     }
 
